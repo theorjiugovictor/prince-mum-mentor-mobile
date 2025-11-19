@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import OnboardingScreen from "./onboardingScreen";
+// import SetupScreen from "../(setup)";
 // import { useRouter } from "expo-router";
 // import { useEffect } from "react";
 // import OnboardingSplash from "./splashscreen";
@@ -23,6 +24,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <OnboardingScreen />
+      {/* <SetupScreen /> */}
     </View>
   );
 }

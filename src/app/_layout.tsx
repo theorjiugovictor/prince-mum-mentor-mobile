@@ -1,32 +1,69 @@
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
 
-// Prevent the splash screen from auto-hiding before fonts are loaded
+// src/app/_layout.tsx
+// The Root Layout acts as the single entry point and conditional router for the entire application.
+
+import React, { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen'; 
+
+// --- IMPORTS FROM CORE UTILITIES ---
+// The custom hook that executes the font loading (located in core/utilities/)
+import { useAssetLoading } from '../core/utils/assetsLoading'; 
+// Import styles/constants (located in core/styles/index)
+import { colors } from '../core/styles/index'; 
+
+
+// 1. MANDATORY SPLASH SCREEN MANAGEMENT (
+// This is the correct place to call this function, ensuring the native splash screen stays visible.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  // Load HankenGrotesk fonts
-  const [fontsLoaded, fontsError] = useFonts({
-    "HankenGrotesk-Regular": require("@/assets/fonts/HankenGrotesk-Regular.ttf"),
-    "HankenGrotesk-Medium": require("@/assets/fonts/HankenGrotesk-Medium.ttf"),
-    "HankenGrotesk-SemiBold": require("@/assets/fonts/HankenGrotesk-SemiBold.ttf"),
-    "HankenGrotesk-Bold": require("@/assets/fonts/HankenGrotesk-Bold.ttf"),
-    "HankenGrotesk-ExtraBold": require("@/assets/fonts/HankenGrotesk-ExtraBold.ttf"),
-  });
 
+function RootLayoutContent() {
+  // 2. Execute the font loading hook (which returns true when fonts are ready)
+  const isLoaded = useAssetLoading();
+
+
+  // 3. Handle Splash Screen Hiding Logic
+  // This logic is owned by this layout component, completing the splash screen task.
   useEffect(() => {
-    // Hide splash screen once fonts are loaded or if there's an error
-    if (fontsLoaded || fontsError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontsError]);
+      if (isLoaded) {
+          // This call hides the native splash screen, revealing the React UI.
+          SplashScreen.hideAsync(); 
+      }
+  }, [isLoaded]);
 
-  // Don't render anything until fonts are loaded
-  if (!fontsLoaded && !fontsError) {
-    return null;
+
+  // --- SHOW LOADING SCREEN WHILE FONTS ARE LOADING ---
+  if (!isLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        {/* Spinner uses the theme's primary color, even on the loading screen */}
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
-
-  return <Stack screenOptions={{ headerShown: false }} />;
 }
+
+export default function RootLayout() {
+  return (
+    // Stack is used to set up the container for the entire app structure
+    <Stack>
+      {/* We use a hidden screen named "index" to host the app's initial logic */}
+      <Stack.Screen name="index" options={{ headerShown: false }} /> 
+      
+      {/* RootLayoutContent hosts the conditional logic and renders the current state */}
+      <RootLayoutContent />
+    </Stack>
+  );
+}
+
+const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        // Using the primary background color from your theme constants
+        backgroundColor: colors.backgroundMain, 
+    },
+});

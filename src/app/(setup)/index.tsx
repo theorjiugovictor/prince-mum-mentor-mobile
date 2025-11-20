@@ -7,11 +7,15 @@ import {
   Switch,
   StyleSheet
 } from 'react-native';
-import { OTPVerificationScreen } from '../(auth)/OtpScreen';
+import { colors, spacing, typography } from '@/src/core/styles';
+import { ms, rbr, rfs, vs } from '@/src/core/styles/scaling';
+import AddGoalModal from '../components/AddGoalModal';
+import CustomInput from '../components/CustomInput';
+import PrimaryButton from '../components/PrimaryButton';
 
 const momStatuses: string[] = ['Pregnant', 'New Mom', 'Toddler Mom', 'Mixed'];
 
-const goalsList: string[] = [
+const defaultGoals: string[] = [
   'Sleep',
   'Feeding',
   'Body Recovery',
@@ -20,10 +24,24 @@ const goalsList: string[] = [
   'Routine Builder',
 ];
 
+interface Errors {
+  partnersName?: string;
+  email?: string;
+}
+
 const MomSetupScreen: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newGoal, setNewGoal] = useState("");
+  const [goals, setGoals] = useState<string[]>(defaultGoals);
+
+  const [showInputs, setShowInputs] = useState<boolean>(false);
+  const [partnersName, setPartnersName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [errors, setErrors] = useState<Errors>({});
 
   const toggleGoal = (goal: string) => {
     if (selectedGoals.includes(goal)) {
@@ -32,6 +50,19 @@ const MomSetupScreen: React.FC = () => {
       setSelectedGoals([...selectedGoals, goal]);
     }
   };
+
+  const handleAddGoal = () => {
+  if (!newGoal.trim()) return;
+
+  setGoals([...goals, newGoal]);
+  setNewGoal("");
+  setIsModalVisible(false);
+};
+
+const nextPage = () => {
+  //later
+}
+
 
   return (
     <View style={styles.container}>
@@ -69,7 +100,7 @@ const MomSetupScreen: React.FC = () => {
           {/* Goals */}
           <Text style={styles.label}>Goals</Text>
           <View style={styles.chipContainer}>
-            {goalsList.map((goal) => (
+            {goals.map((goal) => (
               <TouchableOpacity
                 key={goal}
                 style={[
@@ -89,10 +120,17 @@ const MomSetupScreen: React.FC = () => {
               </TouchableOpacity>
             ))}
 
-            <TouchableOpacity style={styles.addChip}>
+            <TouchableOpacity style={styles.addChip} onPress={() => setIsModalVisible(true)}>
               <Text style={styles.addChipText}>+ Add</Text>
             </TouchableOpacity>
           </View>
+          <AddGoalModal
+            visible={isModalVisible}
+            onClose={() => setIsModalVisible(false)}
+            newGoal={newGoal}
+            setNewGoal={setNewGoal}
+            onAddGoal={handleAddGoal}
+          />
         </View>
 
         {/* Optional Setup Section */}
@@ -100,25 +138,58 @@ const MomSetupScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>Optional Set up</Text>
 
           <Text style={styles.label}>Add Partner</Text>
-          <TouchableOpacity style={styles.addPartnerButton}>
-            <Text style={styles.addPartnerText}>+ Add Partner</Text>
-          </TouchableOpacity>
+          {!showInputs ? (
+            <TouchableOpacity
+              style={styles.addPartnerButton}
+              onPress={() => setShowInputs(true)}
+            >
+              <Text style={styles.addPartnerText}>+ Add Partner</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <CustomInput
+                label="Add Partner"
+                placeholder="Enter Partners Name"
+                value={partnersName}
+                onChangeText={setPartnersName}
+                isError={!!errors.partnersName}
+                errorMessage={errors.partnersName}
+                iconName="person-outline"
+                isValid={partnersName.length > 0 && !errors.partnersName}
+              />
+              <CustomInput
+                label="Email Address"
+                placeholder="Enter Partner Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                isError={!!errors.email}
+                errorMessage={errors.email}
+                iconName="mail-outline"
+                isValid={email.includes('@') && email.length > 0 && !errors.email}
+              />
+            </>
+          )}
 
           <View style={styles.notificationRow}>
             <Text style={styles.label}>Prioritise Notifications</Text>
             <Switch
               value={notificationsEnabled}
               onValueChange={setNotificationsEnabled}
-              trackColor={{ false: '#D1D5DB', true: '#FCA5A5' }}
-              thumbColor={notificationsEnabled ? '#F87171' : '#F3F4F6'}
+              trackColor={{ false: colors.textGrey2, true: colors.primary }}
+              thumbColor={notificationsEnabled ? colors.secondaryExtraLight : colors.secondaryExtraLight}
             />
           </View>
         </View>
+        <PrimaryButton
+        title="Next"
+        onPress={nextPage}
+      />
       </ScrollView>
 
-      <TouchableOpacity style={styles.nextButton}>
+      {/* <TouchableOpacity style={styles.nextButton}>
         <Text style={styles.nextButtonText}>Next</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };
@@ -126,42 +197,67 @@ const MomSetupScreen: React.FC = () => {
 export default MomSetupScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: colors.backgroundMain },
   scrollView: { flex: 1, paddingHorizontal: 20 },
   header: {
-    fontSize: 24,
-    fontWeight: '600',
+    ...typography.heading1,
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginTop: 60,
-    marginBottom: 30,
+    marginTop: ms(60),
+    marginBottom: vs(12),
   },
   section: { marginBottom: 30 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '500', marginBottom: 12 },
-  chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  sectionTitle: { 
+    ...typography.heading3,
+    color: colors.textPrimary, 
+    marginBottom: 20 
+  },
+  label: { 
+    ...typography.labelLarge,
+    color: colors.textPrimary, 
+    marginBottom: 12, 
+  },
+  chipContainer: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 10,
+    marginBottom: 12, 
+  },
   chip: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderRadius: rbr(10),
+    borderWidth: 1.2,
+    borderColor: colors.outline,
   },
   chipSelected: {
-    backgroundColor: '#F3F4F6',
-    borderColor: '#9CA3AF',
+    backgroundColor: colors.secondaryLight,
+    borderColor: colors.backgroundStrong,
   },
-  chipText: { fontSize: 14, color: '#6B7280' },
+  chipText: { 
+    ...typography.labelMedium, 
+    color: colors.textGrey1 
+  },
   chipTextSelected: { color: '#111827', fontWeight: '500' },
   addChip: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderRadius: rbr(10),
+    borderWidth: 1.2,
+    borderColor: colors.outline,
   },
-  addChipText: { fontSize: 14, color: '#6B7280' },
-  addPartnerButton: { alignSelf: 'flex-start', marginBottom: 30 },
-  addPartnerText: { fontSize: 14, color: '#EF4444', fontWeight: '500' },
+  addChipText: { 
+     ...typography.labelMedium, 
+    color: colors.textGrey1 
+  },
+  addPartnerButton: { 
+    alignSelf: 'center', 
+    marginBottom: 30 
+  },
+  addPartnerText: { 
+    ...typography.labelLarge, 
+    color: colors.primaryLight,  
+  },
   notificationRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -169,12 +265,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   nextButton: {
-    backgroundColor: '#F87171',
+    backgroundColor: colors.primary,
     marginHorizontal: 20,
     marginBottom: 40,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
-  nextButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  nextButtonText: { 
+    color: colors.textWhite, 
+    fontSize: 16, 
+    fontWeight: '600' 
+  },
 });

@@ -41,7 +41,7 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
     }
     
     // In rare cases, if the API returns 200 but the body is empty or malformed
-    console.warn("API returned 200 OK but user data was incomplete or null.");
+    console.log("API returned 200 OK but user data was incomplete or null.");
     return null;
 
   } catch (error) {
@@ -50,14 +50,19 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
     // CRITICAL: We look for explicit authentication failures (401 Unauthorized or 403 Forbidden).
     if (axiosError.response?.status === 401 || axiosError.response?.status === 403) {
         // This means the token is expired, revoked, or otherwise invalid.
-        // Returning null triggers the AuthContext to perform a local logout cleanup (removeAuthToken).
-        console.log("Token invalid or expired (401/403). Session cannot be restored.");
+        // Use console.debug/log instead of console.error to avoid red screens.
+        console.debug("Token invalid or expired (401/403). Session cannot be restored.", axiosError.response.data);
         return null;
     }
 
     // Handle all other errors (e.g., 500 server error, network failure, etc.) 
-    // and treat them as a failed session attempt for safety.
-    console.error("Error fetching user profile (unhandled server/network error):", axiosError.message, axiosError.response?.data);
+    // Use console.debug instead of console.error for all catchable errors 
+    // that don't need to panic the application.
+    console.debug(
+        "Error fetching user profile (unhandled server/network error):", 
+        axiosError.message, 
+        axiosError.response?.data
+    );
     return null; 
   }
 }

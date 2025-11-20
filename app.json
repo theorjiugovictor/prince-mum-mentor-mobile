@@ -19,8 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.ukemeikot.MumMentorMobile"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -31,23 +30,16 @@
       [
         "expo-splash-screen",
         {
-          "image": "@/src/assets/images/logo.png",
+          "image": "@/src/app/assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#F9C1CC"
         }
-      ],
-      "expo-secure-store"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "eb49307c-ac6d-4ddb-b0d5-c2e51a067520"
-      }
     }
   }
 }

@@ -28,7 +28,7 @@ export interface UserProfile {
  */
 export async function getCurrentUser(): Promise<UserProfile | null> {
   // This is the protected endpoint where the server verifies the JWT
-  const PROFILE_ENDPOINT = '/user/me'; 
+  const PROFILE_ENDPOINT = '/auth/profile'; 
   
   try {
     // apiClient (via the interceptor) will automatically attach the Bearer token 

@@ -8,7 +8,6 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import CustomInput from '../components/CustomInput'; 
 import PrimaryButton from '../components/PrimaryButton'; 
 import SecondaryButton from '../components/SecondaryButton'; 
@@ -31,17 +30,13 @@ const fontFamilies = {
   bold: "System",
   extraBold: "System",
 };
-// ------------------------------
 
-// --- REQUIRED COMPONENT IMPORTS ---
-
-// ----------------------------------
 
 
 interface CreateTaskFormModalProps {
   isVisible: boolean;
   onClose: () => void;
-  onTaskCreated: () => void; // New prop to signal success to the parent
+  onTaskCreated: () => void; 
 }
 
 // --- MOCK DATE PICKER COMPONENT ---
@@ -79,10 +74,7 @@ const CustomDatePicker: React.FC<{
     </Modal>
   );
 };
-// --- END MOCK DATE PICKER ---
 
-
-// --- CreateTaskForm using CustomInput, PrimaryButton, and SecondaryButton ---
 const CreateTaskForm: React.FC<{ onCancel: () => void; onTaskCreated: () => void }> = ({
   onCancel,
   onTaskCreated,
@@ -94,8 +86,7 @@ const CreateTaskForm: React.FC<{ onCancel: () => void; onTaskCreated: () => void
 
   const handleCreateTask = () => {
     if (taskName.trim()) {
-      onTaskCreated(); // Signal to parent that task is created
-      // Optionally, reset form fields here if the modal remains open briefly
+      onTaskCreated(); 
       setTaskName('');
       setDescription('');
       setDueDate('');
@@ -262,11 +253,11 @@ const taskStyles = StyleSheet.create({
   } as ViewStyle,
   
   cancelButton: {
-    // Full width
+      marginTop: ms(spacing.xs),
   } as ViewStyle,
   
   createTaskButton: {
-    // Full width
+    marginBottom: ms(spacing.sm),
   } as ViewStyle,
 
   // Date Picker Modal Container Styles 

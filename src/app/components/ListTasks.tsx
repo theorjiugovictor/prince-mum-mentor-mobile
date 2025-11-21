@@ -1,0 +1,258 @@
+import { deleteTask } from "@/src/core/services/tasksService";
+import React, { useState } from "react";
+import {
+  Alert,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import PrimaryButton from "./PrimaryButton";
+import SecondaryButton from "./SecondaryButton";
+
+const trashIcon = require("../../assets/images/trash.svg");
+const tickChecked = require("../../assets/images/tick-square-checked.svg");
+const tickUnchecked = require("../../assets/images/tick-square-unchecked.svg");
+const successIcon = require("../../assets/images/success-icon.png");
+
+const ListTasks = ({
+  tasks,
+  callback,
+}: {
+  tasks: any;
+  callback: () => void;
+}) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
+
+  const handleDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    setIsLoadingDelete(true);
+
+    try {
+      await deleteTask(taskToDelete);
+
+      setShowDeleteConfirm(false);
+
+      setShowDeleteSuccess(true);
+
+      await callback();
+    } catch (err) {
+      console.error("Delete error:", err);
+      Alert.alert("Error", "Failed to delete task. Try again.");
+    } finally {
+      setIsLoadingDelete(false);
+      setTaskToDelete(null);
+    }
+  };
+  const toggleTaskCompletion = (taskId: string) => {
+    console.log("Toggle task completion for ID:", taskId);
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={styles.taskListContainer}>
+        {tasks?.map((task: any) => (
+          <View key={task.id} style={styles.taskItem}>
+            {/* Checkbox */}
+            <TouchableOpacity
+              style={styles.checkboxContainer}
+              onPress={() => toggleTaskCompletion(task.id)}
+            >
+              <View>
+                {task.status === "completed" ? (
+                  <Image
+                    source={tickChecked}
+                    style={{ width: 24, height: 24 }}
+                  />
+                ) : (
+                  <Image
+                    source={tickUnchecked}
+                    style={{ width: 24, height: 24 }}
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Task Content */}
+            <View style={styles.taskContent}>
+              <Text
+                style={[
+                  styles.taskTitle,
+                  task.completed && styles.taskTitleCompleted,
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {task.name}
+              </Text>
+              <Text style={styles.taskDateTime}>{task.due_date}</Text>
+            </View>
+
+            {/* Delete Icon */}
+            <TouchableOpacity
+              onPress={() => {
+                setTaskToDelete(task.id);
+                setShowDeleteConfirm(true);
+              }}
+            >
+              <Image source={trashIcon} />
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+
+      {/* DELETE CONFIRMATION MODAL */}
+      <Modal
+        visible={showDeleteConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteConfirm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Image
+              source={trashIcon}
+              style={{ width: 24, height: 24, marginBottom: 10 }}
+            />
+
+            <Text style={styles.modalTitle}>Delete Task</Text>
+            <Text style={styles.modalSubtitle}>
+              Are you sure you want to delete this task?{"\n"}
+              All information and progress will be lost.
+            </Text>
+
+            <PrimaryButton
+              title="Delete"
+              isLoading={isLoadingDelete}
+              onPress={() => handleDeleteTask()}
+              style={{ marginTop: 0 }}
+            />
+
+            <SecondaryButton
+              title="Cancel"
+              onPress={() => setShowDeleteConfirm(false)}
+              style={{ marginTop: 10 }}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* DELETE SUCCESS MODAL */}
+      <Modal
+        visible={showDeleteSuccess}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteSuccess(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Image
+              source={successIcon}
+              style={{ width: 57, height: 57, marginBottom: 15 }}
+            />
+
+            <Text style={styles.modalTitle}>Task deleted successfully</Text>
+
+            <PrimaryButton
+              title="Done"
+              onPress={() => setShowDeleteSuccess(false)}
+              style={{ marginTop: 20 }}
+            />
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+export default ListTasks;
+
+const styles = StyleSheet.create({
+  taskListContainer: {
+    gap: 12,
+  },
+  taskItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  checkboxContainer: {
+    marginRight: 9,
+    alignSelf: "flex-start",
+  },
+
+  taskContent: {
+    flex: 1,
+    marginRight: 12,
+  },
+  taskTitle: {
+    fontSize: 16,
+    color: "#1F1F1F",
+    marginBottom: 4,
+    textTransform: "capitalize",
+  },
+  taskTitleCompleted: {
+    textDecorationLine: "line-through",
+    color: "#999999",
+  },
+  taskDateTime: {
+    fontSize: 14,
+    color: "#6B6B6B",
+  },
+
+  addTaskButton: {
+    marginTop: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+
+  modalBox: {
+    backgroundColor: "#fff",
+    padding: 24,
+    width: "85%",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+
+  modalSubtitle: {
+    textAlign: "center",
+    fontSize: 14,
+    wordWrap: "nowrap",
+    color: "#3A3A3A",
+    marginBottom: 20,
+  },
+
+  successIconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#E5F9EC",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+});

@@ -1,9 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
 import {
-  Alert,
   Image,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,7 +12,8 @@ import { colors, fontFamilies, spacing, typography } from "../../core/styles";
 import { ms } from "../../core/styles/scaling";
 
 import { fetchTasks } from "@/src/core/services/tasksService";
-import axios from "axios";
+import { useEffect, useState } from "react";
+import ListTasks from "../components/ListTasks";
 import PrimaryButton from "../components/PrimaryButton";
 import SecondaryButton from "../components/SecondaryButton";
 
@@ -25,55 +23,6 @@ const notificationIcon = require("../../assets/images/notification.png");
 const resourceIcon = require("../../assets/images/resource-icon.png");
 const journalIcon = require("../../assets/images/journal-icon.png");
 const taskIcon = require("../../assets/images/task-icon.png");
-const trashIcon = require("../../assets/images/trash.svg");
-const tickChecked = require("../../assets/images/tick-square-checked.svg");
-const tickUnchecked = require("../../assets/images/tick-square-unchecked.svg");
-const successIcon = require("../../assets/images/success-icon.png");
-
-const dummyTasks = [
-  {
-    id: "1",
-    title: "Team meeting with marketing department",
-    description: "Discuss Q4 marketing strategies and budget allocation",
-    dateTime: "2024-03-15 10:00pm",
-    completed: false,
-  },
-  {
-    id: "2",
-    title: "Review project proposal",
-    description: "Review and provide feedback on the new client proposal",
-    dateTime: "2024-03-15 02:30pm",
-    completed: true,
-  },
-  {
-    id: "3",
-    title: "Submit expense report",
-    description: "Compile and submit monthly expense report to finance",
-    dateTime: "2024-03-15 04:00pm",
-    completed: false,
-  },
-  {
-    id: "4",
-    title: "Team meeting with marketing department",
-    description: "Discuss Q4 marketing strategies and budget allocation",
-    dateTime: "2024-03-15 10:00pm",
-    completed: false,
-  },
-  {
-    id: "5",
-    title: "Review project proposal",
-    description: "Review and provide feedback on the new client proposal",
-    dateTime: "2024-03-15 02:30pm",
-    completed: true,
-  },
-  {
-    id: "6",
-    title: "Submit expense report",
-    description: "Compile and submit monthly expense report to finance",
-    dateTime: "2024-03-15 04:00pm",
-    completed: false,
-  },
-];
 
 type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
 
@@ -110,48 +59,19 @@ const HeaderIconButton = ({
 );
 
 const Home = () => {
-  const [tasks, setTasks] = useState(dummyTasks);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
 
-  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
-  const [generalError, setGeneralError] = useState<string | null>(null);
-
-  const handleDeleteTask = async () => {
-    if (!taskToDelete) return;
-
-    setIsLoadingDelete(true);
-
+  async function listUserTasks() {
     try {
-      await axios.delete(`/tasks/${taskToDelete}`);
-
-      setShowDeleteConfirm(false);
-
-      setShowDeleteSuccess(true);
-
-      await fetchTasks();
-    } catch (err) {
-      console.error("Delete error:", err);
-      Alert.alert("Error", "Failed to delete task. Try again.");
-    } finally {
-      setIsLoadingDelete(false);
-      setTaskToDelete(null);
+      const response = await fetchTasks();
+      setTasks(response.data.details);
+    } catch (error) {
+      console.error(error);
     }
-  };
-
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
-  };
+  }
 
   useEffect(() => {
-    const response = fetchTasks();
-
-    console.log(response);
+    listUserTasks();
   }, []);
 
   return (
@@ -246,7 +166,7 @@ const Home = () => {
             </TouchableOpacity>
           </View>
 
-          {tasks.length === 0 ? (
+          {tasks?.length === 0 ? (
             <View style={styles.taskCard}>
               <Image source={taskIcon} style={styles.taskIcon} />
               <Text style={styles.taskEmptyTitle}>No task added yet</Text>
@@ -260,124 +180,17 @@ const Home = () => {
               />
             </View>
           ) : (
-            <View style={styles.taskListContainer}>
-              {tasks.map((task) => (
-                <View key={task.id} style={styles.taskItem}>
-                  {/* Checkbox */}
-                  <TouchableOpacity
-                    style={styles.checkboxContainer}
-                    onPress={() => toggleTaskCompletion(task.id)}
-                  >
-                    <View>
-                      {task.completed ? (
-                        <Image
-                          source={tickChecked}
-                          style={{ width: 24, height: 24 }}
-                        />
-                      ) : (
-                        <Image
-                          source={tickUnchecked}
-                          style={{ width: 24, height: 24 }}
-                        />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* Task Content */}
-                  <View style={styles.taskContent}>
-                    <Text
-                      style={[
-                        styles.taskTitle,
-                        task.completed && styles.taskTitleCompleted,
-                      ]}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {task.title}
-                    </Text>
-                    <Text style={styles.taskDateTime}>{task.dateTime}</Text>
-                  </View>
-
-                  {/* Delete Icon */}
-                  <TouchableOpacity
-                    onPress={() => {
-                      setTaskToDelete(task.id);
-                      setShowDeleteConfirm(true);
-                    }}
-                  >
-                    <Image source={trashIcon} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
+            <ListTasks tasks={tasks} callback={fetchTasks} />
           )}
         </View>
       </ScrollView>
+
       {/* Floating Add Button */}
-      <TouchableOpacity style={styles.floatingButton} onPress={() => {}}>
-        <Text style={styles.floatingButtonText}>+</Text>
-      </TouchableOpacity>
-
-      {/* DELETE CONFIRMATION MODAL */}
-      <Modal
-        visible={showDeleteConfirm}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteConfirm(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Image
-              source={trashIcon}
-              style={{ width: 24, height: 24, marginBottom: 10 }}
-            />
-
-            <Text style={styles.modalTitle}>Delete Task</Text>
-            <Text style={styles.modalSubtitle}>
-              Are you sure you want to delete this task?{"\n"}
-              All information and progress will be lost.
-            </Text>
-
-            <PrimaryButton
-              title="Delete"
-              isLoading={isLoadingDelete}
-              onPress={() => handleDeleteTask()}
-              style={{ marginTop: 0 }}
-            />
-
-            <SecondaryButton
-              title="Cancel"
-              onPress={() => setShowDeleteConfirm(false)}
-              style={{ marginTop: 10 }}
-            />
-          </View>
-        </View>
-      </Modal>
-
-      {/* DELETE SUCCESS MODAL */}
-      <Modal
-        visible={showDeleteSuccess}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteSuccess(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Image
-              source={successIcon}
-              style={{ width: 57, height: 57, marginBottom: 15 }}
-            />
-
-            <Text style={styles.modalTitle}>Task deleted successfully</Text>
-
-            <PrimaryButton
-              title="Done"
-              onPress={() => setShowDeleteSuccess(false)}
-              style={{ marginTop: 20 }}
-            />
-          </View>
-        </View>
-      </Modal>
+      {tasks?.length !== 0 ? (
+        <TouchableOpacity style={styles.floatingButton} onPress={() => {}}>
+          <Text style={styles.floatingButtonText}>+</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };
@@ -555,7 +368,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textDecorationLine: "underline",
   },
-
   taskCard: {
     backgroundColor: colors.textWhite,
     borderRadius: ms(spacing.lg),
@@ -598,47 +410,6 @@ const styles = StyleSheet.create({
   taskButtonText: {
     color: colors.primary,
   },
-  taskListContainer: {
-    gap: 12,
-  },
-  taskItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  checkboxContainer: {
-    marginRight: 9,
-    alignSelf: "flex-start",
-  },
-
-  taskContent: {
-    flex: 1,
-    marginRight: 12,
-  },
-  taskTitle: {
-    fontSize: 16,
-    color: "#1F1F1F",
-    marginBottom: 4,
-  },
-  taskTitleCompleted: {
-    textDecorationLine: "line-through",
-    color: "#999999",
-  },
-  taskDateTime: {
-    fontSize: 14,
-    color: "#6B6B6B",
-  },
-
-  addTaskButton: {
-    marginTop: 8,
-  },
   floatingButton: {
     position: "absolute",
     bottom: 30,
@@ -652,49 +423,9 @@ const styles = StyleSheet.create({
     elevation: 12,
     zIndex: 999,
   },
-
   floatingButtonText: {
     color: "#fff",
     fontSize: 30,
     marginTop: -3,
-  },
-
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
-
-  modalBox: {
-    backgroundColor: "#fff",
-    padding: 24,
-    width: "85%",
-    borderRadius: 8,
-    alignItems: "center",
-  },
-
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-
-  modalSubtitle: {
-    textAlign: "center",
-    fontSize: 14,
-    wordWrap: "nowrap",
-    color: "#3A3A3A",
-    marginBottom: 20,
-  },
-
-  successIconCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#E5F9EC",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 15,
   },
 });

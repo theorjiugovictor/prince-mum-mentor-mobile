@@ -21,9 +21,11 @@ const successIcon = require("../../assets/images/success-icon.png");
 const ListTasks = ({
   tasks,
   callback,
+  setAppAction,
 }: {
   tasks: any;
   callback: () => void;
+  setAppAction: () => void;
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
@@ -42,7 +44,6 @@ const ListTasks = ({
       setShowDeleteConfirm(false);
 
       setShowDeleteSuccess(true);
-
       await callback();
     } catch (err) {
       console.error("Delete error:", err);
@@ -97,7 +98,7 @@ const ListTasks = ({
               <Text
                 style={[
                   styles.taskTitle,
-                  task.completed && styles.taskTitleCompleted,
+                  task.status === "completed" && styles.taskTitleCompleted,
                 ]}
                 numberOfLines={1}
                 ellipsizeMode="tail"

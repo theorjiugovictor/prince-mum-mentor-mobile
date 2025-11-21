@@ -1,27 +1,9 @@
 import React from "react";
 import { Modal, StyleSheet, Text, View, ViewStyle, TextStyle, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import PrimaryButton from '../components/PrimaryButton'; 
-// --- REQUIRED STYLE IMPORTS ---
-// NOTE: Mocking imports as external files are not available
-const colors = {
-  textWhite: "#FFFFFF",
-  success: "#10B981", 
-  textPrimary: "#1E293B",
-};
-const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
-const typography = {
-  heading3: { fontSize: 20, fontFamily: 'System' },
-};
-const fontFamilies = {
-  semiBold: "System",
-};
-const ms = (size: number) => size; // Mock scaling function
-// ------------------------------
-
-// --- REQUIRED COMPONENT IMPORTS ---
-
-// ----------------------------------
+import PrimaryButton from '../components/PrimaryButton';
+import { colors, fontFamilies, spacing, typography } from "../../core/styles";
+import { ms } from "../../core/styles/scaling";
 
 
 interface TaskCreationSuccessModalProps {
@@ -39,9 +21,8 @@ const TaskCreationSuccessModal: React.FC<TaskCreationSuccessModalProps> = ({ isV
     <TouchableOpacity
       style={styles.modalOverlay}
       activeOpacity={1}
-      onPress={onDone} // Close on overlay press
+      onPress={onDone} 
     >
-      {/* Inner TouchableOpacity to prevent closing when clicking content */}
       <TouchableOpacity activeOpacity={1} onPress={() => {}}>
         <View style={styles.modalContent}>
           {/* Success Icon */}
@@ -68,25 +49,23 @@ export default TaskCreationSuccessModal;
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    justifyContent: "center", // Center content vertically
-    alignItems: "center",     // Center content horizontally
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   } as ViewStyle,
   modalContent: {
-    backgroundColor: colors.textWhite, // White background for the card
-    borderRadius: ms(16), // Rounded corners for the central card
-    paddingHorizontal: ms(spacing.lg), // Adjust padding for a smaller card
-    paddingVertical: ms(spacing.xl),   // Adjust padding for a smaller card
-    // FIXED: Increased width from 80% to 90% to prevent horizontal clipping of the button text
-    width: '90%', 
-    maxWidth: ms(350), // Max width to prevent it from getting too large on tablets
-    alignItems: "center", // Center items within the card
+    backgroundColor: colors.textWhite, 
+    borderRadius: ms(16), 
+    paddingHorizontal: ms(spacing.lg),
+    paddingVertical: ms(spacing.xl),  
+    maxWidth: ms(350), 
+    alignItems: "center", 
   } as ViewStyle,
 
   successIconWrapper: {
-    width: ms(70), // Slightly larger icon as per screenshot
+    width: ms(70),
     height: ms(70),
-    borderRadius: ms(35),
+    borderRadius: ms(70),
     backgroundColor: colors.textWhite,
     borderWidth: 2,
     borderColor: colors.success,
@@ -102,7 +81,7 @@ const styles = StyleSheet.create({
     marginBottom: ms(spacing.lg), 
   } as TextStyle,
   successButton: {
-    width: "10%", 
+    width: "100%", 
   
     paddingVertical: ms(spacing.sm), 
   } as ViewStyle,

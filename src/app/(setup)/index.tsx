@@ -12,6 +12,7 @@ import { ms, rbr, rfs, vs } from '@/src/core/styles/scaling';
 import AddGoalModal from '../components/AddGoalModal';
 import CustomInput from '../components/CustomInput';
 import PrimaryButton from '../components/PrimaryButton';
+import { router } from 'expo-router';
 
 const momStatuses: string[] = ['Pregnant', 'New Mom', 'Toddler Mom', 'Mixed'];
 
@@ -60,9 +61,8 @@ const MomSetupScreen: React.FC = () => {
 };
 
 const nextPage = () => {
-  //later
+  router.push('/childSetupScreen')
 }
-
 
   return (
     <View style={styles.container}>
@@ -182,9 +182,9 @@ const nextPage = () => {
           </View>
         </View>
         <PrimaryButton
-        title="Next"
-        onPress={nextPage}
-      />
+          title="Next"
+          onPress={nextPage}
+        />
       </ScrollView>
 
       {/* <TouchableOpacity style={styles.nextButton}>

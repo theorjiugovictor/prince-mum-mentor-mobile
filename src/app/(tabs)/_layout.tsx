@@ -5,11 +5,11 @@ import { Image, StyleSheet } from "react-native";
 import { colors, fontFamilies } from "../../core/styles";
 
 const TAB_ICONS = {
-  Home: require("../../assets/images/Home-images/home.png"),
-  AiChat: require("../../assets/images/Home-images/Ai-chat.png"),
-  Milestone: require("../../assets/images/Home-images/milestone.png"),
-  Gallery: require("../../assets/images/Home-images/galery.png"),
-  Community: require("../../assets/images/Home-images/community.png"),
+  Home: require("../../assets/images/home.png"),
+  AiChat: require("../../assets/images/Ai-chat.png"),
+  Milestone: require("../../assets/images/milestone.png"),
+  Gallery: require("../../assets/images/galery.png"),
+  Community: require("../../assets/images/community.png"),
 } as const;
 
 const TabLayout = () => {
@@ -26,7 +26,7 @@ const TabLayout = () => {
         tabBarStyle: {
           borderTopColor: colors.outlineVariant,
           backgroundColor: colors.textWhite,
-          height: 70,
+          height: 100,
         },
         tabBarIcon: ({ focused }) => {
           const icon = TAB_ICONS[route.name as keyof typeof TAB_ICONS];

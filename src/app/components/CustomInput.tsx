@@ -42,6 +42,7 @@ interface CustomInputProps {
   inputRef?: React.RefObject<TextInput>;
   multiline?: boolean;
   editable?: boolean;
+  defaultValue?: string;
 }
 
 // --- COMPONENT ---
@@ -60,6 +61,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   inputRef,
   multiline,
   editable = true,
+  defaultValue,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(!isPassword);
@@ -156,6 +158,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
           autoCapitalize="none"
           multiline={multiline}
           editable={editable}
+          defaultValue={defaultValue}
         />
 
         <View style={styles.passwordToggle}>

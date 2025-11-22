@@ -46,6 +46,32 @@ export async function createTask({
   }
 }
 
+export async function updateTask({
+  id,
+  name,
+  description,
+  due_date,
+}: {
+  id: string;
+  name: string;
+  description: string;
+  due_date: string;
+}) {
+  const response = await apiClient.patch(`${TASKS_ENDPOINT}/${id}`, {
+    name,
+    description,
+    due_date,
+    status: "pending",
+  });
+
+  if (response.status >= 200 && response.status < 300) {
+    return response.data;
+  } else {
+    // throw error if response status is not 2xx
+    throw new Error(response.data?.message || "Failed to update task");
+  }
+}
+
 // --- Delete Task by ID ---
 export async function deleteTask(taskId: string) {
   try {

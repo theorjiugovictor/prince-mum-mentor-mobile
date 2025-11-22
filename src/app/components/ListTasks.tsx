@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import CreateTaskFormModal from "./CreateTask";
 import PrimaryButton from "./PrimaryButton";
 import SecondaryButton from "./SecondaryButton";
 
@@ -68,6 +69,9 @@ const ListTasks = ({
     }
   };
 
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<any>(null);
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.taskListContainer}>
@@ -93,8 +97,17 @@ const ListTasks = ({
               </View>
             </TouchableOpacity>
 
-            {/* Task Content */}
-            <View style={styles.taskContent}>
+            {/* Task Content - Make it clickable for pending tasks */}
+            <TouchableOpacity
+              style={styles.taskContent}
+              onPress={() => {
+                if (task.status === "pending") {
+                  setTaskToEdit(task);
+                  setIsEditModalVisible(true);
+                }
+              }}
+              disabled={task.status === "completed"}
+            >
               <Text
                 style={[
                   styles.taskTitle,
@@ -108,7 +121,7 @@ const ListTasks = ({
               <Text style={styles.taskDateTime}>
                 {format(parseISO(task.due_date), "yyyy-MM-dd h:mma")}
               </Text>
-            </View>
+            </TouchableOpacity>
 
             {/* Delete Icon */}
             <TouchableOpacity
@@ -183,6 +196,20 @@ const ListTasks = ({
           </View>
         </View>
       </Modal>
+
+      <CreateTaskFormModal
+        isVisible={isEditModalVisible}
+        onClose={() => {
+          setIsEditModalVisible(false);
+          setTaskToEdit(null);
+        }}
+        onTaskCreated={() => {
+          setIsEditModalVisible(false);
+          setTaskToEdit(null);
+          callback(); // Refresh tasks
+        }}
+        initData={taskToEdit}
+      />
     </View>
   );
 };

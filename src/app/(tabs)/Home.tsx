@@ -448,9 +448,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 30,
     right: 20,
-    width: 55,
-    height: 55,
-    borderRadius: 30,
+    width: 40,
+    height: 40,
+    borderRadius: 100,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   },
   floatingButtonText: {
     color: "#fff",
-    fontSize: 30,
+    fontSize: 25,
     marginTop: -3,
   },
 });

@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   taskTitleCompleted: {
     textDecorationLine: "line-through",
-    color: "#C4C4C4",
+    color: "#999999",
   },
   taskDateTime: {
     fontSize: 14,

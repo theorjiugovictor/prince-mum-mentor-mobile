@@ -20,6 +20,7 @@ import { createTask } from "@/src/core/services/tasksService";
 import { colors } from "../../core/styles/index";
 import { ms } from "../../core/styles/scaling";
 import DatePickerInput from "./DatePickerInput";
+
 const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
 const typography = {
   heading3: { fontSize: 20, fontFamily: "System" },
@@ -70,15 +71,16 @@ const CustomDatePicker: React.FC<{
     />
   );
 };
+
 const CreateTaskForm: React.FC<{
   onCancel: () => void;
   onTaskCreated: () => void;
 }> = ({ onCancel, onTaskCreated }) => {
   const [taskName, setTaskName] = useState("");
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState<Date | null>(null); // Changed to Date | null
+  const [dueDate, setDueDate] = useState<Date | null>(null);
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [isCreating, setIsCreating] = useState(false); // Add loading state
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateTask = async () => {
     if (!taskName.trim() || !dueDate) {
@@ -98,25 +100,21 @@ const CreateTaskForm: React.FC<{
       setDescription("");
       setDueDate(null);
 
-      onTaskCreated(); // only runs if API call succeeds
+      onTaskCreated();
     } catch (error) {
       Alert.alert("Error", "Failed to create task");
     }
     setIsCreating(false);
   };
 
-  const handleDatePicker = () => {
-    setIsDatePickerVisible(true);
-  };
+  const handleDatePicker = () => setIsDatePickerVisible(true);
 
   const handleDateConfirm = (date: Date) => {
-    setDueDate(date); // Store actual Date object
+    setDueDate(date);
     setIsDatePickerVisible(false);
   };
 
-  const handleDateCancel = () => {
-    setIsDatePickerVisible(false);
-  };
+  const handleDateCancel = () => setIsDatePickerVisible(false);
 
   return (
     <View style={taskStyles.formContainer}>
@@ -130,18 +128,16 @@ const CreateTaskForm: React.FC<{
         iconName="person-outline"
       />
 
+      {/* FIXED BLOCK — clean, no text error */}
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={handleDatePicker}
         style={taskStyles.dateInputWrapper}
       >
         <View pointerEvents="none">
-          {" "}
-          {/* Add this wrapper */}
           <DatePickerInput
             label="Due Date"
             value={dueDate ? dueDate.toLocaleDateString() : "Select Date"}
-            // isValid={!!dueDate}
             placeholder="Select Date"
             onDateChange={(date) => handleDateConfirm(new Date(date))}
           />
@@ -155,7 +151,7 @@ const CreateTaskForm: React.FC<{
           value={description}
           onChangeText={setDescription}
           iconName="mail-outline"
-          multiline={true} // Allow multiple lines
+          multiline={true}
         />
       </View>
 
@@ -166,6 +162,7 @@ const CreateTaskForm: React.FC<{
           style={taskStyles.createTaskButton}
           disabled={!taskName.trim() || !dueDate || isCreating}
         />
+
         <SecondaryButton
           title="Cancel"
           onPress={onCancel}
@@ -198,9 +195,8 @@ const CreateTaskFormModal: React.FC<CreateTaskFormModalProps> = ({
       <TouchableOpacity
         style={taskStyles.modalOverlay}
         activeOpacity={1}
-        onPress={onClose} // Only close if clicking overlay when form is present
+        onPress={onClose}
       >
-        {/* Inner TouchableOpacity prevents clicks within the modal content from closing the modal */}
         <TouchableOpacity activeOpacity={1} onPress={() => {}}>
           <View style={taskStyles.modalContent}>
             <CreateTaskForm onCancel={onClose} onTaskCreated={onTaskCreated} />
@@ -213,14 +209,14 @@ const CreateTaskFormModal: React.FC<CreateTaskFormModalProps> = ({
 
 export default CreateTaskFormModal;
 
-// --- STYLES FOR TASK MODAL ---
+// --- STYLES ---
 const taskStyles = StyleSheet.create({
-  // Modal positioning and background for the form modal (bottom sheet)
   modalOverlay: {
     flex: 1,
-    justifyContent: "flex-end", // Position content at the bottom
+    justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   } as ViewStyle,
+
   modalContent: {
     backgroundColor: colors.backgroundMain,
     borderTopLeftRadius: ms(12),
@@ -234,6 +230,7 @@ const taskStyles = StyleSheet.create({
     paddingTop: 0,
     gap: ms(spacing.xs),
   } as ViewStyle,
+
   formTitle: {
     fontFamily: fontFamilies.extraBold,
     fontSize: typography.heading3.fontSize,
@@ -264,37 +261,4 @@ const taskStyles = StyleSheet.create({
   createTaskButton: {
     marginBottom: ms(spacing.sm),
   } as ViewStyle,
-
-  // Date Picker Modal Container Styles
-  datePickerOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-  } as ViewStyle,
-  datePickerContainer: {
-    backgroundColor: colors.textWhite,
-    borderRadius: ms(16),
-    padding: ms(spacing.md),
-    width: "85%",
-    alignItems: "center",
-  } as ViewStyle,
-  datePickerTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: typography.heading3.fontSize,
-    color: colors.textPrimary,
-    marginBottom: ms(spacing.sm),
-  } as TextStyle,
-
-  datePickerButtonRow: {
-    flexDirection: "row",
-    gap: ms(spacing.sm),
-    marginTop: ms(spacing.sm),
-  } as ViewStyle,
-  datePickerCancelButton: {
-    flex: 1,
-    marginRight: ms(spacing.xs),
-  } as ViewStyle,
-
-  // NOTE: Success screen styles are removed from here as it's now a separate modal
 });

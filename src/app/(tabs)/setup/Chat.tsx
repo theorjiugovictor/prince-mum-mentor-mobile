@@ -1,4 +1,3 @@
-// src/app/(tabs)/chat.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -7,23 +6,28 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Text,
+  Image,
   Clipboard,
   Alert,
 } from "react-native";
 import { ChatWelcome } from "../../components/chat/chat-Welcome";
-import { ChatHistory } from "../../components/chat/chat-history";
 import { ChatMessage } from "../../components/chat/chat-Message";
 import { ChatInput } from "../../components/chat/chat-Input";
 import { MessageActions } from "../../components/chat/message-Action";
-import { RenameChatModal } from "../../components/chat/rename-Modal";
 import { TypingIndicator } from "../../components/chat/typing-Indicator";
 import { HistoryEmptyState } from "../../components/chat/history-Empty-State";
+import { colors } from "@/src/core/styles";
+import { s, vs, rfs } from "@/src/core/styles/scaling";
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  link?: {
+    url: string;
+    title: string;
+  };
 }
 
 interface Chat {
@@ -34,20 +38,16 @@ interface Chat {
 }
 
 export default function ChatScreen() {
-  const [currentView, setCurrentView] = useState<
-    "welcome" | "history" | "chat"
-  >("welcome");
+  const [currentView, setCurrentView] = useState<"welcome" | "chat">("welcome");
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [inputText, setInputText] = useState("");
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
-  const [renameModalVisible, setRenameModalVisible] = useState(false);
-  const [chatToRename, setChatToRename] = useState<string | null>(null);
   const [showHistoryEmpty, setShowHistoryEmpty] = useState(false);
 
   // Handle sending a message
   const handleSend = () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isAiSpeaking) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -60,9 +60,7 @@ export default function ChatScreen() {
     if (!currentChat) {
       const newChat: Chat = {
         id: Date.now().toString(),
-        title:
-          inputText.trim().substring(0, 30) +
-          (inputText.length > 30 ? "..." : ""),
+        title: inputText.trim().substring(0, 30) + (inputText.length > 30 ? "..." : ""),
         messages: [userMessage],
         timestamp: new Date(),
       };
@@ -70,29 +68,50 @@ export default function ChatScreen() {
       setChats((prev) => [newChat, ...prev]);
     } else {
       // Add to existing chat
-      setCurrentChat((prev) => ({
-        ...prev!,
-        messages: [...prev!.messages, userMessage],
-      }));
+      const updatedChat = {
+        ...currentChat,
+        messages: [...currentChat.messages, userMessage],
+      };
+      setCurrentChat(updatedChat);
+      
+      // Update in chats list
+      setChats((prev) =>
+        prev.map((chat) => (chat.id === currentChat.id ? updatedChat : chat))
+      );
     }
 
     setInputText("");
     setCurrentView("chat");
     setIsAiSpeaking(true);
 
-    // Simulate AI response
+    // Simulate AI response with link
     setTimeout(() => {
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "That sounds tough. How long has this been happening?",
+        text: "Here's something you might find helpful:",
         isUser: false,
         timestamp: new Date(),
+        link: {
+          url: "https://example.com/guide",
+          title: "Making_Mealtimes_Fun_for_Picky_Eaters - CalmParent Guide"
+        }
       };
 
-      setCurrentChat((prev) => ({
-        ...prev!,
-        messages: [...prev!.messages, botMessage],
-      }));
+      setCurrentChat((prev) => {
+        if (!prev) return null;
+        const updated = {
+          ...prev,
+          messages: [...prev.messages, botMessage],
+        };
+        
+        // Update in chats list
+        setChats((prevChats) =>
+          prevChats.map((chat) => (chat.id === prev.id ? updated : chat))
+        );
+        
+        return updated;
+      });
+      
       setIsAiSpeaking(false);
     }, 2000);
   };
@@ -100,25 +119,17 @@ export default function ChatScreen() {
   // Handle category selection
   const handleCategoryPress = (category: string) => {
     setInputText(category);
+    setShowHistoryEmpty(true);
   };
 
-  // Handle new chat (from history empty state's New Chat)
+  // Handle new chat from history
   const handleNewChat = () => {
-    // start fresh chat and go to chat view
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      title: "New Chat",
-      messages: [],
-      timestamp: new Date(),
-    };
-    setChats((prev) => [newChat, ...prev]);
-    setCurrentChat(newChat);
-    setInputText("");
+    setCurrentChat(null);
     setCurrentView("chat");
-    setShowHistoryEmpty(false);
+    setInputText("");
   };
 
-  // Ask Anything still opens the HistoryEmptyState modal (per your desired flow)
+  // Ask Anything opens the HistoryEmptyState modal
   const handleAskAnything = () => {
     setShowHistoryEmpty(true);
   };
@@ -132,22 +143,15 @@ export default function ChatScreen() {
     }
   };
 
-  // Handle rename
-  const handleRenameChat = (chatId: string) => {
-    setChatToRename(chatId);
-    setRenameModalVisible(true);
-  };
-
-  const handleSaveRename = (newTitle: string) => {
-    if (chatToRename) {
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === chatToRename ? { ...chat, title: newTitle } : chat
-        )
-      );
-      if (currentChat?.id === chatToRename) {
-        setCurrentChat((prev) => ({ ...prev!, title: newTitle }));
-      }
+  // Handle rename - NOW takes chatId AND newTitle
+  const handleRenameChat = (chatId: string, newTitle: string) => {
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === chatId ? { ...chat, title: newTitle } : chat
+      )
+    );
+    if (currentChat?.id === chatId) {
+      setCurrentChat((prev) => (prev ? { ...prev, title: newTitle } : null));
     }
   };
 
@@ -180,47 +184,42 @@ export default function ChatScreen() {
     }
   };
 
-  // Show history view (list)
-  const showHistory = () => {
-    setCurrentView("history");
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        {/* Back arrow opens HistoryEmptyState modal (per your request) */}
         <TouchableOpacity
-          onPress={() => {
-            setShowHistoryEmpty(true);
-          }}
+          onPress={() => setShowHistoryEmpty(true)}
           style={styles.backTouchable}
         >
-          <Text style={styles.backButton}>←</Text>
+          <Image
+            source={require("../../assets/images/ai-chat/Line-arrow-left.png")}
+            style={styles.backButton}
+          />
         </TouchableOpacity>
 
-        {/* Title sits beside arrow (left-aligned) */}
         <Text style={styles.headerTitle}>
           {currentView === "welcome"
             ? "NORA"
-            : currentView === "history"
-            ? "Baby Feeding Inquiry"
             : currentChat?.title || "New Chat"}
         </Text>
 
         <TouchableOpacity onPress={() => setShowHistoryEmpty(true)}>
-          <Text style={styles.menuButton}>☰</Text>
+          <Image
+            source={require("../../assets/images/ai-chat/menu.png")}
+            style={styles.menuButton}
+          />
         </TouchableOpacity>
       </View>
 
-      {/* HistoryEmptyState is available globally (can be opened by header or Ask Anything) */}
+      {/* History Empty State Modal */}
       <HistoryEmptyState
         visible={showHistoryEmpty}
         onClose={() => setShowHistoryEmpty(false)}
-        onNewChat={() => {
-          // When New Chat pressed inside the empty-state, create new chat & go to chat
-          handleNewChat();
-        }}
+        onNewChat={handleNewChat}
+        chats={chats}
+        onChatPress={handleChatPress}
+        onRenameChat={handleRenameChat}
       />
 
       {/* Content Views */}
@@ -232,34 +231,32 @@ export default function ChatScreen() {
         />
       )}
 
-      {currentView === "history" && (
-        <ChatHistory
-          chats={chats}
-          onChatPress={handleChatPress}
-          onNewChat={() => {
-            // If user creates a chat from history list, create and go to chat
-            handleNewChat();
-          }}
-          onRenameChat={handleRenameChat}
-        />
-      )}
-
-      {currentView === "chat" && currentChat && (
+      {currentView === "chat" && (
         <>
           <FlatList
-            data={currentChat.messages}
+            data={currentChat?.messages || []}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <ChatMessage message={item.text} isUser={item.isUser} />
+            renderItem={({ item, index }) => (
+              <>
+                <ChatMessage 
+                  message={item.text} 
+                  isUser={item.isUser}
+                  link={item.link}
+                />
+                
+                {/* Show typing indicator after last user message */}
+                {item.isUser && 
+                 index === (currentChat?.messages.length || 0) - 1 && 
+                 isAiSpeaking && (
+                  <TypingIndicator isAiSpeaking={true} />
+                )}
+              </>
             )}
             contentContainerStyle={styles.messagesList}
             showsVerticalScrollIndicator={false}
           />
 
-          {/* Typing indicator inside chat, right below messages */}
-          <TypingIndicator isAiSpeaking={isAiSpeaking} />
-
-          {!isAiSpeaking && currentChat.messages.length > 0 && (
+          {!isAiSpeaking && currentChat && currentChat.messages.length > 0 && (
             <MessageActions
               onLike={handleLike}
               onDislike={handleDislike}
@@ -267,25 +264,16 @@ export default function ChatScreen() {
               onCopy={handleCopy}
             />
           )}
+
+          {/* Chat Input */}
+          <ChatInput
+            value={inputText}
+            onChangeText={setInputText}
+            onSend={handleSend}
+            isAiSpeaking={isAiSpeaking}
+          />
         </>
       )}
-
-      {/* Chat input only in chat view */}
-      {currentView === "chat" && (
-        <ChatInput value={inputText} onChangeText={setInputText} onSend={handleSend} />
-      )}
-
-      {/* Rename Modal */}
-      <RenameChatModal
-        visible={renameModalVisible}
-        currentTitle={
-          chatToRename
-            ? chats.find((c) => c.id === chatToRename)?.title || ""
-            : ""
-        }
-        onClose={() => setRenameModalVisible(false)}
-        onSave={handleSaveRename}
-      />
     </SafeAreaView>
   );
 }
@@ -293,39 +281,35 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.textWhite,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    paddingHorizontal: s(8),
+    paddingVertical: vs(12),
   },
   backTouchable: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: s(8),
+    paddingVertical: vs(4),
   },
   backButton: {
-    fontSize: 24,
-    color: "#1A1A1A",
+    width: s(24),
+    height: s(24),
   },
   headerTitle: {
     flex: 1,
-    fontSize: 18,
+    fontSize: rfs(18),
     fontWeight: "600",
-    color: "#1A1A1A",
-    // place title beside arrow
+    color: colors.textPrimary,
     textAlign: "left",
-    marginLeft: 8,
+    marginLeft: s(8),
   },
   menuButton: {
-    fontSize: 24,
-    color: "#1A1A1A",
-    paddingHorizontal: 8,
+    width: s(24),
+    height: s(24),
   },
   messagesList: {
-    paddingVertical: 16,
+    paddingVertical: vs(16),
   },
 });

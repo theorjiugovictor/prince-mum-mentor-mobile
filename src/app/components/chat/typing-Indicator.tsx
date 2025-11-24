@@ -1,6 +1,7 @@
-// src/app/components/chat/TypingIndicator.tsx
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Image } from 'react-native';
+import { colors } from '@/src/core/styles';
+import { s, vs, rbr } from '@/src/core/styles/scaling';
 
 interface TypingIndicatorProps {
   isAiSpeaking?: boolean;
@@ -45,21 +46,17 @@ export const TypingIndicator = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>
-          {isUserSpeaking ? 'Live chat' : 'live Chat (AI Speaking)'}
-        </Text>
+      <View style={styles.iconContainer}>
+        {isAiSpeaking && (
+          <Image 
+            source={require("../../assets/images/ai-chat/small-icon.png")}
+            style={styles.iconImage}
+            resizeMode="contain"
+          />
+        )}
       </View>
       
-      <View style={styles.indicatorContainer}>
-        <View style={styles.iconContainer}>
-          <View style={[styles.icon, isAiSpeaking && styles.aiIcon]}>
-            <Text style={styles.iconEmoji}>
-              {isAiSpeaking ? '👶' : '👤'}
-            </Text>
-          </View>
-        </View>
-
+      <View style={styles.bubbleContainer}>
         <View style={styles.dotsContainer}>
           <Animated.View 
             style={[
@@ -87,52 +84,40 @@ export const TypingIndicator = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#F5F5F5',
-  },
-  headerText: {
-    fontSize: 12,
-    color: '#666666',
-    fontWeight: '500',
-  },
-  indicatorContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    paddingHorizontal: s(16),
+    paddingVertical: vs(8),
+    alignItems: 'flex-end',
   },
   iconContainer: {
-    marginRight: 4,
-  },
-  icon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E5E5E5',
+    width: s(32),
+    height: s(32),
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: s(8),
+    marginBottom: vs(2),
   },
-  aiIcon: {
-    backgroundColor: '#FF4B6E',
+  iconImage: {
+    width: s(32),
+    height: s(32),
   },
-  iconEmoji: {
-    fontSize: 16,
+  bubbleContainer: {
+    backgroundColor: colors.textWhite,
+    borderRadius: rbr(20),
+    borderBottomLeftRadius: rbr(4),
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    paddingVertical: vs(16),
+    paddingHorizontal: s(20),
   },
   dotsContainer: {
     flexDirection: 'row',
-    gap: 6,
+    gap: s(6),
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#999999',
+    width: s(8),
+    height: s(8),
+    borderRadius: rbr(4),
+    backgroundColor: colors.textPrimary,
   },
 });

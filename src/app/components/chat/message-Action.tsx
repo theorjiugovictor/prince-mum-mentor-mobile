@@ -1,6 +1,7 @@
-// src/app/components/chat/MessageActions.tsx
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { colors } from '@/src/core/styles';
+import { s, vs } from '@/src/core/styles/scaling';
 
 interface MessageActionsProps {
   onLike: () => void;
@@ -9,44 +10,40 @@ interface MessageActionsProps {
   onCopy: () => void;
 }
 
-export const MessageActions = ({ 
-  onLike, 
-  onDislike, 
+export const MessageActions = ({
+  onLike,
+  onDislike,
   onRefresh,
-  onCopy 
+  onCopy,
 }: MessageActionsProps) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.actionButton}
-        onPress={onLike}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.actionIcon}>👍</Text>
+      <TouchableOpacity style={styles.actionButton} onPress={onCopy} activeOpacity={0.7}>
+        <Image
+          source={require('../../assets/images/ai-chat/copy.png')}
+          style={styles.icon}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.actionButton}
-        onPress={onDislike}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.actionIcon}>👎</Text>
+      <TouchableOpacity style={styles.actionButton} onPress={onLike} activeOpacity={0.7}>
+        <Image
+          source={require('../../assets/images/ai-chat/like.png')}
+          style={styles.icon}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.actionButton}
-        onPress={onRefresh}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.actionIcon}>🔄</Text>
+      <TouchableOpacity style={styles.actionButton} onPress={onDislike} activeOpacity={0.7}>
+        <Image
+          source={require('../../assets/images/ai-chat/dislike.png')}
+          style={styles.icon}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.actionButton}
-        onPress={onCopy}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.actionIcon}>📋</Text>
+      <TouchableOpacity style={styles.actionButton} onPress={onRefresh} activeOpacity={0.7}>
+        <Image
+          source={require('../../assets/images/ai-chat/maximize-circle.png')}
+          style={styles.icon}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -55,21 +52,18 @@ export const MessageActions = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: s(16),
+    paddingVertical: vs(8),
+    gap: s(12),
   },
   actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+    padding: s(8),
   },
-  actionIcon: {
-    fontSize: 16,
+  icon: {
+    width: s(20),
+    height: s(20),
+    tintColor: colors.textGrey1,
   },
 });

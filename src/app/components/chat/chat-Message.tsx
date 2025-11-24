@@ -1,103 +1,159 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Linking,
+} from "react-native";
+import { colors, typography } from "@/src/core/styles";
+import { s, vs, rbr } from "@/src/core/styles/scaling";
 
 interface ChatMessageProps {
   message: string;
   isUser: boolean;
   timestamp?: string;
+  link?: {
+    url: string;
+    title: string;
+  };
 }
 
-export const ChatMessage = ({ message, isUser, timestamp }: ChatMessageProps) => {
+export const ChatMessage = ({
+  message,
+  isUser,
+  timestamp,
+  link,
+}: ChatMessageProps) => {
+  const handleLinkPress = () => {
+    if (link?.url) {
+      Linking.openURL(link.url);
+    }
+  };
+
   return (
-    <View style={[styles.container, isUser ? styles.userContainer : styles.botContainer]}>
+    <View
+      style={[
+        styles.container,
+        isUser ? styles.userContainer : styles.botContainer,
+      ]}
+    >
       {!isUser && (
         <View style={styles.botIconContainer}>
-          <View style={styles.botIcon}>
-            <Text style={styles.botEmoji}>👶</Text>
-          </View>
+          <Image
+            source={require("../../assets/images/ai-chat/small-icon.png")}
+            style={styles.topIcon}
+          />
         </View>
       )}
-      
-      <View style={[styles.bubble, isUser ? styles.userBubble : styles.botBubble]}>
-        <Text style={[styles.messageText, isUser ? styles.userText : styles.botText]}>
+
+      <View
+        style={[styles.bubble, isUser ? styles.userBubble : styles.botBubble]}
+      >
+        <Text
+          style={[
+            styles.messageText,
+            isUser ? styles.userText : styles.botText,
+          ]}
+        >
           {message}
         </Text>
+
+        {/* Link Preview - Inside the same bubble */}
+        {!isUser && link && (
+          <TouchableOpacity
+            style={styles.linkContainer}
+            onPress={handleLinkPress}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={require("../../assets/images/ai-chat/link-icon.png")}
+              style={styles.linkIcon}
+            />
+            <Text style={styles.linkText} numberOfLines={1}>
+              {link.title}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
-      
-      {isUser && (
-        <View style={styles.userIconContainer}>
-          <View style={styles.userIcon}>
-            <Text style={styles.userEmoji}>👤</Text>
-          </View>
-        </View>
-      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    marginVertical: 8,
-    paddingHorizontal: 16,
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    marginVertical: vs(8),
+    paddingHorizontal: s(16),
+    alignItems: "flex-end",
   },
   userContainer: {
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   botContainer: {
-    justifyContent: 'flex-start',
+    justifyContent: "flex-start",
   },
   botIconContainer: {
-    marginRight: 8,
+    width: s(32),
+    height: s(32),
+    marginRight: s(8),
+    marginBottom: vs(2),
+    justifyContent: "center",
+    alignItems: "center",
   },
-  botIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FF4B6E',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  botEmoji: {
-    fontSize: 16,
-  },
-  userIconContainer: {
-    marginLeft: 8,
-  },
-  userIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E5E5E5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userEmoji: {
-    fontSize: 16,
+  topIcon: {
+    width: s(32),
+    height: s(32),
+    resizeMode: "contain",
   },
   bubble: {
-    maxWidth: '70%',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    maxWidth: s(343), // Figma width
+    paddingVertical: vs(12),
+    paddingHorizontal: s(16),
+    borderRadius: rbr(20),
   },
   userBubble: {
-    backgroundColor: '#FF4B6E',
-    borderTopRightRadius: 4,
+    backgroundColor: colors.primary,
+    borderBottomRightRadius: rbr(4),
   },
   botBubble: {
-    backgroundColor: '#F5F5F5',
-    borderTopLeftRadius: 4,
+    backgroundColor: colors.textWhite,
+    borderBottomLeftRadius: rbr(4),
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   messageText: {
-    fontSize: 15,
-    lineHeight: 20,
+    ...typography.bodyMedium,
+    lineHeight: vs(20),
+    textAlign: "left",
   },
   userText: {
-    color: '#FFFFFF',
+    color: colors.textWhite,
   },
   botText: {
-    color: '#1A1A1A',
+    color: colors.textPrimary,
+  },
+  // Link Preview Styles
+  linkContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: colors.outlineVariant, // Figma soft grey #E5E5E5
+    borderRadius: rbr(8), // Figma rounded corners
+
+    marginTop: vs(12),
+    gap: s(8),
+    width: "100%", // Fill bubble width
+  },
+  linkIcon: {
+    width: s(24), // Figma correct icon size
+    height: s(24),
+    resizeMode: "contain",
+  },
+  linkText: {
+    flex: 1,
+    fontSize: typography.labelMedium.fontSize, // Figma type scale
+    fontFamily: typography.labelMedium.fontFamily,
+    color: colors.textPrimary,
   },
 });

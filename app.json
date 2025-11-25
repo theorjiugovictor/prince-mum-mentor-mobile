@@ -4,12 +4,13 @@
     "slug": "MumMentorMobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "@/src/assets/images/logo.png",
+    "icon": "./src/assets/images/logo.png",
     "scheme": "mummentor",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hng.mummentor"
     },
     "android": {
       "adaptiveIcon": {

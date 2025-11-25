@@ -1,8 +1,7 @@
-// screens/ProfileScreen.tsx
 import { logoutUser } from "@/src/core/services/authService";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Image,
   ScrollView,
@@ -11,15 +10,22 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import EditProfileModal from "./EditProfileScreen";
-import LogoutModal from "./LogoutModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// --- Component Imports ---
+import EditProfileModal from "./EditProfileScreen";
+import LogoutModal from "./LogoutModal";
 
+/**
+ * @fileoverview ProfileScreen component displaying user information and settings menu.
+ * @exports ProfileScreen
+ */
 export default function ProfileScreen({ navigation }: any) {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [showLogout, setShowLogout] = useState(false);
+  // --- State Variables ---
+  const [modalVisible, setModalVisible] = useState(false); // Controls Edit Profile Modal
+  const [showLogout, setShowLogout] = useState(false); // Controls Logout Confirmation Modal
 
+  // --- Mock Data (Replace with real data fetch/context) ---
   const user = {
     name: "Tracy Michaels",
     role: "New mom",
@@ -32,25 +38,37 @@ export default function ProfileScreen({ navigation }: any) {
     description: "Manage your baby's profile, age, and key details.",
   };
 
-  const handleLogout = async () => {
+  // --- Handlers ---
+
+  /** Handles the final logout action after confirmation. */
+  const handleLogout = useCallback(async () => {
     try {
+      // Execute the logout service call
       await logoutUser();
+      // Navigate to the sign-in screen
       router.replace("/(auth)/SignInScreen");
     } catch (error) {
       console.error("Error logging out:", error);
+      // Optionally show an alert if logout fails
     }
-  };
+  }, []);
 
+  // --- Render ---
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
 
-        {/* Profile Card */}
+        {/* --- Profile Card --- */}
         <View style={styles.profileCard}>
-          <Image source={{ uri: user.image }} style={styles.avatar} />
+          <Image
+            source={{ uri: user.image }}
+            style={styles.avatar}
+            accessibilityLabel="User profile avatar"
+          />
           <View style={styles.profileInfoCard}>
             <View style={styles.profileInfo}>
               <Text style={styles.userName}>{user.name}</Text>
@@ -59,20 +77,22 @@ export default function ProfileScreen({ navigation }: any) {
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => setModalVisible(true)}
+              accessibilityLabel="Edit Profile"
             >
               <Text style={styles.editButtonText}>Edit profile</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Your Children Section */}
+        {/* --- Your Children Section --- */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Children</Text>
-
           <View style={styles.menuItemWrapper}>
             <TouchableOpacity
               style={styles.childCard}
               onPress={() => router.push("/profile/ChildInfoScreen")}
+              accessibilityRole="button"
+              accessibilityLabel="Manage child's profile details"
             >
               <View style={styles.childInfo}>
                 <Feather name="user" size={20} color="#666" />
@@ -88,34 +108,35 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Account Settings */}
+        {/* --- Account Settings Section --- */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Settings</Text>
-
           <View style={styles.menuItemWrapper}>
+            {/* Data & Privacy */}
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.menuItem, styles.menuItemTop]}
               onPress={() => router.push("./profile/DataPrivacyScreen")}
+              accessibilityRole="button"
             >
               <Feather name="shield" size={20} color="#666" />
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuTitle}>Data & Privacy</Text>
-                <Text style={styles.menuSubtitle}>
-                  Manage your personal data
-                </Text>
+                <Text style={styles.menuSubtitle}>Manage your personal data</Text>
               </View>
               <Feather name="chevron-right" size={20} color="#999" />
             </TouchableOpacity>
 
+            {/* Password */}
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.menuItem, styles.menuItemBottom]}
               onPress={() => router.push("./profile/ChangePasswordScreen")}
+              accessibilityRole="button"
             >
-              <Feather name="settings" size={20} color="#666" />
+              <Feather name="lock" size={20} color="#666" />
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuTitle}>Password</Text>
                 <Text style={styles.menuSubtitle}>
-                  Manage app settings, email, and preferences
+                  Change or reset your account password
                 </Text>
               </View>
               <Feather name="chevron-right" size={20} color="#999" />
@@ -123,17 +144,17 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Preferences */}
+        {/* --- Preferences Section --- */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
-
           <View style={styles.menuItemWrapper}>
-            <TouchableOpacity style={styles.menuItem}>
+            {/* Notification */}
+            <TouchableOpacity style={styles.menuItem} accessibilityRole="button">
               <Feather name="bell" size={20} color="#666" />
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuTitle}>Notification</Text>
                 <Text style={styles.menuSubtitle}>
-                  Choose what notifications you&apos;d like to receive
+                  Choose what notifications you'd like to receive
                 </Text>
               </View>
               <Feather name="chevron-right" size={20} color="#999" />
@@ -141,14 +162,15 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Others */}
+        {/* --- Others Section --- */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Others</Text>
-
           <View style={styles.menuItemWrapper}>
+            {/* About */}
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.menuItem, styles.menuItemTop]}
               onPress={() => router.push("./profile/AboutScreen")}
+              accessibilityRole="button"
             >
               <Feather name="info" size={20} color="#666" />
               <View style={styles.menuTextContainer}>
@@ -160,9 +182,12 @@ export default function ProfileScreen({ navigation }: any) {
               <Feather name="chevron-right" size={20} color="#999" />
             </TouchableOpacity>
 
+            {/* Log Out */}
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.menuItem, styles.menuItemBottom]}
               onPress={() => setShowLogout(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Log out of the account"
             >
               <Feather name="log-out" size={20} color="#E63946" />
               <View style={styles.menuTextContainer}>
@@ -177,14 +202,14 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.footerSpacing} />
       </ScrollView>
 
-      {/* Edit Profile Modal */}
+      {/* --- Modals --- */}
       <EditProfileModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />
-
       <LogoutModal
         visible={showLogout}
         onCancel={() => setShowLogout(false)}
@@ -194,23 +219,28 @@ export default function ProfileScreen({ navigation }: any) {
   );
 }
 
+// --- Styles ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8F8F8", // Using a light background for the whole screen
+  },
+  scrollContent: {
+    paddingBottom: 40, // Ensure content isn't cut off by the safe area bottom edge
   },
   header: {
     padding: 20,
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
+    marginBottom: 10,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "600",
+    fontSize: 26, // Increased size for better prominence
+    fontWeight: "700", // Bolder weight
+    color: "#333",
   },
   profileCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
     padding: 20,
-    marginTop: 10,
     alignItems: "center",
     flexDirection: "row",
     gap: 16,
@@ -219,18 +249,19 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    marginBottom: 12,
   },
   profileInfoCard: {
     flexDirection: "column",
+    flex: 1,
   },
   profileInfo: {
     marginBottom: 16,
   },
   userName: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 22, // Slightly larger name
+    fontWeight: "800",
     marginBottom: 4,
+    color: "#333",
   },
   userRole: {
     fontSize: 14,
@@ -238,34 +269,38 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: "#E63946",
-    paddingHorizontal: 32,
-    paddingVertical: 10,
+    paddingHorizontal: 20, // Adjusted padding
+    paddingVertical: 8,
     borderRadius: 8,
+    alignSelf: "flex-start", // Keep button tight to text
   },
   editButtonText: {
     color: "#FFF",
     fontWeight: "600",
   },
   section: {
-    marginTop: 20,
-    padding: 10,
+    marginTop: 25, // Increased spacing between sections
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 18, // Slightly smaller title to distinguish from header
+    fontWeight: "700",
     paddingHorizontal: 20,
     marginBottom: 10,
     color: "#333",
   },
+  menuItemWrapper: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10, // Slightly more prominent rounded corners
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: "#E0E0E0", // Light border to define the group
+    overflow: "hidden", // Ensures internal borders/separators work
+  },
   childCard: {
-    backgroundColor: "#FFF",
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderRadius: 8,
-    borderColor: "#F0F0F0",
   },
   childInfo: {
     flexDirection: "row",
@@ -280,22 +315,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
+    color: "#333",
   },
   childDescription: {
     fontSize: 12,
-    color: "#666",
-  },
-  menuItemWrapper: {
-    backgroundColor: "#FFF",
-    borderWidth: 1,
-    borderRadius: 8,
-    borderColor: "#F0F0F0",
+    color: "#888", // Darker subtle color
   },
   menuItem: {
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+  },
+  menuItemTop: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0", // Separator line for items
+  },
+  menuItemBottom: {
+    // Last item in the group, no bottom border needed within the wrapper
   },
   menuTextContainer: {
     marginLeft: 12,
@@ -305,9 +343,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginBottom: 4,
+    color: "#333",
   },
   menuSubtitle: {
     fontSize: 12,
-    color: "#666",
+    color: "#888",
+  },
+  footerSpacing: {
+    height: 40,
   },
 });

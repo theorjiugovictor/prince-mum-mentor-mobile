@@ -62,9 +62,10 @@ const quickActions: QuickAction[] = [
   },
 ];
 
+// --- Greeting Function ---
 /**
- * Determines the appropriate greeting based on the current hour.
- * @returns {string} The time-based greeting (e.g., "Good Morning").
+ * Determines the appropriate greeting based on the current time of day.
+ * @returns {string} The time-based greeting.
  */
 const getGreeting = (): string => {
   const hour = new Date().getHours();
@@ -76,15 +77,14 @@ const getGreeting = (): string => {
 };
 
 /**
- * @fileoverview Home component representing the main landing screen of the application.
- * It displays user greetings, quick actions, and a list of today's tasks.
+ * @fileoverview Home screen component displaying user data, quick actions, and tasks.
  * @exports Home
  */
 const Home = () => {
   // --- State Variables ---
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
-  const [isAppAction, setIsAppAction] = useState(false); // Flag for actions like task completion/deletion
+  const [isAppAction, setIsAppAction] = useState(false); // Used to differentiate initial load from subsequent actions (e.g., refreshing after completion)
 
   const [user, setUser] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
@@ -96,7 +96,7 @@ const Home = () => {
 
   // --- Data Fetching Functions ---
 
-  /** Fetches the current user data from the service. */
+  /** Fetches the current user data. */
   const loadUser = useCallback(async () => {
     setIsLoadingUser(true);
     try {
@@ -104,16 +104,15 @@ const Home = () => {
       setUser(response || null);
     } catch (error) {
       console.log("User fetch error:", error);
-      // Optionally handle navigation to sign-in if user fetch fails critically
     } finally {
       setIsLoadingUser(false);
     }
   }, []);
 
-  /** Fetches the list of tasks for the current user. */
+  /** Fetches the list of user tasks. */
   const listUserTasks = useCallback(async () => {
     setIsLoadingTasks(true);
-    setIsAppAction(true); // Treat task list refresh as a significant action
+    setIsAppAction(true);
     try {
       const response = await fetchTasks();
       if (!response || !response.data) {
@@ -138,14 +137,14 @@ const Home = () => {
 
   // --- Task Modal Handlers ---
 
-  /** Called after a new task is successfully created. */
+  /** Handler executed after a task is successfully created. */
   const handleTaskCreated = useCallback(async () => {
     setIsFormModalVisible(false);
     setIsSuccessModalVisible(true);
     await listUserTasks(); // Refresh the task list
   }, [listUserTasks]);
 
-  /** Called when the success modal is dismissed. */
+  /** Handler to dismiss the task success modal. */
   const handleSuccessDone = useCallback(() => {
     setIsSuccessModalVisible(false);
   }, []);
@@ -156,8 +155,7 @@ const Home = () => {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // NOTE: logoutUser() must be imported and implemented for actual logout
-      // await logoutUser();
+      // NOTE: Placeholder for actual logout service call
       router.replace("/(auth)/SignInScreen");
     } catch (error) {
       console.error("Logout error:", error);
@@ -168,21 +166,19 @@ const Home = () => {
 
   // --- Effects ---
 
-  /** Effect to load data and set up greeting interval on mount. */
+  /** Effect to initialize data loading and set up the greeting timer. */
   useEffect(() => {
     loadUser();
     listUserTasks();
 
-    // Set up interval to update greeting every minute (60000ms)
     const greetingInterval = setInterval(() => {
       setGreeting(getGreeting());
-    }, 60000);
+    }, 60000); // Updates every minute
 
     return () => clearInterval(greetingInterval);
   }, [loadUser, listUserTasks]);
 
   // --- Render ---
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar
@@ -193,37 +189,47 @@ const Home = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Top Bar: Greeting & Notifications */}
+        {/* === Top Bar: Greeting & Notifications === */}
         <View style={styles.topBar}>
           <View>
             <TouchableOpacity
               onPress={() => router.push("./profile/ProfileScreen")}
+              accessibilityRole="button"
             >
               <View style={styles.greetingRow}>
-                <Image source={profileImage} style={styles.profileAvatar} />
+                <Image
+                  source={profileImage}
+                  style={styles.profileAvatar}
+                  accessibilityLabel="User Profile Picture"
+                />
                 <Text style={styles.greetingLabel}>
-                  Hi,{" "}
-                  {isLoadingUser
-                    ? "..."
-                    : user?.full_name?.split(" ")[0] || "User"}
+                  Hi, {isLoadingUser ? "..." : user?.full_name?.split(" ")[0] || "User"}
                 </Text>
               </View>
             </TouchableOpacity>
             <Text style={styles.greetingTitle}>{greeting}</Text>
           </View>
 
-          <TouchableOpacity onPress={() => router.push("../notifications")}>
-            <Image source={notificationIcon} style={styles.notificationIcon} />
+          <TouchableOpacity
+            onPress={() => router.push("../notifications")}
+            accessibilityLabel="Notifications"
+            accessibilityRole="button"
+          >
+            <Image
+              source={notificationIcon}
+              style={styles.notificationIcon}
+            />
           </TouchableOpacity>
         </View>
 
-        {/* Hero Card */}
+        {/* === Hero Card === */}
         <View style={styles.heroCard}>
           <View style={styles.heroImageWrapper}>
             <Image
               source={heroImage}
               style={styles.heroImage}
               resizeMode="cover"
+              accessibilityIgnoresContainerProperties
             />
           </View>
           <View style={styles.heroText}>
@@ -233,13 +239,13 @@ const Home = () => {
             </Text>
             <PrimaryButton
               title="Chat with Nora AI"
-              onPress={() => {}} // Placeholder for navigation to chat screen
+              onPress={() => {}} // Navigate to chat
               style={styles.heroButton}
             />
           </View>
         </View>
 
-        {/* Quick Actions Section */}
+        {/* === Quick Actions Section === */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
@@ -249,55 +255,41 @@ const Home = () => {
                 style={styles.quickActionCard}
                 activeOpacity={0.9}
                 onPress={() => {
-                  if (action.id === "resources") {
-                    router.push("/resources");
-                  } else if (action.id === "journal") {
-                    // Placeholder for journal screen navigation
-                  }
+                  if (action.id === "resources") router.push("/resources");
+                  // Add journal navigation here
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Go to ${action.title}`}
               >
-                {/* Dynamically load icons/images */}
+                {/* Use the correct asset based on action ID */}
                 {action.id === "journal" ? (
                   <Image
                     source={journalIcon}
-                    style={[
-                      styles.quickActionImage,
-                      styles.quickActionIconSpacing,
-                    ]}
-                  />
-                ) : action.id === "resources" ? (
-                  <Image
-                    source={resourceIcon}
-                    style={[
-                      styles.quickActionImage,
-                      styles.quickActionIconSpacing,
-                    ]}
+                    style={[styles.quickActionImage, styles.quickActionIconSpacing]}
+                    resizeMode="contain"
                   />
                 ) : (
-                  <Feather
-                    name={action.icon}
-                    size={ms(18)}
-                    color={colors.primary}
-                    style={styles.quickActionIconSpacing}
+                  <Image
+                    source={resourceIcon}
+                    style={[styles.quickActionImage, styles.quickActionIconSpacing]}
+                    resizeMode="contain"
                   />
                 )}
                 <Text style={styles.quickActionTitle}>{action.title}</Text>
-                <Text style={styles.quickActionSubtitle}>
-                  {action.subtitle}
-                </Text>
+                <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Today's Task Section */}
+        {/* === Today's Task Section === */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{"Today's Task"}</Text>
             <TouchableOpacity
-              onPress={() => {
-                router.push("../components/TaskPage"); // Placeholder for dedicated Task List screen
-              }}
+              onPress={() => router.push("../components/TaskPage")}
+              accessibilityRole="link"
+              accessibilityLabel="View All Tasks"
             >
               <Text style={styles.viewAllLink}>View All</Text>
             </TouchableOpacity>
@@ -306,6 +298,7 @@ const Home = () => {
           {isLoadingTasks && isAppAction ? (
             <ActivityIndicator size="large" color={colors.primary} />
           ) : tasks.length === 0 ? (
+            /* Empty State */
             <View style={styles.taskCard}>
               <Image source={taskIcon} style={styles.taskIcon} />
               <Text style={styles.taskEmptyTitle}>No task added yet</Text>
@@ -319,6 +312,7 @@ const Home = () => {
               />
             </View>
           ) : (
+            /* Task List */
             <ListTasks
               tasks={tasks}
               callback={listUserTasks}
@@ -327,7 +321,7 @@ const Home = () => {
           )}
         </View>
 
-        {/* Logout Button Section */}
+        {/* === Logout Section === */}
         <View style={styles.logoutSection}>
           <SecondaryButton
             title={isLoggingOut ? "Logging out..." : "Logout"}
@@ -338,24 +332,24 @@ const Home = () => {
         </View>
       </ScrollView>
 
-      {/* Floating Add Task Button (visible only if tasks exist) */}
+      {/* === Floating Add Task Button === */}
       {tasks.length !== 0 && (
         <TouchableOpacity
           style={styles.floatingButton}
           onPress={() => setIsFormModalVisible(true)}
           accessibilityLabel="Add New Task"
+          accessibilityRole="button"
         >
           <Text style={styles.floatingButtonText}>+</Text>
         </TouchableOpacity>
       )}
 
-      {/* Modals */}
+      {/* === Modals === */}
       <TaskCreationFlow
         isVisible={isFormModalVisible}
         onClose={() => setIsFormModalVisible(false)}
         onTaskCreated={handleTaskCreated}
       />
-
       <TaskCreationSuccessModal
         isVisible={isSuccessModalVisible}
         onDone={handleSuccessDone}
@@ -366,7 +360,7 @@ const Home = () => {
 
 export default Home;
 
-// --- Stylesheet ---
+// --- Styles ---
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -548,13 +542,13 @@ const styles = StyleSheet.create({
   logoutButton: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: colors.error, // Using a specific color for destructive action
+    borderColor: colors.error,
   },
   floatingButton: {
     position: "absolute",
     bottom: 30,
     right: 20,
-    width: ms(50), // Increased size slightly for better tap target
+    width: ms(50),
     height: ms(50),
     borderRadius: ms(25),
     backgroundColor: colors.primary,

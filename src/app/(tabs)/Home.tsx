@@ -193,7 +193,7 @@ const Home = () => {
         <View style={styles.topBar}>
           <View>
             <TouchableOpacity
-              onPress={() => router.push("./profile/ProfileScreen")}
+              onPress={() => router.push("../profile/ProfileScreen")}
               accessibilityRole="button"
             >
               <View style={styles.greetingRow}>
@@ -229,7 +229,6 @@ const Home = () => {
               source={heroImage}
               style={styles.heroImage}
               resizeMode="cover"
-              accessibilityIgnoresContainerProperties
             />
           </View>
           <View style={styles.heroText}>

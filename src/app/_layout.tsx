@@ -1,12 +1,16 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Redirect, Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
+// app/_layout.tsx
+
 import React, { useEffect, useState } from "react";
+import { Stack, Redirect } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 import { AuthProvider, useAuth } from "../core/services/authContext";
-import { colors } from "../core/styles/index";
+import { SetupProvider } from "../core/hooks/setupContext";
 import { useAssetLoading } from "../core/utils/assetsLoading";
+import { colors } from "../core/styles/index";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -50,7 +54,7 @@ function RootLayoutContent() {
     }
   }, [isLoaded, isSessionLoading, isCheckingOnboarding]);
 
-  // --- STILL LOADING ---
+  // Still loading assets or session state
   if (!isLoaded || isSessionLoading || isCheckingOnboarding) {
     return (
       <View style={styles.loadingContainer}>
@@ -64,24 +68,24 @@ function RootLayoutContent() {
   // ----------------------------------------------------
   if (!user) {
     if (onboardingComplete) {
-      // User has completed onboarding before, go to sign in
       return (
         <>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(onboarding)" />
             <Stack.Screen name="(auth)" />
+            <Stack.Screen name="setup" />
           </Stack>
           <Redirect href="/(auth)/SignInScreen" />
         </>
       );
     }
 
-    // User has NOT completed onboarding, show onboarding
     return (
       <>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(auth)" />
+          <Stack.Screen name="setup" />
         </Stack>
         <Redirect href="/(onboarding)" />
       </>
@@ -96,6 +100,7 @@ function RootLayoutContent() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="resources" />
+        <Stack.Screen name="setup" />
       </Stack>
       <Redirect href="/(tabs)/Home" />
     </>
@@ -109,7 +114,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <RootLayoutContent />
+        <SetupProvider>
+          <RootLayoutContent />
+        </SetupProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

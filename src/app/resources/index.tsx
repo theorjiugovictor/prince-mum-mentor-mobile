@@ -52,6 +52,13 @@ const ResourcesScreen: React.FC = () => {
     router.push({ pathname: "/resources/[sectionId]", params: { sectionId } });
   };
 
+  const handleResourcePress = (resourceId: string) => {
+    router.push({
+      pathname: "/resources/detail/[resourceId]",
+      params: { resourceId },
+    });
+  };
+
   const hasResults = filteredSections.length > 0;
 
   return (
@@ -116,6 +123,7 @@ const ResourcesScreen: React.FC = () => {
                 title={section.title}
                 resources={displayedResources}
                 onPressViewAll={() => handleViewAll(section.id)}
+                onPressResource={handleResourcePress}
                 style={styles.sectionSpacing}
               />
             );

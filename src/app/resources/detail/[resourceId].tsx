@@ -1,0 +1,125 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useMemo } from "react";
+import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { colors, spacing } from "../../../core/styles";
+import { ms, rfs } from "../../../core/styles/scaling";
+import ResourceDetailView from "../../components/resources/ResourceDetailView";
+import { resourceSections } from "../data";
+import { ResourceListItem } from "../types";
+
+const ResourceDetailScreen: React.FC = () => {
+  const router = useRouter();
+  const { resourceId } = useLocalSearchParams<{ resourceId?: string | string[] }>();
+
+  const normalizedResourceId = Array.isArray(resourceId) ? resourceId[0] : resourceId;
+
+  // Find the resource and its section
+  const { resource, sectionId } = useMemo(() => {
+    for (const section of resourceSections) {
+      const found = section.resources.find((r) => r.id === normalizedResourceId);
+      if (found) {
+        return { resource: found, sectionId: section.id };
+      }
+    }
+    return { resource: null, sectionId: null };
+  }, [normalizedResourceId]);
+
+  // Get related resources: prioritize same section, then add from other sections
+  const relatedResources = useMemo(() => {
+    if (!resource || !sectionId) return [];
+
+    const related: ResourceListItem[] = [];
+    
+    // First, get resources from the same section (excluding current resource)
+    const currentSection = resourceSections.find((s) => s.id === sectionId);
+    if (currentSection) {
+      const sameSectionResources = currentSection.resources
+        .filter((r) => r.id !== resource.id)
+        .slice(0, 3);
+      related.push(...sameSectionResources);
+    }
+
+    // If we need more, add from other sections
+    if (related.length < 3) {
+      const needed = 3 - related.length;
+      const otherSectionResources = resourceSections
+        .filter((s) => s.id !== sectionId)
+        .flatMap((s) => s.resources)
+        .filter((r) => r.id !== resource.id)
+        .slice(0, needed);
+      related.push(...otherSectionResources);
+    }
+
+    return related;
+  }, [resource, sectionId]);
+
+  if (!resource) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <StatusBar barStyle="dark-content" backgroundColor={colors.backgroundMain} />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Resource not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const handleSaveForLater = () => {
+    // TODO: Implement save for later functionality
+    console.log("Save for later pressed");
+  };
+
+  const handleWatchNow = () => {
+    // TODO: Implement video player or navigation
+    console.log("Watch now pressed:", resource.videoUrl);
+  };
+
+  const handleRelatedResourcePress = (relatedResourceId: string) => {
+    router.push({
+      pathname: "/resources/detail/[resourceId]",
+      params: { resourceId: relatedResourceId },
+    });
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.backgroundMain} />
+      <View style={styles.container}>
+        <ResourceDetailView
+          resource={resource}
+          relatedResources={relatedResources}
+          onBack={() => router.back()}
+          onSaveForLater={handleSaveForLater}
+          onWatchNow={handleWatchNow}
+          onRelatedResourcePress={handleRelatedResourcePress}
+        />
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.backgroundMain,
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: ms(spacing.lg),
+    paddingTop: ms(spacing.xl),
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: ms(spacing.lg),
+  },
+  errorText: {
+    fontSize: rfs(16),
+    color: colors.textSecondary,
+  },
+});
+
+export default ResourceDetailScreen;

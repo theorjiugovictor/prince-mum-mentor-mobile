@@ -1,3 +1,5 @@
+// src/screens/(auth)/SignInScreen.tsx
+
 import React, { useState, useEffect } from 'react';
 import { 
   View, 
@@ -26,6 +28,10 @@ import { login, loginWithGoogle, ApiErrorResponse } from '../../core/services/au
 import { useGoogleAuth, parseGoogleIdToken } from '../../core/services/googleAuthservice';
 import { getDeviceInfo } from '../../core/services/deviceInfoHelper';
 
+// --- Setup Hook Import ---
+import { useSetup } from '../../core/hooks/setupContext';
+import { setupStorage } from '../../core/services/setupStorageService';
+
 export default function SignInScreen() {
   // --- Local State Management ---
   const [email, setEmail] = useState('');
@@ -34,6 +40,9 @@ export default function SignInScreen() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  // --- Setup Hook ---
+  const { refreshSetupData } = useSetup();
 
   // --- Google Auth Hook ---
   const { request, response, promptAsync } = useGoogleAuth();
@@ -84,8 +93,19 @@ export default function SignInScreen() {
       const loginPayload = { email: email.toLowerCase(), password };
       await login(loginPayload); 
 
-      Alert.alert("Welcome Back!", "Login successful.");
-      router.replace('/(tabs)/Home'); 
+      // Refresh setup data and check if setup is completed
+      await refreshSetupData();
+      const isSetupDone = await setupStorage.isSetupCompleted();
+      
+      if (!isSetupDone) {
+        // First time user - redirect to setup
+        Alert.alert("Welcome!", "Let's set up your profile.");
+        router.replace('/setup/Mum');
+      } else {
+        // Returning user - go to home
+        Alert.alert("Welcome Back!", "Login successful.");
+        router.replace('/(tabs)/Home');
+      }
 
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
@@ -130,15 +150,25 @@ export default function SignInScreen() {
         device_name: deviceInfo.device_name,
       });
 
+      // Refresh setup data and check if setup is completed
+      await refreshSetupData();
+      const isSetupDone = await setupStorage.isSetupCompleted();
+
       // Parse user info for display (optional)
       const userInfo = parseGoogleIdToken(idToken);
-      
-      Alert.alert(
-        "Welcome Back!", 
-        userInfo ? `Signed in as ${userInfo.name}` : "Google login successful."
-      );
-      
-      router.replace('/(tabs)/Home');
+
+      if (!isSetupDone) {
+        // First time Google user - redirect to setup
+        Alert.alert("Welcome!", "Let's personalize your experience.");
+        router.replace('/setup/Mum');
+      } else {
+        // Returning Google user - go to home
+        Alert.alert(
+          "Welcome Back!", 
+          userInfo ? `Signed in as ${userInfo.name}` : "Google login successful."
+        );
+        router.replace('/(tabs)/Home');
+      }
 
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;

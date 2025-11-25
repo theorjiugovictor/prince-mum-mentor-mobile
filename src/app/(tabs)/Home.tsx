@@ -152,7 +152,7 @@ const Home = () => {
         <View style={styles.topBar}>
           <View>
             <TouchableOpacity
-              onPress={() => router.push("/profile/ProfileScreen")}
+              onPress={() => router.push("./profile/ProfileScreen")}
             >
               <View style={styles.greetingRow}>
                 <Image source={profileImage} style={styles.profileAvatar} />

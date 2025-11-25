@@ -42,6 +42,9 @@ export default function SignInScreen() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  // --- Setup Hook ---
+  const { refreshSetupData } = useSetup();
+
   // --- Google Auth Hook ---
   const { request, response, promptAsync } = useGoogleAuth();
 
@@ -140,6 +143,10 @@ export default function SignInScreen() {
         device_id: deviceInfo.device_id,
         device_name: deviceInfo.device_name,
       });
+
+      // Refresh setup data and check if setup is completed
+      await refreshSetupData();
+      const isSetupDone = await setupStorage.isSetupCompleted();
 
       // Parse user info for display (optional)
       const userInfo = parseGoogleIdToken(idToken);

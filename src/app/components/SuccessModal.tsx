@@ -19,7 +19,7 @@ interface SuccessModalProps {
   iconComponent?: React.ReactNode;
 }
 
-const SuccessModal: React.FC<SuccessModalProps> = ({
+export const SuccessModal: React.FC<SuccessModalProps> = ({
   visible,
   title = "Set Up Successful",
   message,

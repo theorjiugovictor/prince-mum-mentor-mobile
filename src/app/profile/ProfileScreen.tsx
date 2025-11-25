@@ -191,7 +191,7 @@ export default function ProfileScreen({ navigation }: any) {
             {/* About */}
             <TouchableOpacity
               style={[styles.menuItem, styles.menuItemTop]}
-              onPress={() => router.push("./profile/AboutScreen")}
+              onPress={() => router.push("/profile/AboutScreen")}
               accessibilityRole="button"
             >
               <View style={styles.iconContainer}>

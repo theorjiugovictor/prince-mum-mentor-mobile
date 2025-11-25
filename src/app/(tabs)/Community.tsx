@@ -325,12 +325,8 @@ const Community: React.FC = () => {
               <Text
                 style={[
                   styles.modalPostButton,
-<<<<<<< HEAD
                   !createText.trim() &&
                     !createImage &&
-=======
-                  !createText.trim() && !createImage &&
->>>>>>> dev
                     styles.modalPostButtonDisabled,
                 ]}
               >

@@ -1,8 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   StatusBar,
@@ -11,7 +12,6 @@ import {
   TouchableOpacity,
   View,
   ViewStyle,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -203,7 +203,10 @@ const Home = () => {
                   accessibilityLabel="User Profile Picture"
                 />
                 <Text style={styles.greetingLabel}>
-                  Hi, {isLoadingUser ? "..." : user?.full_name?.split(" ")[0] || "User"}
+                  Hi,{" "}
+                  {isLoadingUser
+                    ? "..."
+                    : user?.full_name?.split(" ")[0] || "User"}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -215,10 +218,7 @@ const Home = () => {
             accessibilityLabel="Notifications"
             accessibilityRole="button"
           >
-            <Image
-              source={notificationIcon}
-              style={styles.notificationIcon}
-            />
+            <Image source={notificationIcon} style={styles.notificationIcon} />
           </TouchableOpacity>
         </View>
 
@@ -234,7 +234,9 @@ const Home = () => {
           <View style={styles.heroText}>
             <Text style={styles.heroTitle}>You are Amazing</Text>
             <Text style={styles.heroSubtitle}>
-              {"You're growing right alongside your child,\nand that's something to be proud of"}
+              {
+                "You're growing right alongside your child,\nand that's something to be proud of"
+              }
             </Text>
             <PrimaryButton
               title="Chat with Nora AI"
@@ -254,7 +256,8 @@ const Home = () => {
                 style={styles.quickActionCard}
                 activeOpacity={0.9}
                 onPress={() => {
-                  if (action.id === "resources") router.push("/resources");
+                  if (action.id === "resources")
+                    router.push("/resources/index");
                   // Add journal navigation here
                 }}
                 accessibilityRole="button"
@@ -264,18 +267,26 @@ const Home = () => {
                 {action.id === "journal" ? (
                   <Image
                     source={journalIcon}
-                    style={[styles.quickActionImage, styles.quickActionIconSpacing]}
+                    style={[
+                      styles.quickActionImage,
+                      styles.quickActionIconSpacing,
+                    ]}
                     resizeMode="contain"
                   />
                 ) : (
                   <Image
                     source={resourceIcon}
-                    style={[styles.quickActionImage, styles.quickActionIconSpacing]}
+                    style={[
+                      styles.quickActionImage,
+                      styles.quickActionIconSpacing,
+                    ]}
                     resizeMode="contain"
                   />
                 )}
                 <Text style={styles.quickActionTitle}>{action.title}</Text>
-                <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
+                <Text style={styles.quickActionSubtitle}>
+                  {action.subtitle}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>

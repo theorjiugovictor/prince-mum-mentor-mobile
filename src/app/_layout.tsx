@@ -1,31 +1,18 @@
-<<<<<<< HEAD
-import { store } from "@/src/store/store";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Redirect, Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Provider } from "react-redux";
-import { AuthProvider, useAuth } from "../core/services/authContext";
-import { colors } from "../core/styles/index";
-import { useAssetLoading } from "../core/utils/assetsLoading";
-=======
 // app/_layout.tsx
 
-import React, { useEffect, useState } from "react";
-import { Stack } from "expo-router";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import * as SplashScreen from "expo-splash-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Stack, router } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { router } from "expo-router";
 
-import { AuthProvider, useAuth } from "../core/services/authContext";
+import { store } from "@/src/store/store";
+import { Provider } from "react-redux";
 import { SetupProvider } from "../core/hooks/setupContext";
-import { useAssetLoading } from "../core/utils/assetsLoading";
+import { AuthProvider, useAuth } from "../core/services/authContext";
 import { colors } from "../core/styles/index";
->>>>>>> dev
+import { useAssetLoading } from "../core/utils/assetsLoading";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,7 +30,10 @@ function useOnboardingStatusLoader() {
       try {
         const value = await AsyncStorage.getItem(ONBOARDING_KEY);
         setOnboardingComplete(value === "true");
-        console.log('📱 Onboarding status:', value === "true" ? 'Complete' : 'Not complete');
+        console.log(
+          "📱 Onboarding status:",
+          value === "true" ? "Complete" : "Not complete"
+        );
       } catch (error) {
         console.error("Failed to load onboarding status:", error);
       }
@@ -61,13 +51,10 @@ function useOnboardingStatusLoader() {
 function RootLayoutContent() {
   const isLoaded = useAssetLoading();
   const { user, isSessionLoading } = useAuth();
-<<<<<<< HEAD
+
   const { onboardingComplete, isCheckingOnboarding } =
     useOnboardingStatusLoader();
-=======
-  const { onboardingComplete, isCheckingOnboarding } = useOnboardingStatusLoader();
   const [hasNavigated, setHasNavigated] = useState(false);
->>>>>>> dev
 
   // Hide splash only when EVERYTHING is ready
   useEffect(() => {
@@ -82,9 +69,9 @@ function RootLayoutContent() {
       return;
     }
 
-    console.log('🚀 Initial navigation check:', { 
-      user: !!user, 
-      onboardingComplete 
+    console.log("🚀 Initial navigation check:", {
+      user: !!user,
+      onboardingComplete,
     });
 
     // Perform initial navigation only once
@@ -92,21 +79,28 @@ function RootLayoutContent() {
 
     if (user) {
       // User is logged in - go to home
-      console.log('✅ User logged in - redirecting to Home');
+      console.log("✅ User logged in - redirecting to Home");
       router.replace("/(tabs)/Home");
     } else {
       // User is not logged in
       if (onboardingComplete) {
         // Onboarding done - go to sign in
-        console.log('✅ Onboarding complete - redirecting to SignIn');
+        console.log("✅ Onboarding complete - redirecting to SignIn");
         router.replace("/(auth)/SignInScreen");
       } else {
         // Show onboarding
-        console.log('✅ Onboarding not complete - showing onboarding');
+        console.log("✅ Onboarding not complete - showing onboarding");
         router.replace("/(onboarding)");
       }
     }
-  }, [isLoaded, isSessionLoading, isCheckingOnboarding, user, onboardingComplete, hasNavigated]);
+  }, [
+    isLoaded,
+    isSessionLoading,
+    isCheckingOnboarding,
+    user,
+    onboardingComplete,
+    hasNavigated,
+  ]);
 
   // Still loading assets or session state
   if (!isLoaded || isSessionLoading || isCheckingOnboarding) {
@@ -117,51 +111,6 @@ function RootLayoutContent() {
     );
   }
 
-<<<<<<< HEAD
-  // ----------------------------------------------------
-  // USER NOT LOGGED IN
-  // ----------------------------------------------------
-  if (!user) {
-    if (onboardingComplete) {
-      return (
-        <>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(onboarding)" />
-            <Stack.Screen name="(auth)" />
-          </Stack>
-          <Redirect href="/(auth)/SignInScreen" />
-        </>
-      );
-    }
-
-    return (
-      <>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="(auth)" />
-        </Stack>
-        <Redirect href="/(onboarding)" />
-      </>
-    );
-  }
-
-  // ----------------------------------------------------
-  // USER LOGGED IN
-  // ----------------------------------------------------
-  return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="categories/[categoryId]"
-          options={{
-            title: "Category",
-          }}
-        />
-      </Stack>
-      <Redirect href="/(tabs)/Home" />
-    </>
-=======
   // Just render the stack - navigation happens in useEffect above
   // ONLY include routes that actually exist in your file structure
   return (
@@ -175,8 +124,8 @@ function RootLayoutContent() {
       <Stack.Screen name="profile" />
       <Stack.Screen name="resources" />
       <Stack.Screen name="components" />
+      <Stack.Screen name="categories/[categoryId]" />
     </Stack>
->>>>>>> dev
   );
 }
 
@@ -186,19 +135,13 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-<<<<<<< HEAD
       <Provider store={store}>
         <AuthProvider>
-          <RootLayoutContent />
+          <SetupProvider>
+            <RootLayoutContent />
+          </SetupProvider>
         </AuthProvider>
       </Provider>
-=======
-      <AuthProvider>
-        <SetupProvider>
-          <RootLayoutContent />
-        </SetupProvider>
-      </AuthProvider>
->>>>>>> dev
     </GestureHandlerRootView>
   );
 }

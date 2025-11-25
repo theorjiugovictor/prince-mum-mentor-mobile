@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import EditProfileModal from "./EditProfileScreen";
 import LogoutModal from "./LogoutModal";
+import { colors, typography } from "@/src/core/styles";
 
 export default function ProfileScreen({ navigation }: any) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -44,6 +45,9 @@ export default function ProfileScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Feather name="arrow-left" size={24} color="#000" />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
 
@@ -127,7 +131,9 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={styles.sectionTitle}>Preferences</Text>
 
           <View style={styles.menuItemWrapper}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem}
+              onPress={() => router.push("/profile/NotificationSettings")}
+            >
               <Feather name="bell" size={20} color="#666" />
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuTitle}>Notification</Text>
@@ -165,7 +171,7 @@ export default function ProfileScreen({ navigation }: any) {
             >
               <Feather name="log-out" size={20} color="#E63946" />
               <View style={styles.menuTextContainer}>
-                <Text style={[styles.menuTitle, { color: "#E63946" }]}>
+                <Text style={[styles.menuTitle, { color: colors.error }]}>
                   Log Out
                 </Text>
                 <Text style={styles.menuSubtitle}>
@@ -196,18 +202,20 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.backgroundMain,
   },
   header: {
-    padding: 20,
-    backgroundColor: "#FFF",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    gap: 16,
+    paddingVertical: 16,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "600",
+    ...typography.heading2
   },
   profileCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: colors.backgroundMain,
     padding: 20,
     marginTop: 10,
     alignItems: "center",
@@ -227,37 +235,34 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   userName: {
-    fontSize: 20,
-    fontWeight: "bold",
     marginBottom: 4,
+    ...typography.bodyLarge,
   },
   userRole: {
-    fontSize: 14,
     color: "#666",
+    ...typography.bodyMedium
   },
   editButton: {
-    backgroundColor: "#E63946",
+    backgroundColor: colors.primary,
     paddingHorizontal: 32,
     paddingVertical: 10,
     borderRadius: 8,
   },
   editButtonText: {
-    color: "#FFF",
-    fontWeight: "600",
+    color: colors.backgroundMain,
+    ...typography.labelMedium
   },
   section: {
     marginTop: 20,
     padding: 10,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    paddingHorizontal: 20,
+    paddingHorizontal: 4,
     marginBottom: 10,
-    color: "#333",
+    ...typography.heading3
   },
   childCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: colors.backgroundMain,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -276,12 +281,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   childName: {
-    fontSize: 16,
-    fontWeight: "600",
+    ...typography.labelLarge,
     marginBottom: 4,
   },
   childDescription: {
-    fontSize: 12,
+    ...typography.labelMedium,
     color: "#666",
   },
   menuItemWrapper: {
@@ -301,12 +305,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuTitle: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...typography.labelLarge,
     marginBottom: 4,
   },
   menuSubtitle: {
-    fontSize: 12,
+    ...typography.labelMedium,
     color: "#666",
   },
 });

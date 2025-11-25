@@ -12,6 +12,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { typography } from "@/src/core/styles";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -233,12 +234,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+    ...typography.heading2
   },
   closeButton: {
     padding: 4,

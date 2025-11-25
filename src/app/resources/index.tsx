@@ -2,12 +2,12 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -84,7 +84,7 @@ const ResourcesScreen: React.FC = () => {
 
           <TouchableOpacity
             onPress={() => {
-              // TODO: Navigate to saved resources when feature is available.
+              router.push("/resources/saved");
             }}
             style={styles.viewSavedButton}
             accessibilityRole="button"

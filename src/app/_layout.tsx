@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider, useAuth } from "../core/services/authContext";
+import { SavedResourcesProvider } from "../core/services/savedResourcesContext";
 import { colors } from "../core/styles/index";
 import { useAssetLoading } from "../core/utils/assetsLoading";
 
@@ -109,7 +110,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <RootLayoutContent />
+        <SavedResourcesProvider>
+          <RootLayoutContent />
+        </SavedResourcesProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

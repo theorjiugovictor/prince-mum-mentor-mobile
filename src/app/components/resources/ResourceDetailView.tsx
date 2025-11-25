@@ -22,6 +22,7 @@ interface ResourceDetailViewProps {
   onSaveForLater?: () => void;
   onWatchNow?: () => void;
   onRelatedResourcePress?: (resourceId: string) => void;
+  saveButtonLabel?: string;
 }
 
 const ResourceDetailView: React.FC<ResourceDetailViewProps> = ({
@@ -31,6 +32,7 @@ const ResourceDetailView: React.FC<ResourceDetailViewProps> = ({
   onSaveForLater,
   onWatchNow,
   onRelatedResourcePress,
+  saveButtonLabel,
 }) => {
   return (
     <View style={styles.container}>
@@ -80,7 +82,7 @@ const ResourceDetailView: React.FC<ResourceDetailViewProps> = ({
         <View style={styles.actionsContainer}>
           <View style={styles.buttonWrapper}>
             <SecondaryButton
-              title="Save for later"
+              title={saveButtonLabel || "Save for later"}
               onPress={onSaveForLater || (() => {})}
             />
           </View>

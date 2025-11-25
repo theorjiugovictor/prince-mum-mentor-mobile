@@ -1,10 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { StatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useSavedResources } from "../../../core/services/savedResourcesContext";
 import { colors, spacing } from "../../../core/styles";
 import { ms, rfs } from "../../../core/styles/scaling";
+import SuccessModal from "../../components/SucessModal";
 import ResourceDetailView from "../../components/resources/ResourceDetailView";
 import { resourceSections } from "../data";
 import { ResourceListItem } from "../types";
@@ -12,6 +14,8 @@ import { ResourceListItem } from "../types";
 const ResourceDetailScreen: React.FC = () => {
   const router = useRouter();
   const { resourceId } = useLocalSearchParams<{ resourceId?: string | string[] }>();
+  const { saveResource, isResourceSaved } = useSavedResources();
+  const [isSaveModalVisible, setIsSaveModalVisible] = useState(false);
 
   const normalizedResourceId = Array.isArray(resourceId) ? resourceId[0] : resourceId;
 
@@ -67,8 +71,12 @@ const ResourceDetailScreen: React.FC = () => {
   }
 
   const handleSaveForLater = () => {
-    // TODO: Implement save for later functionality
-    console.log("Save for later pressed");
+    if (!resource) {
+      return;
+    }
+
+    saveResource(resource.id);
+    setIsSaveModalVisible(true);
   };
 
   const handleWatchNow = () => {
@@ -83,6 +91,15 @@ const ResourceDetailScreen: React.FC = () => {
     });
   };
 
+  const handleCloseSaveModal = () => {
+    setIsSaveModalVisible(false);
+  };
+
+  const handleViewSavedItems = () => {
+    setIsSaveModalVisible(false);
+    router.push("/resources/saved");
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.backgroundMain} />
@@ -94,8 +111,20 @@ const ResourceDetailScreen: React.FC = () => {
           onSaveForLater={handleSaveForLater}
           onWatchNow={handleWatchNow}
           onRelatedResourcePress={handleRelatedResourcePress}
+          saveButtonLabel={resource ? (isResourceSaved(resource.id) ? "Saved" : undefined) : undefined}
         />
       </View>
+      {resource ? (
+        <SuccessModal
+          visible={isSaveModalVisible}
+          onClose={handleCloseSaveModal}
+          title="Saved for Later"
+          message={`${resource.title} has been added to your saved tips.`}
+          buttonText="Done"
+          secondaryButtonText="View saved items"
+          onSecondaryAction={handleViewSavedItems}
+        />
+      ) : null}
     </SafeAreaView>
   );
 };

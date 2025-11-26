@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
-import { setAuthToken, removeAuthToken } from "./authStorage"; // ✅ Import centralized auth storage
+import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
+import { getCurrentUser, UserProfile } from "./userService";
 
 const API_BASE_URL = "https://api.staging.kaizen.emerj.net";
 
@@ -19,6 +20,7 @@ export interface GoogleAuthResult {
     name: string;
     photo?: string;
   };
+  userProfile?: UserProfile; // Backend user profile data
   tokens?: {
     accessToken: string;
     refreshToken: string;
@@ -110,23 +112,25 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
 
       const { access_token, refresh_token } = data.data;
 
-      // ✅ FIXED: Use centralized setAuthToken for access token
+      // ✅ FIX: Use standard setAuthToken() to store token in "NoraAppAuthToken" key
+      // This ensures the token is stored in the same place as email login
       await setAuthToken(access_token);
-      console.log("✅ Access token stored using centralized authStorage");
+      console.log("✅ Token stored using setAuthToken()");
 
-      // Verify token was actually stored
-      const { getAuthToken } = await import("./authStorage");
-      const storedToken = await getAuthToken();
-      console.log("Token verification - stored:", storedToken ? "YES" : "NO");
-
-      if (!storedToken) {
-        console.error("CRITICAL: Token was not stored despite no errors!");
-        throw new Error("Failed to store authentication token");
-      }
-
-      // Store refresh token separately (using SecureStore directly)
+      // Also store refresh_token separately for token refresh functionality
       await SecureStore.setItemAsync("refresh_token", refresh_token);
       console.log("✅ Refresh token stored");
+
+      // ✅ FIX: Fetch user profile from backend after successful authentication
+      // This ensures we have complete user data like email login
+      console.log("📥 Fetching user profile from backend...");
+      const userProfile = await getCurrentUser();
+
+      if (userProfile) {
+        console.log("✅ User profile fetched successfully:", userProfile.email);
+      } else {
+        console.warn("⚠️ Failed to fetch user profile after Google login");
+      }
 
       return {
         success: true,
@@ -135,6 +139,7 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
           name: user?.name || "",
           photo: user?.photo || undefined,
         },
+        userProfile: userProfile || undefined, // Include backend user profile
         tokens: {
           accessToken: access_token,
           refreshToken: refresh_token,
@@ -206,9 +211,8 @@ export const signOutFromGoogle = async (): Promise<{
     // Sign out from Google
     await GoogleSignin.signOut();
 
-    // ✅ FIXED: Use centralized removeAuthToken for access token
+    // ✅ FIX: Use standard removeAuthToken() to clear the auth token
     await removeAuthToken();
-    console.log("✅ Access token removed using centralized authStorage");
 
     // Clear refresh token and device ID
     await SecureStore.deleteItemAsync("refresh_token");
@@ -242,8 +246,7 @@ export const isSignedInToGoogle = async (): Promise<boolean> => {
  */
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
-    // ✅ FIXED: Use centralized getAuthToken
-    const { getAuthToken } = await import("./authStorage");
+    // ✅ FIX: Use standard getAuthToken() to check for authentication
     const accessToken = await getAuthToken();
     return !!accessToken;
   } catch (error) {
@@ -290,9 +293,9 @@ export const refreshAccessToken = async (): Promise<{
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
-    
+
     console.log("🔄 Refreshing access token...");
-    
+
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: {
@@ -302,13 +305,13 @@ export const refreshAccessToken = async (): Promise<{
         refresh_token: refreshToken,
       }),
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || "Failed to refresh token");
     }
-    
+
     if (data.status === "success" && data.data) {
       const { access_token, refresh_token: newRefreshToken } = data.data;
 
@@ -321,7 +324,7 @@ export const refreshAccessToken = async (): Promise<{
 
       return { success: true, accessToken: access_token };
     }
-    
+
     throw new Error("Invalid response from backend");
   } catch (error: any) {
     console.error("❌ Token Refresh Error:", error);
@@ -341,14 +344,13 @@ export const makeAuthenticatedRequest = async (
   options: RequestInit = {}
 ): Promise<Response> => {
   try {
-    // ✅ FIXED: Use centralized getAuthToken
-    const { getAuthToken } = await import("./authStorage");
+    // ✅ FIX: Use standard getAuthToken() to retrieve token
     let accessToken = await getAuthToken();
 
     if (!accessToken) {
       throw new Error("No access token available. Please sign in.");
     }
-    
+
     // First attempt
     let response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
@@ -358,7 +360,7 @@ export const makeAuthenticatedRequest = async (
         "Content-Type": "application/json",
       },
     });
-    
+
     // If 401, try refreshing token
     if (response.status === 401) {
       console.log("🔄 Access token expired, refreshing...");
@@ -368,7 +370,7 @@ export const makeAuthenticatedRequest = async (
       if (!refreshResult.success) {
         throw new Error("Session expired. Please sign in again.");
       }
-      
+
       // Retry request with new token
       accessToken = refreshResult.accessToken!;
       response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -380,7 +382,7 @@ export const makeAuthenticatedRequest = async (
         },
       });
     }
-    
+
     return response;
   } catch (error: any) {
     console.error("❌ API Request Error:", error);
@@ -399,11 +401,11 @@ export const getCurrentUser = async (): Promise<{
   try {
     const response = await makeAuthenticatedRequest("/auth/user");
     const data = await response.json();
-    
+
     if (data.status === "success" && data.data) {
       return { success: true, user: data.data };
     }
-    
+
     throw new Error(data.message || "Failed to get user info");
   } catch (error: any) {
     console.error("❌ Get user error:", error);

@@ -84,6 +84,7 @@ export default function CreateForm() {
           <Pressable
             style={[styles.buttons, styles.buttonSave]}
             onPress={() => handleMilestoneCreation()}
+            disabled={!title && !desc}
           >
             Save
           </Pressable>

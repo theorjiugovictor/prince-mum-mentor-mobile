@@ -1,6 +1,6 @@
 import FormInput from "@/src/app/components/milestone/FormInput";
 import { colors, typography } from "@/src/core/styles";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "react-native-modal";
 
 import { useAppDispatch, useAppSelector } from "@/src/store/hooks";
@@ -17,12 +17,19 @@ export default function EditForm() {
     useAppSelector(getMilestoneStates);
   const dispatch = useAppDispatch();
 
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+
   const currentMilestone = milestoneData.find(
     (milestone) => milestone.id === milestoneToEditId
   );
 
-  const [title, setTitle] = useState(currentMilestone?.title ?? "");
-  const [desc, setDesc] = useState(currentMilestone?.desc ?? "");
+  useEffect(() => {
+    if (currentMilestone) {
+      setTitle(currentMilestone.title);
+      setDesc(currentMilestone.desc);
+    }
+  }, [currentMilestone]);
 
   function handleMilestoneUpdate() {
     const updatedMilestone = {
@@ -76,7 +83,6 @@ export default function EditForm() {
             style={styles.input}
             placeholder="eg. Tried a 5 Minutes Exercise Plan..."
             placeholderTextColor={colors.textGrey2}
-            defaultValue={currentMilestone?.desc ?? ""}
             keyboardType="default"
             autoCapitalize="none"
             value={desc}
@@ -88,6 +94,7 @@ export default function EditForm() {
           <Pressable
             style={[styles.buttons, styles.buttonSave]}
             onPress={handleMilestoneUpdate}
+            disabled={!title && !desc}
           >
             Save
           </Pressable>

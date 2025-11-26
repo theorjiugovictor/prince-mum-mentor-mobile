@@ -1,4 +1,4 @@
-// TaskListItem.tsx - Updated with style guide
+// TaskListItem.tsx - Updated with drag-and-drop support
 import React from 'react';
 import {
   View,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { format, parseISO } from 'date-fns';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, fontFamilies } from '../../core/styles/index';
 import { ms, rfs } from '../../core/styles/scaling';
 
@@ -20,6 +21,8 @@ interface TaskListItemProps {
   onToggleStatus: (taskId: string, status: string) => void;
   onDelete: (taskId: string) => void;
   onPress: () => void;
+  onLongPress?: () => void; // For drag-and-drop
+  isActive?: boolean; // When being dragged
 }
 
 const TaskListItem: React.FC<TaskListItemProps> = ({
@@ -27,9 +30,30 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
   onToggleStatus,
   onDelete,
   onPress,
+  onLongPress,
+  isActive = false,
 }) => {
   return (
-    <View style={styles.taskItem}>
+    <TouchableOpacity
+      style={[
+        styles.taskItem,
+        isActive && styles.taskItemActive,
+      ]}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      disabled={task.status === 'completed'}
+      activeOpacity={0.7}
+      delayLongPress={200}
+    >
+      {/* Drag Handle Icon */}
+      <View style={styles.dragHandle}>
+        <Ionicons
+          name="menu-outline"
+          size={20}
+          color={colors.textGrey2}
+        />
+      </View>
+
       {/* Checkbox */}
       <TouchableOpacity
         style={styles.checkboxContainer}
@@ -43,11 +67,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
       </TouchableOpacity>
 
       {/* Task Content */}
-      <TouchableOpacity
-        style={styles.taskContent}
-        onPress={onPress}
-        disabled={task.status === 'completed'}
-      >
+      <View style={styles.taskContent}>
         <Text
           style={[
             styles.taskTitle,
@@ -71,7 +91,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
         <Text style={styles.taskDateTime}>
           {format(parseISO(task.due_date), 'yyyy - MM - dd')} · {format(parseISO(task.due_date), 'h:mma')}
         </Text>
-      </TouchableOpacity>
+      </View>
 
       {/* Delete Icon */}
       <TouchableOpacity
@@ -80,7 +100,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
       >
         <Image source={trashIcon} style={styles.trashIcon} />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -93,6 +113,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.textWhite,
     borderBottomWidth: 1,
     borderBottomColor: colors.backgroundSubtle,
+  },
+  taskItemActive: {
+    backgroundColor: colors.backgroundSubtle,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  dragHandle: {
+    marginRight: ms(spacing.xs),
+    paddingTop: ms(2),
+    justifyContent: 'center',
   },
   checkboxContainer: {
     marginRight: ms(spacing.sm + 4),

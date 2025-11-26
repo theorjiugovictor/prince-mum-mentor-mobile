@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
-  Clipboard,
   FlatList,
   Image,
   StyleSheet,
@@ -25,7 +24,6 @@ import { ChatInput } from "../components/chat/chat-Input";
 import { ChatMessage } from "../components/chat/chat-Message";
 import { ChatWelcome } from "../components/chat/chat-Welcome";
 import { HistoryEmptyState } from "../components/chat/history-Empty-State";
-import { MessageActions } from "../components/chat/message-Action";
 import { TypingIndicator } from "../components/chat/typing-Indicator";
 
 interface Chat {
@@ -206,29 +204,6 @@ export default function ChatScreen() {
     }
   };
 
-  // Message actions
-  const handleLike = () => {
-    Alert.alert("Liked", "Message feedback recorded");
-  };
-
-  const handleDislike = () => {
-    Alert.alert("Disliked", "Message feedback recorded");
-  };
-
-  const handleRefresh = () => {
-    Alert.alert("Refresh", "This would regenerate the last response");
-  };
-
-  const handleCopy = () => {
-    const lastBotMessage = [...displayMessages]
-      .reverse()
-      .find((m) => !m.isUser);
-    if (lastBotMessage) {
-      Clipboard.setString(lastBotMessage.text);
-      Alert.alert("Copied", "Message copied to clipboard");
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -304,16 +279,6 @@ export default function ChatScreen() {
           {/* Show typing indicator when waiting for first chunk */}
           {isAiSpeaking && !streamingText && (
             <TypingIndicator isAiSpeaking={true} />
-          )}
-
-          {/* Message Actions */}
-          {!isAiSpeaking && displayMessages.length > 0 && (
-            <MessageActions
-              onLike={handleLike}
-              onDislike={handleDislike}
-              onRefresh={handleRefresh}
-              onCopy={handleCopy}
-            />
           )}
 
           {/* Chat Input */}

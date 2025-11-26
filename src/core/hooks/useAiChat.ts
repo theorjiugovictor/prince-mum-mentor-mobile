@@ -255,7 +255,7 @@ export const useDeleteConversation = () => {
     mutationFn: async (conversation_id: string) => {
       try {
         const res = await authApi.delete(
-          `/api/v1/ai-chat/conversations/${conversation_id}`
+          `/api/v1/ai-chat/chats/${conversation_id}`
         );
 
         // 1. Force failure if server didn't return 200-299

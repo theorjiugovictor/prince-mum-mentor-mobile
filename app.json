@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hng.mummentor"
+      "bundleIdentifier": "com.hng.mummentor",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Allow $(PRODUCT_NAME) to use Face ID."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +22,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.hng.mummentor"
+      "package": "com.hng.mummentor",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",

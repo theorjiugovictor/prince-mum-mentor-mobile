@@ -31,8 +31,8 @@ export const configureGoogleSignIn = () => {
   GoogleSignin.configure({
     webClientId: GOOGLE_WEB_CLIENT_ID, // Required for Android
     iosClientId: GOOGLE_IOS_CLIENT_ID, // Required for iOS
-    offlineAccess: true, // Required to get idToken
-    scopes: ["profile", "email"], // Optional, these are default
+    forceCodeForRefreshToken: true, // ← Add this
+    scopes: ["profile", "email", "openid"], // ← Add 'openid'
   });
 
   console.log("✅ Google Sign-In configured");
@@ -54,33 +54,54 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
     const userInfo = await GoogleSignin.signIn();
     console.log("✅ Google Sign-In successful");
 
-    // Check if we got an ID token
-    if (!userInfo?.idToken) {
+    // ✅ FIXED: Get token from correct location (userInfo.data.idToken)
+    const idToken = userInfo?.data?.idToken;
+    const user = userInfo?.data?.user;
+
+    if (!idToken) {
       throw new Error("No ID token received from Google");
     }
+
     console.log("📤 Authenticating with backend...");
 
-    // Get optional device info
-    const deviceId = (await SecureStore.getItemAsync("device_id")) || undefined;
+    // ✅ FIXED: Generate device ID if it doesn't exist
+    let deviceId = await SecureStore.getItemAsync("device_id");
+    if (!deviceId) {
+      // Generate a unique device ID (UUID-like)
+      deviceId = `device-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
+      await SecureStore.setItemAsync("device_id", deviceId);
+    }
+
     const deviceName = "Mobile App";
-    // Send ID token to YOUR backend
-    const response = await fetch(`${API_BASE_URL}/google/login`, {
+
+    console.log("🔧 Request payload:", {
+      id_token: idToken.substring(0, 50) + "...",
+      device_id: deviceId,
+      device_name: deviceName,
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/google/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id_token: userInfo?.idToken,
+        id_token: idToken,
         device_id: deviceId,
         device_name: deviceName,
       }),
     });
+
     const data = await response.json();
+    console.log("📥 Backend response:", data);
 
     if (!response.ok) {
       console.error("❌ Backend authentication failed:", data);
       throw new Error(data.message || "Backend authentication failed");
     }
+
     if (data.status === "success" && data.data) {
       console.log("✅ Backend authentication successful");
 
@@ -90,17 +111,12 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
       await SecureStore.setItemAsync("access_token", access_token);
       await SecureStore.setItemAsync("refresh_token", refresh_token);
 
-      // Store device ID if we didn't have one
-      if (!deviceId && deviceName) {
-        await SecureStore.setItemAsync("device_id", deviceName);
-      }
-
       return {
         success: true,
         user: {
-          email: userInfo?.user.email,
-          name: userInfo?.user.name || "",
-          photo: userInfo?.user.photo || undefined,
+          email: user?.email,
+          name: user?.name || "",
+          photo: user?.photo || undefined,
         },
         tokens: {
           accessToken: access_token,
@@ -108,11 +124,11 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
         },
       };
     }
+
     throw new Error("Invalid response from backend");
   } catch (error: any) {
     console.error("❌ Google Sign-In Error:", error);
 
-    // Handle specific error cases
     if (error.code === "SIGN_IN_CANCELLED") {
       return {
         success: false,
@@ -152,7 +168,6 @@ export const signOutFromGoogle = async (): Promise<{
     console.log("🚪 Signing out from Google...");
 
     const refreshToken = await SecureStore.getItemAsync("refresh_token");
-    // Revoke session on backend if refresh token exists
     if (refreshToken) {
       try {
         await fetch(`${API_BASE_URL}/auth/revoke`, {
@@ -167,7 +182,6 @@ export const signOutFromGoogle = async (): Promise<{
         console.log("✅ Session revoked on backend");
       } catch (error) {
         console.warn("⚠️ Failed to revoke session on backend:", error);
-        // Continue with local sign out even if backend fails
       }
     }
 

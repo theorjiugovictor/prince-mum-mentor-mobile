@@ -2,9 +2,8 @@ import { colors } from "@/src/core/styles";
 import { rfs, s, vs } from "@/src/core/styles/scaling";
 import { showToast } from "@/src/core/utils/toast";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Clipboard,
   FlatList,
   Image,
   StyleSheet,
@@ -25,8 +24,8 @@ import { ChatInput } from "../components/chat/chat-Input";
 import { ChatMessage } from "../components/chat/chat-Message";
 import { ChatWelcome } from "../components/chat/chat-Welcome";
 import { HistoryEmptyState } from "../components/chat/history-Empty-State";
-import { MessageActions } from "../components/chat/message-Action";
 import { TypingIndicator } from "../components/chat/typing-Indicator";
+import { getCurrentUser } from "@/src/core/services/userService";
 
 interface Chat {
   id: string;
@@ -51,6 +50,9 @@ export default function ChatScreen() {
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [showHistoryEmpty, setShowHistoryEmpty] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
   const flatListRef = useRef<FlatList>(null);
   const hasReceivedChunkRef = useRef(false);
 
@@ -59,6 +61,24 @@ export default function ChatScreen() {
   const deleteConversation = useDeleteConversation();
   const renameConversation = useRenameConversation();
   const { data: chatMessages } = useChatMessages(currentChat?.id);
+
+  /** Fetches the current user data. */
+  const loadUser = useCallback(async () => {
+    setIsLoadingUser(true);
+    try {
+      const response = await getCurrentUser();
+      setUser(response || null);
+    } catch (error) {
+      console.log("User fetch error:", error);
+    } finally {
+      setIsLoadingUser(false);
+    }
+  }, []);
+
+  /** Effect to initialize data loading and set up the greeting timer. */
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
 
   // Update currentChat title when messages are loaded
   useEffect(() => {
@@ -206,29 +226,6 @@ export default function ChatScreen() {
     }
   };
 
-  // Message actions
-  const handleLike = () => {
-    showToast.success("Liked", "Message feedback recorded");
-  };
-
-  const handleDislike = () => {
-    showToast.success("Disliked", "Message feedback recorded");
-  };
-
-  const handleRefresh = () => {
-    showToast.success("Refresh", "This would regenerate the last response");
-  };
-
-  const handleCopy = () => {
-    const lastBotMessage = [...displayMessages]
-      .reverse()
-      .find((m) => !m.isUser);
-    if (lastBotMessage) {
-      Clipboard.setString(lastBotMessage.text);
-      showToast.success("Copied", "Message copied to clipboard");
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -275,7 +272,9 @@ export default function ChatScreen() {
       {/* Content Views */}
       {currentView === "welcome" && (
         <ChatWelcome
-          userName="Tracy"
+          userName={
+            isLoadingUser ? "..." : user?.full_name?.split(" ")[0] || "User"
+          }
           onCategoryPress={handleCategoryPress}
           onAskAnything={handleAskAnything}
         />
@@ -304,16 +303,6 @@ export default function ChatScreen() {
           {/* Show typing indicator when waiting for first chunk */}
           {isAiSpeaking && !streamingText && (
             <TypingIndicator isAiSpeaking={true} />
-          )}
-
-          {/* Message Actions */}
-          {!isAiSpeaking && displayMessages.length > 0 && (
-            <MessageActions
-              onLike={handleLike}
-              onDislike={handleDislike}
-              onRefresh={handleRefresh}
-              onCopy={handleCopy}
-            />
           )}
 
           {/* Chat Input */}

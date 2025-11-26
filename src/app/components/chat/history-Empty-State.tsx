@@ -145,7 +145,7 @@ export const HistoryEmptyState = ({
               style={styles.actionIcon}
             />
           </TouchableOpacity>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={(e) => {
               e.stopPropagation();
@@ -156,7 +156,7 @@ export const HistoryEmptyState = ({
               source={require("../../assets/images/ai-chat/delete.png")}
               style={styles.actionIcon}
             />
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>

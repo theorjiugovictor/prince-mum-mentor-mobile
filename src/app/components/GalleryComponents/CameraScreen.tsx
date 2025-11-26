@@ -8,7 +8,6 @@ import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { StatusBar } from "expo-status-bar";
 import React, { useRef, useState } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { showToast } from "@/src/core/utils/toast";
 
 interface CameraScreenProps {
   visible: boolean;

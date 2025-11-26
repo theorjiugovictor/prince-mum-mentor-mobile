@@ -3,54 +3,39 @@ import { colors, typography } from "@/src/core/styles";
 import { useAppDispatch, useAppSelector } from "@/src/store/hooks";
 import {
   getMilestoneStates,
-  onDeleteMilestone,
-  onToggleDeleteModal,
+  onToggleEditSuccessModal,
 } from "@/src/store/milestoneSlice";
 import React from "react";
 
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
-export default function DeleteModal() {
-  const { isDeleteModalOpen } = useAppSelector(getMilestoneStates);
+export default function SuccessModal() {
+  const { isSuccessModalOpen } = useAppSelector(getMilestoneStates);
   const dispatch = useAppDispatch();
 
-  const onCloseModal = () =>
-    dispatch(onToggleDeleteModal({ isOpenForm: false }));
-
-  const handleDeleteMilestone = () => {
-    dispatch(onDeleteMilestone());
-    onCloseModal();
-  };
+  const onCloseModal = () => dispatch(onToggleEditSuccessModal(false));
 
   return (
     <ModalAnimationWrapper
-      isVisible={isDeleteModalOpen}
+      isVisible={isSuccessModalOpen}
       onBackdropPress={onCloseModal}
     >
       <View style={styles.modalContainer}>
-        <Image
-          source={require("../../../assets/images/trash.png")}
-          style={styles.deleteIcon}
-        />
+        <View style={styles.modalTextBox}>
+          <View style={styles.modalHeader}>
+            <Image
+              source={require("../../../assets/images/green-success.png")}
+            />
+            <Text style={styles.successHeaderText}>
+              Milestone updated successfully
+            </Text>
+          </View>
 
-        <View style={styles.modalHeader}>
-          <Text style={styles.headerText}>Delete Milestone</Text>
-          <Text>Are you sure you want to delete this Milestone?</Text>
-        </View>
-
-        <View style={styles.buttonsContainer}>
           <Pressable
             style={[styles.button, styles.buttonSave]}
-            onPress={handleDeleteMilestone}
-          >
-            Delete
-          </Pressable>
-
-          <Pressable
-            style={[styles.button, styles.buttonCancel]}
             onPress={onCloseModal}
           >
-            Cancel
+            Done
           </Pressable>
         </View>
       </View>
@@ -59,45 +44,32 @@ export default function DeleteModal() {
 }
 
 const styles = StyleSheet.create({
-  // delete modal
-  headerDesc: {
-    ...typography.bodySmall,
-    textAlign: "center",
-    color: colors.textGrey1,
-  },
+  // successful modal
 
-  // success modal
-  headerText: {
+  successHeaderText: {
     ...typography.heading3,
     color: "black",
     fontWeight: 600,
     textAlign: "center",
   },
-  deleteIcon: {
-    width: 24,
-    height: 24,
+  successIcon: {
+    width: 57.52,
+    height: 52.52,
   },
   modalHeader: {
-    gap: 8,
+    gap: 12,
     alignItems: "center",
+  },
+
+  modalTextBox: {
+    gap: 32,
   },
 
   modalContainer: {
     padding: 24,
-    gap: 24,
     borderRadius: 8,
     backgroundColor: "white",
-    alignItems: "center",
   },
-
-  // create milestone form
-  buttonCancel: {
-    backgroundColor: "white",
-    color: colors.primary,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-
   buttonSave: {
     color: "white",
     backgroundColor: colors.primary,
@@ -113,12 +85,6 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",
-    alignSelf: "stretch",
-  },
-
-  buttonsContainer: {
-    gap: 8,
     width: "100%",
   },
 

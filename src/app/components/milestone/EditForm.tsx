@@ -1,18 +1,43 @@
 import FormInput from "@/src/app/components/milestone/FormInput";
 import { colors, typography } from "@/src/core/styles";
-import React from "react";
+import React, { useState } from "react";
 import Modal from "react-native-modal";
 
 import { useAppDispatch, useAppSelector } from "@/src/store/hooks";
 import {
   getMilestoneStates,
+  onEditMileStone,
   onToggleEditForm,
+  onToggleEditSuccessModal,
 } from "@/src/store/milestoneSlice";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function EditForm() {
-  const { isEditModalOpen } = useAppSelector(getMilestoneStates);
+  const { isEditModalOpen, milestoneData, milestoneToEditId } =
+    useAppSelector(getMilestoneStates);
   const dispatch = useAppDispatch();
+
+  const currentMilestone = milestoneData.find(
+    (milestone) => milestone.id === milestoneToEditId
+  );
+
+  const [title, setTitle] = useState(currentMilestone?.title ?? "");
+  const [desc, setDesc] = useState(currentMilestone?.desc ?? "");
+
+  function handleMilestoneUpdate() {
+    const updatedMilestone = {
+      title,
+      desc,
+    };
+
+    dispatch(onEditMileStone(updatedMilestone));
+    // if success, open success modal
+
+    setTitle("");
+    setDesc("");
+    dispatch(onToggleEditForm({ isOpenForm: false }));
+    dispatch(onToggleEditSuccessModal(true));
+  }
 
   return (
     <Modal
@@ -39,9 +64,10 @@ export default function EditForm() {
             style={styles.input}
             placeholder="e.g 5 Minutes Exercise"
             placeholderTextColor={colors.textGrey2}
-            defaultValue=""
             keyboardType="default"
             autoCapitalize="none"
+            value={title}
+            onChangeText={(text) => setTitle(text)}
           />
         </FormInput>
 
@@ -50,14 +76,19 @@ export default function EditForm() {
             style={styles.input}
             placeholder="eg. Tried a 5 Minutes Exercise Plan..."
             placeholderTextColor={colors.textGrey2}
-            defaultValue=""
+            defaultValue={currentMilestone?.desc ?? ""}
             keyboardType="default"
             autoCapitalize="none"
+            value={desc}
+            onChangeText={(text) => setDesc(text)}
           />
         </FormInput>
 
         <View style={styles.buttonsContainer}>
-          <Pressable style={[styles.buttons, styles.buttonSave]}>
+          <Pressable
+            style={[styles.buttons, styles.buttonSave]}
+            onPress={handleMilestoneUpdate}
+          >
             Save
           </Pressable>
 

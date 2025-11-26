@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "eas-build-pre-install": "echo \"$GOOGLE_SERVICES_JSON\" > google-services.json"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -23,12 +24,14 @@
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
     "expo": "~54.0.25",
+    "expo-apple-authentication": "~8.0.7",
     "expo-application": "~7.0.7",
     "expo-auth-session": "~7.0.9",
     "expo-av": "~16.0.7",
     "expo-camera": "~17.0.9",
     "expo-constants": "~18.0.10",
     "expo-crypto": "~15.0.7",
+    "expo-dev-client": "~6.0.18",
     "expo-device": "~8.0.9",
     "expo-font": "~14.0.9",
     "expo-haptics": "~15.0.7",

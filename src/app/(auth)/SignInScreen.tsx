@@ -1,6 +1,3 @@
-// src/screens/(auth)/SignInScreen.tsx
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AxiosError } from "axios";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -26,19 +23,11 @@ import PrimaryButton from "../components/PrimaryButton";
 
 // --- API Service Import ---
 import {
-  ApiErrorResponse,
-  login,
-  loginWithGoogle,
-} from "../../core/services/authService";
-import { getDeviceInfo } from "../../core/services/deviceInfoHelper";
-import {
-  parseGoogleIdToken,
-  useGoogleAuth,
-} from "../../core/services/googleAuthservice";
-
-// --- Setup Hook Import ---
-import { useSetup } from "../../core/hooks/setupContext";
-import { setupStorage } from "../../core/services/setupStorageService";
+  isAppleAuthAvailable,
+  signInWithApple,
+} from "@/src/core/services/appleAuthService";
+import { signInWithGoogle } from "@/src/core/services/googleAuthservice";
+import { ApiErrorResponse, login } from "../../core/services/authService";
 
 export default function SignInScreen() {
   // --- Local State Management ---
@@ -48,28 +37,76 @@ export default function SignInScreen() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
+  const [isAppleAvailable, setIsAppleAvailable] = useState(false);
 
-  // --- Setup Hook ---
-  const { refreshSetupData } = useSetup();
-
-  // --- Google Auth Hook ---
-  const { request, response, promptAsync } = useGoogleAuth();
-
-  // --- Handle Google Auth Response ---
+  // Check if Apple Sign-In is available
   useEffect(() => {
-    if (response?.type === "success") {
-      const { authentication } = response;
-      if (authentication?.idToken) {
-        handleGoogleLogin(authentication.idToken);
+    const checkAppleAuth = async () => {
+      const available = await isAppleAuthAvailable();
+      setIsAppleAvailable(available);
+    };
+    checkAppleAuth();
+  }, []);
+
+  // Handle Apple Sign-In
+  const handleApplePress = async () => {
+    setIsAppleLoading(true);
+    setErrors({});
+    setGeneralError(null);
+
+    try {
+      const result = await signInWithApple();
+
+      if (result.success) {
+        Alert.alert(
+          "Welcome Back!",
+          result.user?.name
+            ? `Signed in as ${result.user.name}`
+            : "Apple login successful."
+        );
+        router.replace("/(tabs)/Home");
+      } else {
+        setGeneralError(
+          result.error || "Apple sign in failed. Please try again."
+        );
       }
-    } else if (response?.type === "error") {
-      console.error("Google auth error:", response.error);
-      Alert.alert(
-        "Google Sign In Failed",
-        "Unable to complete Google sign in."
-      );
+    } catch (error) {
+      console.error("Apple sign in error:", error);
+      setGeneralError("Apple sign in failed. Please try again.");
+    } finally {
+      setIsAppleLoading(false);
     }
-  }, [response]);
+  };
+
+  const handleGooglePress = async () => {
+    setIsGoogleLoading(true);
+    setErrors({});
+    setGeneralError(null);
+
+    try {
+      const result = await signInWithGoogle();
+
+      if (result.success) {
+        Alert.alert(
+          "Welcome Back!",
+          result.user
+            ? `Signed in as ${result.user.name}`
+            : "Google login successful."
+        );
+        router.replace("/(tabs)/Home");
+      } else {
+        setGeneralError(
+          result.error || "Google sign in failed. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      setGeneralError("Google sign in failed. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   // --- Validation Logic (Client-Side Check) ---
   const validate = () => {
@@ -104,23 +141,8 @@ export default function SignInScreen() {
       const loginPayload = { email: email.toLowerCase(), password };
       await login(loginPayload);
 
-      // Mark onboarding as complete after successful login
-      await AsyncStorage.setItem("@OnboardingComplete", "true");
-      console.log("✅ Login successful - onboarding marked complete");
-
-      // Refresh setup data and check if setup is completed
-      await refreshSetupData();
-      const isSetupDone = await setupStorage.isSetupCompleted();
-
-      if (!isSetupDone) {
-        // First time user - redirect to setup
-        Alert.alert("Welcome!", "Let's set up your profile.");
-        router.replace("/setup/Mum");
-      } else {
-        // Returning user - go to home
-        Alert.alert("Welcome Back!", "Login successful.");
-        router.replace("/(tabs)/Home");
-      }
+      Alert.alert("Welcome Back!", "Login successful.");
+      router.replace("/(tabs)/Home");
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       const statusCode = axiosError.response?.status;
@@ -149,75 +171,13 @@ export default function SignInScreen() {
     }
   };
 
-  // --- Handle Google Login ---
-  const handleGoogleLogin = async (idToken: string) => {
-    setIsGoogleLoading(true);
-    setErrors({});
-    setGeneralError(null);
-
-    try {
-      // Get device information
-      const deviceInfo = await getDeviceInfo();
-
-      // Send ID token with device info to your backend
-      await loginWithGoogle({
-        id_token: idToken,
-        device_id: deviceInfo.device_id,
-        device_name: deviceInfo.device_name,
-      });
-
-      // Mark onboarding as complete after successful Google login
-      await AsyncStorage.setItem("@OnboardingComplete", "true");
-      console.log("✅ Google login successful - onboarding marked complete");
-
-      // Refresh setup data and check if setup is completed
-      await refreshSetupData();
-      const isSetupDone = await setupStorage.isSetupCompleted();
-
-      // Parse user info for display (optional)
-      const userInfo = parseGoogleIdToken(idToken);
-
-      if (!isSetupDone) {
-        // First time Google user - redirect to setup
-        Alert.alert("Welcome!", "Let's personalize your experience.");
-        router.replace("/setup/Mum");
-      } else {
-        // Returning Google user - go to home
-        Alert.alert(
-          "Welcome Back!",
-          userInfo
-            ? `Signed in as ${userInfo.name}`
-            : "Google login successful."
-        );
-        router.replace("/(tabs)/Home");
-      }
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiErrorResponse>;
-      console.error("Google login API error:", axiosError.response?.data);
-
-      setGeneralError("Google sign in failed. Please try again.");
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
-  // --- Trigger Google Sign In ---
-  const handleGooglePress = async () => {
-    try {
-      await promptAsync();
-    } catch (error) {
-      console.error("Error triggering Google sign in:", error);
-      Alert.alert("Error", "Failed to start Google sign in");
-    }
-  };
-
   // --- Navigation Handlers ---
   const handleForgotPassword = () => {
     router.push("/(auth)/ForgotPasswordScreen");
   };
 
   const handleSignUp = () => {
-    router.push("/(auth)/SignUpScreen");
+    router.replace("/(auth)/SignUpScreen");
   };
 
   return (
@@ -293,7 +253,7 @@ export default function SignInScreen() {
             <TouchableOpacity
               style={styles.socialButton}
               onPress={handleGooglePress}
-              disabled={!request || isGoogleLoading}
+              disabled={isGoogleLoading}
             >
               {isGoogleLoading ? (
                 <ActivityIndicator size="small" color={colors.primary} />
@@ -309,17 +269,26 @@ export default function SignInScreen() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.socialButton, { marginLeft: ms(spacing.md) }]}
-              onPress={() => Alert.alert("Apple Login", "Coming soon!")}
-            >
-              <Image
-                source={require("../../assets/images/apple.png")}
-                style={styles.socialButtonImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.socialButtonText}>Apple</Text>
-            </TouchableOpacity>
+            {isAppleAvailable && (
+              <TouchableOpacity
+                style={[styles.socialButton, { marginLeft: ms(spacing.md) }]}
+                onPress={handleApplePress}
+                disabled={isAppleLoading}
+              >
+                {isAppleLoading ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <>
+                    <Image
+                      source={require("../../assets/images/apple.png")}
+                      style={styles.socialButtonImage}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.socialButtonText}>Apple</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </ScrollView>

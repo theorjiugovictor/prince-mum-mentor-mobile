@@ -1,6 +1,7 @@
 import { AxiosError, isAxiosError } from "axios";
 import apiClient from "./apiClient";
 import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // --- TYPES ---
 export interface AuthTokenData {
@@ -10,6 +11,7 @@ export interface AuthTokenData {
     id: string;
     email: string;
     full_name: string;
+    profile_setup_id?: string; // ✅ ADDED: profile_setup_id
   };
 }
 
@@ -121,6 +123,12 @@ export async function login(payload: LoginPayload): Promise<AuthTokenData> {
       "/api/v1/auth/login",
       payload
     );
+    
+    console.log('='.repeat(60));
+    console.log('🔐 LOGIN RESPONSE RECEIVED');
+    console.log('='.repeat(60));
+    console.log('Full response:', JSON.stringify(response.data, null, 2));
+    
     const tokenData = response.data.data;
     const token = tokenData?.access_token;
 
@@ -137,6 +145,22 @@ export async function login(payload: LoginPayload): Promise<AuthTokenData> {
     } else {
       console.error("Login response missing access_token:", response.data);
       throw new Error("API response missing access token.");
+    }
+
+    // ✅ STORE profile_setup_id if it exists in the response
+    if (tokenData?.user?.profile_setup_id) {
+      console.log('✅ Found profile_setup_id in login response:', tokenData.user.profile_setup_id);
+      await AsyncStorage.setItem('profile_setup_id', tokenData.user.profile_setup_id);
+      console.log('✅ Stored profile_setup_id in AsyncStorage');
+    } else {
+      console.warn('⚠️ profile_setup_id NOT found in login response');
+      console.warn('⚠️ Login response structure:', JSON.stringify(response.data, null, 2));
+      
+      // ✅ FALLBACK: Use user.id as profile_setup_id if not provided
+      if (tokenData?.user?.id) {
+        console.log('💡 Using user.id as fallback profile_setup_id:', tokenData.user.id);
+        await AsyncStorage.setItem('profile_setup_id', tokenData.user.id);
+      }
     }
 
     return tokenData;
@@ -175,6 +199,9 @@ export async function loginWithGoogle(
       throw new Error("API response missing access token.");
     }
 
+    // ✅ TODO: Handle profile_setup_id for Google login if needed
+    console.log('📝 Google login response:', JSON.stringify(response.data, null, 2));
+
     return response.data;
   } catch (error) {
     throw error as AxiosError<ApiErrorResponse> | Error;
@@ -183,6 +210,8 @@ export async function loginWithGoogle(
 
 export async function logout(): Promise<void> {
   await removeAuthToken();
+  // ✅ Clear profile_setup_id on logout
+  await AsyncStorage.removeItem('profile_setup_id');
 }
 
 // --- VERIFICATION AND RECOVERY ---
@@ -290,6 +319,7 @@ export async function verifyValue(
     return { success: false, error: error as AxiosError<ApiErrorResponse> };
   }
 }
+
 export async function resetPassword(
   payload: ResetPasswordPayload
 ): Promise<MessageResponse> {
@@ -321,9 +351,12 @@ export async function logoutUser(): Promise<MessageResponse> {
       "/api/v1/auth/logout"
     );
     await removeAuthToken();
+    // ✅ Clear profile_setup_id on logout
+    await AsyncStorage.removeItem('profile_setup_id');
     return response.data;
   } catch (error) {
     await removeAuthToken();
+    await AsyncStorage.removeItem('profile_setup_id');
     throw error as AxiosError<ApiErrorResponse>;
   }
 }
@@ -343,6 +376,7 @@ export async function deleteAccount(
       { data: payload }
     );
     await removeAuthToken();
+    await AsyncStorage.removeItem('profile_setup_id');
     return response.data;
   } catch (error) {
     throw error as AxiosError<ApiErrorResponse>;

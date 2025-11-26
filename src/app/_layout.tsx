@@ -10,8 +10,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SetupProvider } from "../core/hooks/setupContext";
 import { AuthProvider, useAuth } from "../core/services/authContext";
-import { useAssetLoading } from "../core/utils/assetsLoading";
 import { colors } from "../core/styles";
+import { useAssetLoading } from "../core/utils/assetsLoading";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -126,11 +126,13 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <SetupProvider>
-          <RootLayoutContent />
-        </SetupProvider>
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <SetupProvider>
+            <RootLayoutContent />
+          </SetupProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

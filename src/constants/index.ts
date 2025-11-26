@@ -22,7 +22,8 @@ export const AUTH_ROUTES_LIST = [
   "/(auth)/onboarding",
 ];
 
-export const ACCESS_TOKEN_KEY = "access_token";
+// export const ACCESS_TOKEN_KEY = "access_token";
+export const ACCESS_TOKEN_KEY = "NoraAppAuthToken";
 export const REFRESH_TOKEN_KEY = "refresh_token";
 export const ONBOARDING_COMPLETE_KEY = "onboarding_complete";
 export const REDIRECT_AFTER_LOGIN_KEY = "redirect_after_login";

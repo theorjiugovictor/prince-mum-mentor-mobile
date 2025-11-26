@@ -1,6 +1,6 @@
 // hooks/useCrud.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, authApi } from "../lib/api";
+import { api, authApi } from "../../lib/api";
 
 interface CrudOptions {
   queryKey?: string | string[];

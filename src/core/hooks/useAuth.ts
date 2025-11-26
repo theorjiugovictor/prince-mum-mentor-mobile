@@ -1,8 +1,8 @@
 // hooks/useAuth.ts
 import { useMutation } from "@tanstack/react-query";
-import { API_ENDPOINTS } from "../constants";
-import { api } from "../lib/api";
-import { auth } from "../lib/auth";
+import { API_ENDPOINTS } from "../../constants";
+import { api } from "../../lib/api";
+import { auth } from "../../lib/auth";
 
 interface LoginPayload {
   email: string;

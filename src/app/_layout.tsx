@@ -1,18 +1,22 @@
 // app/_layout.tsx
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Stack, router } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { store } from "@/src/store/store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Toast from "react-native-toast-message";
 import { Provider } from "react-redux";
 import { SetupProvider } from "../core/hooks/setupContext";
 import { AuthProvider, useAuth } from "../core/services/authContext";
-import { colors } from "../core/styles/index";
+import { SavedResourcesProvider } from "../core/services/savedResourcesContext";
+import { colors } from "../core/styles";
 import { useAssetLoading } from "../core/utils/assetsLoading";
+import { toastConfig } from "../core/utils/toast";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,6 +52,17 @@ function useOnboardingStatusLoader() {
 // ----------------------------------------------------
 // MAIN ROOT LAYOUT CONTENT
 // ----------------------------------------------------
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
+
 function RootLayoutContent() {
   const isLoaded = useAssetLoading();
   const { user, isSessionLoading } = useAuth();
@@ -111,21 +126,22 @@ function RootLayoutContent() {
     );
   }
 
-  // Just render the stack - navigation happens in useEffect above
-  // ONLY include routes that actually exist in your file structure
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(onboarding)" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="setup" />
-      <Stack.Screen name="Gallery" />
-      <Stack.Screen name="notifications" />
-      <Stack.Screen name="profile" />
-      <Stack.Screen name="resources" />
-      <Stack.Screen name="components" />
-      <Stack.Screen name="categories/[categoryId]" />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="setup" />
+        <Stack.Screen name="Gallery" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="profile" />
+        <Stack.Screen name="resources" />
+        <Stack.Screen name="components" />
+        <Stack.Screen name="categories/[categoryId]" />
+      </Stack>
+      <Toast config={toastConfig} />
+    </>
   );
 }
 
@@ -135,13 +151,17 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Provider store={store}>
-        <AuthProvider>
-          <SetupProvider>
-            <RootLayoutContent />
-          </SetupProvider>
-        </AuthProvider>
-      </Provider>
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>
+          <AuthProvider>
+            <SetupProvider>
+              <SavedResourcesProvider>
+                <RootLayoutContent />
+              </SavedResourcesProvider>
+            </SetupProvider>
+          </AuthProvider>
+        </Provider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

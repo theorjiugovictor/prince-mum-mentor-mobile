@@ -1,12 +1,18 @@
 // src/screens/ChangePasswordScreen.tsx
 
+import {
+  ApiErrorResponse,
+  changePassword,
+} from "@/src/core/services/authService";
 import { colors, typography } from "@/src/core/styles";
 import { ms, vs } from "@/src/core/styles/scaling";
 import { Ionicons } from "@expo/vector-icons";
+import { AxiosError } from "axios";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -17,12 +23,19 @@ import {
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
 
+interface ChangePasswordPayload {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Password strength validation
   const validatePasswordStrength = (password: string) => {
@@ -63,19 +76,84 @@ const ChangePassword = () => {
       return;
     }
 
-    // Handle password change logic here
+    // Call the API to change password
     setIsLoading(true);
     try {
-      // Your API call here
-      console.log("Changing password...");
-      // await changePasswordAPI(oldPassword, newPassword);
-      // router.back(); // or navigate to success screen
+      const payload: ChangePasswordPayload = {
+        old_password: oldPassword,
+        new_password: newPassword,
+        confirm_password: confirmNewPassword,
+      };
+
+      const response = await changePassword(payload);
+
+      console.log("✅ Password changed successfully:", response);
+
+      // Clear form
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+
+      // Show success modal
+      setShowSuccessModal(true);
     } catch (error) {
-      console.error("Error changing password:", error);
-      setErrors({ general: "Failed to change password" });
+      console.error("❌ Error changing password:", error);
+
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      const statusCode = axiosError.response?.status;
+      const responseData = axiosError.response?.data;
+
+      // Handle different error cases
+      if (statusCode === 401) {
+        setErrors({ oldPassword: "Old password is incorrect" });
+      } else if (statusCode === 422) {
+        // Check if errors are nested in error.errors (your backend structure)
+        const validationErrors =
+          //@ts-ignore
+          responseData?.error?.errors || responseData?.detail;
+
+        if (Array.isArray(validationErrors)) {
+          const fieldErrors: { [key: string]: string } = {};
+
+          validationErrors.forEach((err: any) => {
+            // Get the field name from the loc array (last item, converting snake_case to camelCase)
+            const field = err.loc[err.loc.length - 1];
+            const camelCaseField = field.replace(/_([a-z])/g, (g: string) =>
+              g[1].toUpperCase()
+            );
+
+            // Use the error message from the backend
+            fieldErrors[camelCaseField] = err.msg || "Invalid input";
+          });
+
+          setErrors(fieldErrors);
+        } else {
+          setErrors({
+            general: "Validation failed. Please check your inputs.",
+          });
+        }
+      } else if (responseData?.message) {
+        // Handle the top-level message field from your backend
+        setErrors({ general: responseData.message });
+      } else if (responseData?.detail) {
+        // Fallback to detail field
+        setErrors({
+          general:
+            typeof responseData.detail === "string"
+              ? responseData.detail
+              : "Failed to change password",
+        });
+      } else {
+        setErrors({ general: "Failed to change password. Please try again." });
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    router.back();
   };
 
   return (
@@ -100,6 +178,13 @@ const ChangePassword = () => {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
       >
+        {/* General Error Message */}
+        {errors.general && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errors.general}</Text>
+          </View>
+        )}
+
         {/* Old Password */}
         <CustomInput
           label="Enter Old Password"
@@ -217,6 +302,40 @@ const ChangePassword = () => {
           }
         />
       </ScrollView>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleSuccessModalClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* Success Icon */}
+            <View style={styles.successIconContainer}>
+              <Ionicons
+                name="checkmark-circle"
+                size={ms(60)}
+                color={colors.success}
+              />
+            </View>
+
+            {/* Success Message */}
+            <Text style={styles.successTitle}>
+              Password changed successfully
+            </Text>
+
+            {/* Done Button */}
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={handleSuccessModalClose}
+            >
+              <Text style={styles.doneButtonText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -259,13 +378,25 @@ const styles = StyleSheet.create({
     paddingTop: vs(20),
     paddingBottom: vs(40),
   },
+  errorContainer: {
+    backgroundColor: colors.errorLight,
+    borderRadius: ms(8),
+    padding: ms(12),
+    marginBottom: vs(16),
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  errorText: {
+    ...typography.bodyMedium,
+    color: colors.error,
+    textAlign: "center",
+  },
   inputWrapper: {
     marginBottom: vs(8),
   },
   strengthIndicator: {
     flexDirection: "row",
     alignItems: "center",
-    // marginTop: vs(6),
     marginBottom: vs(12),
   },
   strengthIcon: {
@@ -280,5 +411,43 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.success,
     flex: 1,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: ms(40),
+  },
+  modalContent: {
+    backgroundColor: colors.textWhite,
+    borderRadius: ms(16),
+    padding: ms(32),
+    alignItems: "center",
+    width: "100%",
+    maxWidth: ms(320),
+  },
+  successIconContainer: {
+    marginBottom: vs(20),
+  },
+  successTitle: {
+    ...typography.heading3,
+    color: colors.textPrimary,
+    textAlign: "center",
+    marginBottom: vs(24),
+  },
+  doneButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: vs(14),
+    paddingHorizontal: ms(48),
+    borderRadius: ms(8),
+    width: "100%",
+    alignItems: "center",
+  },
+  doneButtonText: {
+    ...typography.bodyLarge,
+    color: colors.textWhite,
+    fontWeight: "600",
   },
 });

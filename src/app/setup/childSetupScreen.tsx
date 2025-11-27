@@ -1,8 +1,14 @@
-import { colors, typography } from "@/src/core/styles";
+// src/screens/setup/childSetupScreen.tsx
+
+import { useAuth } from "@/src/core/services/authContext";
+import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, vs } from "@/src/core/styles/scaling";
+import { showToast } from "@/src/core/utils/toast";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -10,38 +16,62 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Added
+import { useSetup } from "../../core/hooks/setupContext";
 import ChildSetupItem, { ChildData } from "../components/ChildSetupItem";
 import PrimaryButton from "../components/PrimaryButton";
 import SecondaryButton from "../components/SecondaryButton";
 import { SuccessModal, useSuccessModal } from "../components/SuccessModal";
 
-const SetupScreen = () => {
+const ChildSetupScreen = () => {
+  const { completeSetup, momSetupData } = useSetup();
+  const { user } = useAuth();
+
   const [children, setChildren] = useState<ChildData[]>([
     { fullName: "", age: "", dob: "", gender: "" },
   ]);
-
-  const addChild = () => {
-    setChildren([...children, { fullName: "", age: "", dob: "", gender: "" }]);
-  };
-
-  const updateChild = (index: number, updatedChild: ChildData) => {
-    const newChildren = [...children];
-    newChildren[index] = updatedChild;
-    setChildren(newChildren);
-  };
-
-  const removeChild = (index: number) => {
-    const updated = children.filter((_, i) => i !== index);
-    setChildren(updated);
-  };
-
-  const canceled = () => {
-    router.back();
-  };
-
+  const [isLoading, setIsLoading] = useState(false);
   const { visible, show, hide } = useSuccessModal();
 
-  const isFormComplete = () => {
+  useEffect(() => {
+    if (!user) {
+      console.warn("User not loaded in ChildSetupScreen");
+    } else {
+      console.log("User loaded:", user.id, user.email);
+    }
+  }, [user]);
+
+  const addChild = useCallback(() => {
+    setChildren((prevChildren) => [
+      ...prevChildren,
+      { fullName: "", age: "", dob: "", gender: "" },
+    ]);
+  }, []);
+
+  const updateChild = useCallback((index: number, updatedChild: ChildData) => {
+    setChildren((prevChildren) => {
+      const newChildren = [...prevChildren];
+      newChildren[index] = updatedChild;
+      return newChildren;
+    });
+  }, []);
+
+  const removeChild = useCallback((index: number) => {
+    setChildren((prevChildren) => prevChildren.filter((_, i) => i !== index));
+  }, []);
+
+  const canceled = useCallback(() => {
+    Alert.alert(
+      "Cancel Setup",
+      "Are you sure you want to cancel? Your progress will be lost.",
+      [
+        { text: "No", style: "cancel" },
+        { text: "Yes", style: "destructive", onPress: () => router.back() },
+      ]
+    );
+  }, []);
+
+  const isFormComplete = useCallback(() => {
     return children.every(
       (child) =>
         child.fullName?.trim() &&
@@ -49,55 +79,114 @@ const SetupScreen = () => {
         child.dob?.trim() &&
         child.gender?.trim()
     );
+  }, [children]);
+
+  const handleDone = async () => {
+    if (!isFormComplete()) {
+      Alert.alert(
+        "Incomplete Form",
+        "Please fill in all child details before continuing."
+      );
+      return;
+    }
+
+    if (!momSetupData) {
+      showToast.error(
+        "Error",
+        "Mom setup data is missing. Please go back and complete mom setup first."
+      );
+      router.back();
+      return;
+    }
+
+    if (!user || !user.id) {
+      Alert.alert(
+        "Authentication Error",
+        "User session not found. Please log in again."
+      );
+      router.replace("/(auth)/SignInScreen");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await completeSetup(children, user.id);
+
+      // --- AsyncStorage flag to mark setup complete ---
+      await AsyncStorage.setItem("isSetupComplete", "true");
+
+      console.log("Setup completed successfully!");
+      show(); // Show success modal
+    } catch (error) {
+      console.error("Error completing setup:", error);
+      Alert.alert("Setup Error", "Failed to complete setup. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const handleSuccessClose = useCallback(() => {
+    hide();
+    router.replace("/(tabs)/Home");
+  }, [hide]);
+
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <Text style={styles.title}>Set Up</Text>
+    <>
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.title}>Set Up Children</Text>
 
-        {children.map((child, index) => (
-          <ChildSetupItem
-            key={index}
-            index={index}
-            childData={child}
-            onUpdate={updateChild}
-            onDelete={() => removeChild(index)}
-          />
-        ))}
+          {children.map((child, index) => (
+            <ChildSetupItem
+              key={index}
+              index={index}
+              childData={child}
+              onUpdate={updateChild}
+              onDelete={() => removeChild(index)}
+            />
+          ))}
 
-        <TouchableOpacity style={styles.addBtn} onPress={addChild}>
-          <Text style={styles.addBtnText}>＋ Add Another Child</Text>
-        </TouchableOpacity>
-      </ScrollView>
-      <SuccessModal
-        visible={visible}
-        onClose={hide}
-        title="Setup Successful!"
-        message=""
-        iconComponent={
-          <Image
-            source={require("../../assets/images/success-icon.png")}
-            style={styles.successIcon}
-          />
-        }
-      />
+          <TouchableOpacity style={styles.addBtn} onPress={addChild}>
+            <Text style={styles.addBtnText}>＋ Add Another Child</Text>
+          </TouchableOpacity>
+        </ScrollView>
 
-      {/* Bottom Buttons */}
-      <View style={styles.bottomButtons}>
-        <PrimaryButton
-          title="Done"
-          onPress={show}
-          disabled={!isFormComplete()}
+        <SuccessModal
+          visible={visible}
+          onClose={handleSuccessClose}
+          title="Setup Successful!"
+          message="Your profile is ready. Let's get started!"
+          iconComponent={
+            <Image
+              source={require("../../assets/images/success-icon.png")}
+              style={styles.successIcon}
+            />
+          }
         />
 
-        <SecondaryButton title="Cancel" onPress={canceled} />
+        <View style={styles.bottomButtons}>
+          <PrimaryButton
+            title="Done"
+            onPress={handleDone}
+            disabled={!isFormComplete() || isLoading || !user}
+            isLoading={isLoading}
+          />
+          <SecondaryButton
+            title="Cancel"
+            onPress={canceled}
+            disabled={isLoading}
+          />
+        </View>
       </View>
-    </View>
+    </>
   );
 };
 
-export default SetupScreen;
+export default ChildSetupScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -105,30 +194,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollView: {
-    paddingHorizontal: 20,
-    paddingBottom: 140,
+    paddingHorizontal: ms(spacing.lg),
+    paddingTop: vs(60),
+    paddingBottom: vs(180),
   },
   title: {
     ...typography.heading1,
     color: colors.textPrimary,
     textAlign: "center",
-    marginTop: ms(60),
-    marginBottom: vs(12),
+    marginBottom: vs(spacing.xl),
   },
   addBtn: {
     alignSelf: "center",
-    marginVertical: 20,
+    marginVertical: vs(spacing.lg),
   },
   addBtnText: {
     ...typography.labelLarge,
     color: colors.primary,
   },
-
   bottomButtons: {
-    padding: 20,
-    gap: 12,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: ms(spacing.lg),
+    paddingBottom: vs(spacing.xl),
+    gap: vs(spacing.sm),
     backgroundColor: colors.backgroundMain,
-    borderColor: colors.backgroundSubtle,
+    borderTopWidth: 1,
+    borderTopColor: colors.backgroundSubtle,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
   },
   successIcon: {
     width: ms(60),

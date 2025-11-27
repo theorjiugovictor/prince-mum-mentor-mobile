@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,30 @@ export default function ResetPassword() {
   const [newPasswordError, setNewPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
+  // ✅ Debug: Log token on mount (only once)
+  useEffect(() => {
+    console.log('🔍 ResetPassword Screen - Token received:', {
+      hasToken: !!verificationToken,
+      tokenLength: verificationToken?.length,
+      tokenPreview: verificationToken ? verificationToken.substring(0, 20) + '...' : 'N/A',
+      email: email
+    });
+
+    if (!verificationToken) {
+      Alert.alert(
+        'Error', 
+        'Verification token is missing. Please restart the password reset process.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(auth)/ForgotPasswordScreen')
+          }
+        ]
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Run only once on mount
+
   const validatePassword = (password: string): boolean => {
     if (password.length < 8) {
       setNewPasswordError('Password must be at least 8 characters');
@@ -77,26 +101,37 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
+      console.log('📤 Sending password reset request with token:', verificationToken.substring(0, 20) + '...');
+      
+      // ✅ FIXED: Order matters! Match the exact order from API documentation
       const payload = {
-        token: verificationToken,
         new_password: newPassword,
         confirm_password: confirmPassword,
+        token: verificationToken,
       };
+
+      console.log('📦 Payload structure:', JSON.stringify(payload, null, 2));
 
       await resetPassword(payload);
 
+      console.log('✅ Password reset successful');
+      
       // Show success modal
       setShowSuccessModal(true);
 
     } catch (error) {
-      console.error('Reset password error:', error);
+      console.error('❌ Reset password error:', error);
       
       let errorMessage = 'Failed to reset password. Please try again.';
       
       if ((error as any).isAxiosError) {
         const axiosError = error as AxiosError<ApiErrorResponse>;
-        errorMessage = axiosError.response?.data?.message 
-          || (typeof axiosError.response?.data?.detail === 'string' ? axiosError.response.data.detail : errorMessage);
+        const responseData = axiosError.response?.data;
+        
+        errorMessage = responseData?.message 
+          || (typeof responseData?.detail === 'string' ? responseData.detail : errorMessage);
+        
+        console.error('Server error details:', responseData);
       }
       
       Alert.alert('Error', errorMessage);
@@ -107,7 +142,8 @@ export default function ResetPassword() {
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
-    router.push('/SignInScreen');
+    // ✅ FIXED: Correct path to SignInScreen
+    router.replace('/(auth)/SignInScreen');
   };
 
   return (
@@ -121,7 +157,7 @@ export default function ResetPassword() {
       >
         <Text style={styles.title}>Reset Password</Text>
         <Text style={styles.subtitle}>
-          Create a new password for your account
+          Create a new password for {email || 'your account'}
         </Text>
 
         <View style={styles.inputWrapper}>
@@ -133,11 +169,11 @@ export default function ResetPassword() {
               setNewPassword(text);
               if (newPasswordError) validatePassword(text);
             }}
-            iconName="lock-outline"
+            iconName="lock-closed-outline"
             isPassword={true}
-            secureTextEntry={true}
             isError={!!newPasswordError}
             errorMessage={newPasswordError}
+            isValid={newPassword.length >= 8 && !newPasswordError}
           />
         </View>
 
@@ -152,11 +188,11 @@ export default function ResetPassword() {
                 setConfirmPasswordError('');
               }
             }}
-            iconName="lock-outline"
+            iconName="lock-closed-outline"
             isPassword={true}
-            secureTextEntry={true}
             isError={!!confirmPasswordError}
             errorMessage={confirmPasswordError}
+            isValid={confirmPassword.length > 0 && newPassword === confirmPassword && !confirmPasswordError}
           />
         </View>
 

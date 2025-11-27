@@ -39,7 +39,6 @@ function OtpScreen() {
   const params = useLocalSearchParams<{ email: string; context?: 'register' | 'reset'; verificationToken?: string }>();
   const email = params.email;
   const context = params.context ?? 'register';
-  const resetToken = params.verificationToken;
 
   // State
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
@@ -124,6 +123,7 @@ function OtpScreen() {
         const response = result.data;
         
         if (context === 'register') {
+          // ✅ Email verification - token should be stored already by verifyValue
           const tokenResponse = response as TokenResponse;
           
           if (tokenResponse.access_token) {
@@ -141,20 +141,43 @@ function OtpScreen() {
             );
           }
         } else if (context === 'reset') {
-          const verificationToken = response.access_token || resetToken; 
+          // ✅ Password reset - OTP code itself is the verification token
+          const verificationToken = response.access_token;
           
-          if (!verificationToken) {
-            setVerificationError("Verification successful, but missing token for password reset.");
-          } else {
-            Alert.alert("Success", "Code verified. Proceeding to reset password.");
-            router.push({ 
-              pathname: '/(auth)/ResetPassword',
-              params: { 
-                verificationToken: verificationToken,
-                email: email
-              } 
-            });
+          // 🔍 DETAILED LOGGING FOR DEBUGGING
+          console.log("🔍 OTP VERIFICATION - What we're passing:");
+          console.log("  - Raw response:", JSON.stringify(response, null, 2));
+          console.log("  - access_token field:", verificationToken);
+          console.log("  - Type:", typeof verificationToken);
+          console.log("  - Length:", verificationToken?.length);
+          console.log("  - Actual value:", verificationToken);
+          console.log("  - Original OTP entered:", verificationValue);
+          
+          if (!verificationToken || verificationToken.length !== 6) {
+            console.error("❌ Token validation failed!");
+            console.error("  - Expected: 6-digit OTP code");
+            console.error("  - Received:", verificationToken);
+            console.error("  - Length:", verificationToken?.length);
+            
+            setVerificationError("Invalid OTP code. Please try again.");
+            Alert.alert("Error", "Invalid OTP code. Please try again.");
+            setOtp(Array(OTP_LENGTH).fill(''));
+            inputRefs.current[0]?.focus();
+            return;
           }
+          
+          console.log("✅ OTP validation passed, navigating to ResetPassword");
+          console.log("  - Passing token:", verificationToken);
+          console.log("  - Passing email:", email);
+          
+          Alert.alert("Success", "Code verified. Proceeding to reset password.");
+          router.push({ 
+            pathname: '/(auth)/ResetPassword',
+            params: { 
+              verificationToken: verificationToken, // This is the OTP code
+              email: email
+            } 
+          });
         }
       } else { 
         const error = result.error;
@@ -179,7 +202,7 @@ function OtpScreen() {
     } finally {
       setIsLoading(false); 
     }
-  }, [isLoading, otp, context, email, resetToken]);
+  }, [isLoading, otp, context, email]);
 
   const handleResendCode = useCallback(async () => {
     if (timer > 0 || isResending || isLoading || !email) {

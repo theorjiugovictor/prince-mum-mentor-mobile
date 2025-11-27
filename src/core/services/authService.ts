@@ -1,6 +1,8 @@
 import { AxiosError, isAxiosError } from "axios";
 import apiClient from "./apiClient";
 import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getProfileSetup } from './profileSetup.service';
 
 // --- TYPES ---
 export interface AuthTokenData {
@@ -10,6 +12,7 @@ export interface AuthTokenData {
     id: string;
     email: string;
     full_name: string;
+    profile_setup_id?: string;
   };
 }
 
@@ -35,7 +38,11 @@ export interface RegisterPayload {
   password: string;
   confirm_password: string;
 }
-
+export interface ChangePasswordPayload {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+}
 export interface LoginPayload {
   email: string;
   password: string;
@@ -65,6 +72,11 @@ export interface ResetPasswordPayload {
 
 export interface MessageResponse {
   message: string;
+}
+
+export interface DeleteAccountPayload {
+  confirmation_phrase: string;
+  password: string;
 }
 
 export interface ValidationErrorDetail {
@@ -112,6 +124,12 @@ export async function login(payload: LoginPayload): Promise<AuthTokenData> {
       "/api/v1/auth/login",
       payload
     );
+    
+    console.log('='.repeat(60));
+    console.log('🔐 LOGIN RESPONSE RECEIVED');
+    console.log('='.repeat(60));
+    console.log('Full response:', JSON.stringify(response.data, null, 2));
+    
     const tokenData = response.data.data;
     const token = tokenData?.access_token;
 
@@ -124,6 +142,16 @@ export async function login(payload: LoginPayload): Promise<AuthTokenData> {
 
       if (!storedToken) {
         console.error("CRITICAL: Token was not stored despite no errors!");
+      }
+      
+      // ✅ Fetch and store profile_setup_id after successful login
+      console.log('🔄 Fetching profile setup...');
+      try {
+        await getProfileSetup();
+        console.log('✅ Profile setup fetched and stored');
+      } catch (profileError) {
+        console.error('⚠️ Could not fetch profile setup:', profileError);
+        // Don't fail login if profile setup fetch fails
       }
     } else {
       console.error("Login response missing access_token:", response.data);
@@ -161,6 +189,16 @@ export async function loginWithGoogle(
       if (!storedToken) {
         console.error("CRITICAL: Token was not stored despite no errors!");
       }
+      
+      // ✅ Fetch and store profile_setup_id after successful Google login
+      console.log('🔄 Fetching profile setup...');
+      try {
+        await getProfileSetup();
+        console.log('✅ Profile setup fetched and stored');
+      } catch (profileError) {
+        console.error('⚠️ Could not fetch profile setup:', profileError);
+        // Don't fail login if profile setup fetch fails
+      }
     } else {
       console.error("Google login response missing access_token:", response.data);
       throw new Error("API response missing access token.");
@@ -174,6 +212,7 @@ export async function loginWithGoogle(
 
 export async function logout(): Promise<void> {
   await removeAuthToken();
+  await AsyncStorage.removeItem('profile_setup_id');
 }
 
 // --- VERIFICATION AND RECOVERY ---
@@ -217,21 +256,70 @@ export async function verifyValue(
       throw new Error("Invalid verification type provided.");
     }
 
-    const response = await apiClient.post<{
-      data: TokenResponse;
-      message: string;
-      status: string;
-      status_code: number;
-    }>(apiUrl, requestBody);
+    const response = await apiClient.post(apiUrl, requestBody);
 
-    const tokenData = response.data.data;
-    const token = tokenData?.access_token;
+    // ✅ Handle different response formats based on verification type
+    let tokenData: TokenResponse;
 
-    if (token && token.length > 0) {
-      await setAuthToken(token);
-      console.log("Verification successful. Token stored.");
+    if (payload.type === "email_verification") {
+      // Email verification returns full TokenResponse object
+      const responseData = response.data.data;
+      
+      if (Array.isArray(responseData)) {
+        // Handle array format [token, expiry]
+        const token = responseData[0];
+        tokenData = {
+          access_token: token,
+          refresh_token: '',
+          user: {
+            id: '',
+            email: payload.email,
+            full_name: ''
+          }
+        };
+      } else {
+        // Handle object format
+        tokenData = responseData;
+      }
+      
+      const token = tokenData?.access_token;
+      console.log("✅ Email verification token:", token?.substring(0, 20) + "...");
+      
+      if (token && token.length > 0) {
+        await setAuthToken(token);
+        console.log("Email verification successful. Token stored.");
+        
+        // ✅ Fetch profile setup after email verification
+        try {
+          await getProfileSetup();
+        } catch (profileError) {
+          console.error('⚠️ Could not fetch profile setup:', profileError);
+        }
+      } else {
+        console.warn("Email verification returned no access token:", response.data);
+      }
+      
+    } else if (payload.type === "password_reset") {
+      // ✅ Password reset OTP verify returns just a string message, NOT a token
+      // The OTP code itself will be used as the "token" for the reset-password endpoint
+      console.log("Password reset OTP verified successfully");
+      console.log("API Response:", response.data);
+      
+      // Use the OTP code as the verification token for the next step
+      const otpCode = payload.verification_value;
+      tokenData = {
+        access_token: otpCode, // Use OTP as token
+        refresh_token: '',
+        user: {
+          id: '',
+          email: payload.email,
+          full_name: ''
+        }
+      };
+      
+      console.log("✅ Using OTP code as verification token for password reset");
     } else {
-      console.warn("Verification returned no access token:", response.data);
+      throw new Error("Invalid verification type provided.");
     }
 
     return { success: true, data: tokenData };
@@ -250,14 +338,19 @@ export async function resetPassword(
   return response.data;
 }
 
+
 export async function changePassword(
-  payload: ResetPasswordPayload
-): Promise<MessageResponse> {
-  const response = await apiClient.patch<MessageResponse>(
-    "/api/v1/auth/change-password",
-    payload
-  );
-  return response.data;
+  payload: ChangePasswordPayload
+): Promise<string> {
+  try {
+    const response = await apiClient.patch<string>(
+      "/api/v1/auth/change-password",
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    throw error as AxiosError<ApiErrorResponse>;
+  }
 }
 
 export async function logoutUser(): Promise<MessageResponse> {
@@ -266,9 +359,33 @@ export async function logoutUser(): Promise<MessageResponse> {
       "/api/v1/auth/logout"
     );
     await removeAuthToken();
+    await AsyncStorage.removeItem('profile_setup_id');
     return response.data;
   } catch (error) {
     await removeAuthToken();
+    await AsyncStorage.removeItem('profile_setup_id');
+    throw error as AxiosError<ApiErrorResponse>;
+  }
+}
+
+/**
+ * Delete Account
+ * Permanently deletes user account and all associated data
+ * Requires confirmation phrase "DELETE MY ACCOUNT" and user's current password
+ * Removes auth token after successful deletion
+ */
+export async function deleteAccount(
+  payload: DeleteAccountPayload
+): Promise<string> {
+  try {
+    const response = await apiClient.delete<string>(
+      "/api/v1/auth/delete",
+      { data: payload }
+    );
+    await removeAuthToken();
+    await AsyncStorage.removeItem('profile_setup_id');
+    return response.data;
+  } catch (error) {
     throw error as AxiosError<ApiErrorResponse>;
   }
 }

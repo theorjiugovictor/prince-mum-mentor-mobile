@@ -1,19 +1,13 @@
 // src/components/ChildSetupItem.tsx
 
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Platform,
-} from 'react-native';
-import { ms, rh, rw } from '@/src/core/styles/scaling';
-import { colors, spacing, typography } from '@/src/core/styles';
-import CustomInput from './CustomInput';
-import DatePickerInput from './DatePickerInput';
-import GenderDropdown from './GenderDropdown';
+import { colors, spacing, typography } from "@/src/core/styles";
+import { ms, rh, rw } from "@/src/core/styles/scaling";
+import React, { useState } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import CustomInput from "./CustomInput";
+import DatePickerInput from "./DatePickerInput";
+import DeleteConfirmModal from "./DeleteConfirmationModal";
+import GenderDropdown from "./GenderDropdown";
 
 interface ChildSetupItemProps {
   index: number;
@@ -41,6 +35,9 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
     onUpdate(index, { ...childData, [key]: value });
   };
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+
   return (
     <View style={styles.container}>
       {/* HEADER */}
@@ -50,14 +47,28 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
       >
         <Text style={styles.headerText}>Child {index + 1} Set up</Text>
 
-        <Image
-          source={
-            expanded
-              ? require('@/src/assets/images/arrow-up.png')
-              : require('@/src/assets/images/arrow-down.png')
-          }
-          style={styles.arrowIcon}
-        />
+        <View style={styles.iconRow}>
+          <TouchableOpacity
+            onPress={() => {
+              setItemToDelete(index);
+              setShowDeleteModal(true);
+            }}
+          >
+            <Image
+              source={require("@/src/assets/images/trash.png")}
+              style={styles.deleteIcon}
+            />
+          </TouchableOpacity>
+
+          <Image
+            source={
+              expanded
+                ? require("@/src/assets/images/arrow-up.png")
+                : require("@/src/assets/images/arrow-down.png")
+            }
+            style={styles.arrowIcon}
+          />
+        </View>
       </TouchableOpacity>
 
       {/* EXPANDED CONTENT */}
@@ -70,7 +81,7 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
               label="Child's Full Name"
               placeholder="Enter Full Name"
               value={childData.fullName}
-              onChangeText={(t) => handleChange('fullName', t)}
+              onChangeText={(t) => handleChange("fullName", t)}
               iconName="person-outline"
             />
 
@@ -79,7 +90,7 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
               label="Child's Age"
               placeholder="Enter Age"
               value={childData.age}
-              onChangeText={(t) => handleChange('age', t)}
+              onChangeText={(t) => handleChange("age", t)}
               iconName="calendar-outline"
             />
 
@@ -88,21 +99,28 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
               label="Child's Date Of Birth"
               placeholder="Select Date"
               value={childData.dob}
-              onDateChange={(date) => handleChange('dob', date)}
+              onDateChange={(date) => handleChange("dob", date)}
             />
 
             {/* Gender - Now with Dropdown */}
             <GenderDropdown
               label="Child's Gender"
               value={childData.gender}
-              onValueChange={(gender) => handleChange('gender', gender)}
+              onValueChange={(gender) => handleChange("gender", gender)}
             />
-            <TouchableOpacity style={styles.deleteBtn} onPress={onDelete}>
-              <Text style={styles.deleteText}>Remove Child</Text>
-            </TouchableOpacity>
           </View>
         </>
       )}
+      <DeleteConfirmModal
+        visible={showDeleteModal}
+        title={`Delete Child Setup ${index + 1}`}
+        message="Are you sure you want to delete this child setup?"
+        onCancel={() => setShowDeleteModal(false)}
+        onDelete={() => {
+          onDelete();
+          setShowDeleteModal(false);
+        }}
+      />
     </View>
   );
 };
@@ -118,9 +136,9 @@ const styles = StyleSheet.create({
     borderColor: colors.backgroundSubtle,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: ms(spacing.sm),
   },
   headerText: {
@@ -129,8 +147,20 @@ const styles = StyleSheet.create({
   arrowIcon: {
     width: rw(6),
     height: rh(6),
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+  },
+
+  deleteIcon: {
+    width: 20,
+    height: 20,
+    tintColor: colors.error,
+  },
+
   divider: {
     height: rh(0.1),
     backgroundColor: colors.backgroundSubtle,
@@ -138,15 +168,5 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: ms(spacing.md),
-  },
-  deleteBtn: {
-    marginTop: ms(12),
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  deleteText: {
-    ...typography.labelMedium,
-    color: colors.primary,
   },
 });

@@ -1,3 +1,5 @@
+// src/screens/setup/MomSetupScreen.tsx
+
 import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, rbr, rfs, vs } from "@/src/core/styles/scaling";
 import { showToast } from "@/src/core/utils/toast";
@@ -14,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Added
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSetup } from "../../core/hooks/setupContext";
 import { MomSetupData } from "../../core/services/setupStorageService";
 import AddGoalModal from "../components/AddGoalModal";
@@ -152,7 +154,12 @@ const MomSetupScreen: React.FC = () => {
   };
 
   const handleNext = async () => {
+    console.log('='.repeat(80));
+    console.log('📱 MOM SETUP SCREEN - handleNext called');
+    console.log('='.repeat(80));
+    
     if (!validateForm()) {
+      console.log('❌ Form validation failed');
       showToast.error(
         "Validation Error",
         "Please complete all required fields."
@@ -160,6 +167,7 @@ const MomSetupScreen: React.FC = () => {
       return;
     }
 
+    console.log('✅ Form validation passed');
     setIsLoading(true);
 
     try {
@@ -177,13 +185,23 @@ const MomSetupScreen: React.FC = () => {
         };
       }
 
+      console.log('💾 Saving mom setup data to context/AsyncStorage...');
+      console.log('📦 Mom setup data:', JSON.stringify(momSetupData, null, 2));
+      
       await saveMomSetup(momSetupData);
+      
+      console.log('✅ Mom setup data saved successfully');
 
-      // --- AsyncStorage flag added ---
+      // IMPORTANT: Keep setup as incomplete - will be set by service on backend success
+      console.log('🔒 Setting isSetupComplete = false (will be set by backend service)');
       await AsyncStorage.setItem("isSetupComplete", "false");
 
+      console.log('➡️ Navigating to Child Setup Screen');
+      console.log('='.repeat(80));
+      
       router.push("/setup/childSetupScreen");
     } catch (error) {
+      console.error('❌ Error saving mom setup:', error);
       showToast.error("Error", "Failed to save your setup. Please try again.");
     } finally {
       setIsLoading(false);
@@ -305,18 +323,6 @@ const MomSetupScreen: React.FC = () => {
               setNewGoal={setNewGoal}
               onAddGoal={handleAddGoal}
             />
-
-            {/* <EditGoalModal
-              visible={isEditModalVisible}
-              onClose={() => {
-                setIsEditModalVisible(false);
-                setEditingGoal("");
-                setEditedGoalValue("");
-              }}
-              goalValue={editedGoalValue}
-              setGoalValue={setEditedGoalValue}
-              onUpdateGoal={handleUpdateGoal}
-            /> */}
           </View>
 
           {/* Optional Setup */}

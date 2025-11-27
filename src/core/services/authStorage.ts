@@ -47,13 +47,21 @@ export async function getAuthToken(): Promise<string | null> {
       // Use localStorage for web
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       // ✅ LOG ADDED: Critical check for token retrieval
-      console.log("[STORAGE] Web token retrieved:", token ? "YES" : "NO", token ? `Token ID: ${token.substring(0, 10)}...` : "");
+      console.log(
+        "[STORAGE] Web token retrieved:",
+        token ? "YES" : "NO",
+        token ? `Token ID: ${token.substring(0, 10)}...` : ""
+      );
       return token;
     } else {
       // Use SecureStore for native
       const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
       // ✅ LOG ADDED: Critical check for token retrieval
-      console.log("[STORAGE] Native token retrieved:", token ? "YES" : "NO", token ? `Token ID: ${token.substring(0, 10)}...` : "");
+      console.log(
+        "[STORAGE] Native token retrieved:",
+        token ? "YES" : "NO",
+        token ? `Token ID: ${token.substring(0, 10)}...` : ""
+      );
       return token;
     }
   } catch (error) {
@@ -68,7 +76,7 @@ export async function getAuthToken(): Promise<string | null> {
 export async function removeAuthToken(): Promise<void> {
   try {
     if (Platform.OS === "web") {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.clear();
       console.log("Auth token removed from localStorage (web)");
     } else {
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);

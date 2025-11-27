@@ -37,7 +37,7 @@ interface Errors {
 }
 
 const MomSetupScreen: React.FC = () => {
-  const { user, isSessionLoading } = useAuth();
+  const { isSessionLoading } = useAuth();
   const { saveMomSetup } = useSetup();
 
   const [selectedStatus, setSelectedStatus] = useState<string>("");
@@ -48,9 +48,9 @@ const MomSetupScreen: React.FC = () => {
   const [newGoal, setNewGoal] = useState("");
   const [goals, setGoals] = useState<string[]>(defaultGoals);
   const [customGoals, setCustomGoals] = useState<string[]>([]);
-  const [showInputs, setShowInputs] = useState<boolean>(false);
-  const [partnersName, setPartnersName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [showInputs] = useState<boolean>(false);
+  const [partnersName] = useState<string>("");
+  const [email] = useState<string>("");
   const [errors, setErrors] = useState<Errors>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -115,12 +115,6 @@ const MomSetupScreen: React.FC = () => {
       showToast.info("Please wait", "Restoring session...");
       return;
     }
-
-    // if (!user) {
-    //   showToast.error("Session Error", "You are not logged in. Please login again.");
-    //   router.replace("/(auth)/SignInScreen");
-    //   return;
-    // }
 
     if (!validateForm()) {
       showToast.error(

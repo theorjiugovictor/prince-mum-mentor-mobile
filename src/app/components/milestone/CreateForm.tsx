@@ -13,7 +13,7 @@ import { CreateMilestoneType, MilestoneDataType } from "@/src/types/milestones";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import Modal from "react-native-modal";
 
 export default function CreateForm() {
@@ -33,7 +33,7 @@ export default function CreateForm() {
         dispatch(onToggleSuccessModal(true));
         queryClient.invalidateQueries({ queryKey: ["milestonesByCat"] });
       },
-      onError: (error) => {
+      onError: (error: any) => {
         showToast.error(error.message);
       },
     });
@@ -70,68 +70,80 @@ export default function CreateForm() {
       backdropOpacity={0.5}
       onBackdropPress={() => dispatch(onToggleCreateForm(false))}
       style={{ justifyContent: "flex-end", margin: 0 }}
+      avoidKeyboard
     >
-      <View style={styles.milestoneFormContainer}>
-        <View style={styles.formHeaderBox}>
-          <Text style={styles.formTitle}>create milestones</Text>
-          <Text style={styles.formDescription}>
-            Add Milestones to stay focused, celebrate progress
-          </Text>
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.milestoneFormContainer}>
+            <View style={styles.formHeaderBox}>
+              <Text style={styles.formTitle}>create milestones</Text>
+              <Text style={styles.formDescription}>
+                Add Milestones to stay focused, celebrate progress
+              </Text>
+            </View>
 
-        <FormInput label="Milestone Name">
-          <TextInput
-            style={styles.input}
-            placeholder="e.g 5 Minutes Exercise"
-            placeholderTextColor={colors.textGrey2}
-            editable={!isCreatingMilestone}
-            autoCapitalize="none"
-            value={formData.name}
-            onChangeText={(text) =>
-              setFormData((cur) => ({ ...cur, name: text }))
-            }
-          />
-        </FormInput>
+            <FormInput label="Milestone Name">
+              <TextInput
+                style={styles.input}
+                placeholder="e.g 5 Minutes Exercise"
+                placeholderTextColor={colors.textGrey2}
+                editable={!isCreatingMilestone}
+                autoCapitalize="none"
+                value={formData.name}
+                onChangeText={(text) =>
+                  setFormData((cur) => ({ ...cur, name: text }))
+                }
+              />
+            </FormInput>
 
-        <FormInput label="Add Description">
-          <TextInput
-            style={styles.input}
-            placeholder="eg. Tried a 5 Minutes Exercise Plan..."
-            placeholderTextColor={colors.textGrey2}
-            editable={!isCreatingMilestone}
-            defaultValue=""
-            keyboardType="default"
-            autoCapitalize="none"
-            onChangeText={(text) =>
-              setFormData((cur) => ({ ...cur, description: text }))
-            }
-          />
-        </FormInput>
+            <FormInput label="Add Description">
+              <TextInput
+                style={styles.input}
+                placeholder="eg. Tried a 5 Minutes Exercise Plan..."
+                placeholderTextColor={colors.textGrey2}
+                editable={!isCreatingMilestone}
+                defaultValue=""
+                keyboardType="default"
+                autoCapitalize="none"
+                onChangeText={(text) =>
+                  setFormData((cur) => ({ ...cur, description: text }))
+                }
+              />
+            </FormInput>
 
-        <View style={styles.buttonsContainer}>
-          <Pressable
-            style={[
-              styles.buttons,
-              styles.buttonSave,
-              (!isNameInputFilled || isCreatingMilestone) && styles.buttonDisabled,
-            ]}
-            onPress={handleMilestoneCreation}
-            disabled={!isNameInputFilled || isCreatingMilestone}
-          >
-            <Text style={styles.buttonText}>
-              {isCreatingMilestone ? "Saving..." : "Save"}
-            </Text>
-          </Pressable>
+            <View style={styles.buttonsContainer}>
+              <Pressable
+                style={[
+                  styles.buttons,
+                  styles.buttonSave,
+                  (!isNameInputFilled || isCreatingMilestone) &&
+                    styles.buttonDisabled,
+                ]}
+                onPress={handleMilestoneCreation}
+                disabled={!isNameInputFilled || isCreatingMilestone}
+              >
+                <Text style={styles.buttonText}>
+                  {isCreatingMilestone ? "Saving..." : "Save"}
+                </Text>
+              </Pressable>
 
-          <Pressable
-            style={[styles.buttons, styles.buttonCancel]}
-            onPress={() => dispatch(onToggleCreateForm(false))}
-            disabled={isCreatingMilestone}
-          >
-            <Text style={styles.buttonCancelText}>Cancel</Text>
-          </Pressable>
-        </View>
-      </View>
+              <Pressable
+                style={[styles.buttons, styles.buttonCancel]}
+                onPress={() => dispatch(onToggleCreateForm(false))}
+                disabled={isCreatingMilestone}
+              >
+                <Text style={styles.buttonCancelText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

@@ -182,7 +182,6 @@ export const useSendAiMessage = () => {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
-              chunkCount++;
 
               if (data.type === "start") {
                 messageId = data.message_id;
@@ -195,7 +194,7 @@ export const useSendAiMessage = () => {
                 }
               }
             } catch (e) {
-              console.error("Failed to parse SSE data:", e, "Line:", line);
+              console.error("❌ Failed to parse SSE data:", e, "Line:", line);
             }
           }
         }

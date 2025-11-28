@@ -97,4 +97,27 @@ export const CATEGORIES: Record<string, CategoryInfo> = {
     desc: "See patterns in how you feel over time.",
     icon: require("../../assets/images/emotional-tracker.png"),
   },
+
+  // child
+
+  Development: {
+    title: "month development",
+    desc: "See what your baby is learning at each age.",
+    icon: require("../../assets/images/month.png"),
+  },
+  "Health and Nutrition": {
+    title: "Health & Nutrition",
+    desc: "Monitor growth measurements easily.",
+    icon: require("../../assets/images/health.png"),
+  },
+  "Activities and Play": {
+    title: "Activities & Play",
+    desc: "Age-appropriate activities to support learning.",
+    icon: require("../../assets/images/activity.png"),
+  },
+  "Growth Check": {
+    title: "Growth Check",
+    desc: "Monitor feeding, sleep, and basic wellness.",
+    icon: require("../../assets/images/emotional-tracker.png"),
+  },
 };

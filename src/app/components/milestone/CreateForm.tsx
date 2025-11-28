@@ -1,5 +1,4 @@
 import FormInput from "@/src/app/components/milestone/FormInput";
-import { useAuth } from "@/src/core/services/authContext";
 
 import { createMilestone } from "@/src/core/services/milestoneService";
 import { colors, typography } from "@/src/core/styles";
@@ -24,8 +23,8 @@ export default function CreateForm() {
   const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({ name: "", description: "" });
   const queryClient = useQueryClient();
-  const { categoryValue, ownerType, ownerId } = useLocalSearchParams();
-  const { user } = useAuth();
+  const { categoryValue, ownerId, childId } = useLocalSearchParams();
+
   const isNameInputFilled = !!formData.name;
 
   const { mutate: createNewMilestone, isPending: isCreatingMilestone } =
@@ -35,7 +34,7 @@ export default function CreateForm() {
       onSuccess: () => {
         dispatch(onToggleCreateForm(false));
         dispatch(onToggleSuccessModal(true));
-        queryClient.invalidateQueries({ queryKey: ["milestones"] });
+        queryClient.invalidateQueries({ queryKey: ["milestonesByCat"] });
       },
 
       onError: (error) => {
@@ -48,7 +47,7 @@ export default function CreateForm() {
     const newMilestone: MilestoneDataType = {
       id: crypto.randomUUID(),
       owner_id: ownerId as string,
-      owner_type: ownerType as string,
+      owner_type: childId ? "child" : "mother",
       status: "pending",
       category: categoryValue as string,
       created_at: currentDate,
@@ -59,6 +58,7 @@ export default function CreateForm() {
     const serverNewMilestone = {
       ...formData,
       category: categoryValue as string,
+      child_id: childId as string | undefined,
     };
 
     dispatch(onAddMilestone(newMilestone));
@@ -66,7 +66,6 @@ export default function CreateForm() {
 
     // if success, open success modal
     setFormData({ name: "", description: "" });
-    dispatch(onToggleCreateForm(false));
   }
 
   return (
@@ -124,6 +123,7 @@ export default function CreateForm() {
               styles.buttons,
               styles.buttonSave,
               !isNameInputFilled && styles.buttonDisabled,
+              isCreatingMilestone && styles.buttonDisabled,
             ]}
             onPress={() => handleMilestoneCreation()}
             disabled={!isNameInputFilled || isCreatingMilestone}

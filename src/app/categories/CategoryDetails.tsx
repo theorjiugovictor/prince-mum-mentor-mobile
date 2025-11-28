@@ -8,7 +8,6 @@ import SuccessModal from "@/src/app/components/milestone/SuccessModal";
 import { MILESTONE_STATUS } from "@/src/core/data/milestone-data";
 import { getMilestonesByCategory } from "@/src/core/services/milestoneService";
 import { colors, typography } from "@/src/core/styles";
-import { useMilestoneTypeChange } from "@/src/hooks/useMilestoneTypeChange";
 import { useAppDispatch } from "@/src/store/hooks";
 import {
   onAddMilestoneOnMount,
@@ -17,7 +16,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -25,15 +24,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CategoryDetails() {
   const dispatch = useAppDispatch();
-  const { categoryValue, ownerType, ownerId } = useLocalSearchParams();
-  const {
-    mileStoneType: milestoneStatus,
-    saveMilestoneType: saveMilestoneStatus,
-  } = useMilestoneTypeChange("completed", "milestone_status");
+  const { categoryValue, ownerType, ownerId, childId } = useLocalSearchParams();
+  const [milestoneStatus, setMilestoneStatus] = useState("pending");
 
   const { data, error, isError, isLoading } = useQuery({
-    queryKey: ["milestonesByCat", categoryValue],
-    queryFn: () => getMilestonesByCategory(categoryValue as string),
+    queryKey: ["milestonesByCat", categoryValue, childId],
+    queryFn: () =>
+      getMilestonesByCategory(
+        categoryValue as string,
+        childId as string | undefined
+      ),
   });
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function CategoryDetails() {
                 <View style={styles.mileStonesHeading}>
                   {MILESTONE_STATUS.map((section) => (
                     <Text
-                      onPress={() => saveMilestoneStatus(section.status)}
+                      onPress={() => setMilestoneStatus(section.status)}
                       key={section.id}
                       style={[
                         styles.sectionText,
@@ -77,8 +77,6 @@ export default function CategoryDetails() {
               </View>
 
               <MilestonesList milestoneStatus={milestoneStatus} />
-
-              {/* <EmptyMilestoneMessage /> */}
             </View>
 
             <CreateForm />

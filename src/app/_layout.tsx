@@ -136,6 +136,7 @@ function RootLayoutContent() {
           name="categories/CategoryDetails"
           options={{ title: "category" }}
         />
+        <Stack.Screen name="child-milestone/[id].tsx" />
       </Stack>
       <Toast config={toastConfig} />
     </>

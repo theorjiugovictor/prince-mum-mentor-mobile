@@ -3,12 +3,18 @@ import { colors, typography } from "@/src/core/styles";
 import React, { useEffect, useState } from "react";
 import Modal from "react-native-modal";
 
+import { editMilestone } from "@/src/core/services/milestoneService";
+import { showToast } from "@/src/core/utils/toast";
 import { useAppDispatch, useAppSelector } from "@/src/store/hooks";
 import {
   getMilestoneStates,
+  onEditMileStone,
   onToggleEditForm,
   onToggleEditSuccessModal,
 } from "@/src/store/milestoneSlice";
+import { EditMilestoneType } from "@/src/types/milestones";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocalSearchParams } from "expo-router";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function EditForm() {
@@ -16,11 +22,28 @@ export default function EditForm() {
     useAppSelector(getMilestoneStates);
   const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({ name: "", description: "" });
+  const { categoryValue } = useLocalSearchParams();
   const isNameInputFilled = formData.name;
+  const queryClient = useQueryClient();
 
   const currentMilestone = milestoneData.find(
     (milestone) => milestone.id === milestoneToEditId
   );
+
+  const { mutate: updateMilestone, isPending: isUpdatingMilestone } =
+    useMutation({
+      mutationFn: (payload: EditMilestoneType) =>
+        editMilestone(milestoneToEditId, payload),
+      onSuccess: () => {
+        dispatch(onToggleEditForm({ isOpenForm: false }));
+        dispatch(onToggleEditSuccessModal(true));
+        queryClient.invalidateQueries({ queryKey: ["milestonesByCat"] });
+      },
+      onError: (error) => {
+        showToast.error(error.message);
+        dispatch(onToggleEditForm({ isOpenForm: false }));
+      },
+    });
 
   useEffect(() => {
     if (currentMilestone) {
@@ -32,16 +55,21 @@ export default function EditForm() {
   }, [currentMilestone]);
 
   function handleMilestoneUpdate() {
-    const updatedMilestone = {
+    const currentDate = new Date().toISOString();
+    const milestoneToUpdate = {
       ...formData,
+      updated_at: currentDate,
     };
 
-    // dispatch(onEditMileStone(updatedMilestone));
+    const serverMilestoneToUpdate = {
+      ...formData,
+      category: categoryValue as string,
+    };
+
+    dispatch(onEditMileStone(milestoneToUpdate));
+    updateMilestone(serverMilestoneToUpdate);
 
     setFormData({ name: "", description: "" });
-
-    dispatch(onToggleEditForm({ isOpenForm: false }));
-    dispatch(onToggleEditSuccessModal(true));
   }
 
   return (
@@ -70,6 +98,7 @@ export default function EditForm() {
             keyboardType="default"
             autoCapitalize="none"
             value={formData.name}
+            editable={!isUpdatingMilestone}
             onChangeText={(text) =>
               setFormData((cur) => ({ ...cur, name: text }))
             }
@@ -83,6 +112,7 @@ export default function EditForm() {
             placeholderTextColor={colors.textGrey2}
             keyboardType="default"
             autoCapitalize="none"
+            editable={!isUpdatingMilestone}
             value={formData.description}
             onChangeText={(text) =>
               setFormData((cur) => ({ ...cur, description: text }))
@@ -96,11 +126,12 @@ export default function EditForm() {
               styles.buttons,
               styles.buttonSave,
               !isNameInputFilled && styles.buttonDisabled,
+              isUpdatingMilestone && styles.buttonDisabled,
             ]}
             onPress={handleMilestoneUpdate}
-            disabled={!isNameInputFilled}
+            disabled={!isNameInputFilled || isUpdatingMilestone}
           >
-            Save
+            {isUpdatingMilestone ? "Updating Milestone..." : "Update"}
           </Pressable>
 
           <Pressable

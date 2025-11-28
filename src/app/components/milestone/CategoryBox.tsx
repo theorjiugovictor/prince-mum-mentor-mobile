@@ -1,8 +1,9 @@
 import { CATEGORIES } from "@/src/core/data/milestone-data";
+import { getMilestonesByCategory } from "@/src/core/services/milestoneService";
 import { colors, typography } from "@/src/core/styles";
-import { useAppSelector } from "@/src/store/hooks";
-import { getMilestoneStates } from "@/src/store/milestoneSlice";
+import { showToast } from "@/src/core/utils/toast";
 import { Category } from "@/src/types/milestones";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -12,24 +13,51 @@ interface CategoryBoxType {
   category: Category;
   milestoneType: string;
   ownerId: string;
+  childId?: string;
 }
 
 export default function CategoryBox({
   category,
   milestoneType,
   ownerId,
+  childId,
 }: CategoryBoxType) {
-  const { milestoneData } = useAppSelector(getMilestoneStates);
+  // const { milestoneData } = useAppSelector(getMilestoneStates);
+
+  console.log(category);
 
   const router = useRouter();
+  const {
+    data: milestoneData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["milestonesByCat", category.label, childId],
+    queryFn: () => getMilestonesByCategory(category.label, childId),
+  });
 
-  const completedMilestones = milestoneData.filter(
-    (milestone) => milestone.status === "completed"
-  ).length;
+  const completedMilestones =
+    milestoneData?.filter((milestone) => milestone.status === "completed")
+      .length ?? 0;
+  const milestonesDataLength = milestoneData?.length ?? 0;
 
-  const progress = (completedMilestones / milestoneData.length) * 100;
+  console.log(milestoneData, category.label, "milestone");
+
+  if (isLoading) {
+    return <View>Loading</View>;
+  }
+
+  const progress = milestonesDataLength
+    ? (completedMilestones / milestonesDataLength) * 100
+    : 0;
+
+  console.log(progress, "progress", category.label, "ridwan");
 
   const categoryData = CATEGORIES[category.label];
+
+  if (error) {
+    showToast.error(error.message);
+  }
 
   return (
     <Link
@@ -40,6 +68,7 @@ export default function CategoryBox({
           categoryLabel: category.label,
           ownerType: milestoneType,
           ownerId,
+          childId,
         },
       }}
       asChild

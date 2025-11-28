@@ -18,7 +18,7 @@ import {
 import { useSetup } from "../../core/hooks/setupContext";
 // ✅ FIXED: ChildData interface is correctly imported here
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getProfileSetup } from "../../core/services/profileSetup.service";
+// import { getProfileSetup } from "../../core/services/profileSetup.service";
 import { completeSetupFlow } from "../../core/services/setupService";
 import ChildSetupItem, { ChildData } from "../components/ChildSetupItem";
 import PrimaryButton from "../components/PrimaryButton";
@@ -34,29 +34,9 @@ const ChildSetupScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { visible, show, hide } = useSuccessModal();
 
-  // ✅ STATE: Flag to ignore the initial state flicker
-  const [isNavigatingFromSetup, setIsNavigatingFromSetup] = useState(true);
-
-  // Set the flag to false after a brief moment to allow the context to settle
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsNavigatingFromSetup(false);
-      console.log("[ChildSetup] Initial navigation buffer complete (500ms).");
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   // Check session and redirect if setup already exists or session is invalid
   useEffect(() => {
     // 1. Always wait for the context to finish its main check OR the buffer period to end.
-    if (isSessionLoading || isNavigatingFromSetup) {
-      // 📢 AGGRESSIVE LOG: Track the waiting state
-      console.log(
-        `[ChildSetup Guard] WAITING. Loading: ${isSessionLoading ? "TRUE" : "FALSE"}, Buffer: ${isNavigatingFromSetup ? "TRUE" : "FALSE"}.`
-      );
-      return;
-    }
 
     // --- REDIRECT GUARDS ---
 
@@ -80,7 +60,7 @@ const ChildSetupScreen: React.FC = () => {
     }
 
     // 4. EDGE CASE CHECK: User session LOST but Mom data exists (Go back to Login - This is the silent logout)
-    if (!user && momSetupData) {
+    if (!momSetupData) {
       // 📢 CRITICAL LOG: This captures the silent session failure
       console.error(
         "[ChildSetup Guard] REDIRECT: SESSION LOST. User is NULL but MomData EXISTS. Redirecting to LOGIN."
@@ -88,25 +68,7 @@ const ChildSetupScreen: React.FC = () => {
       router.replace("/(auth)/SignInScreen");
       return;
     }
-
-    // 5. Normal execution: Check if profile setup is already complete
-    (async () => {
-      try {
-        const profile = await getProfileSetup();
-        // if (profile?.id) {
-        //   console.log(
-        //     "[ChildSetup] Profile already exists. Redirecting to Home."
-        //   );
-        //   router.replace("/(tabs)/Home");
-        // }
-      } catch (err) {
-        // This is expected if the profile doesn't exist yet (i.e., this is the first time running setup)
-        console.log(
-          "[ChildSetup] Profile not found or error fetching (expected during setup), proceeding."
-        );
-      }
-    })();
-  }, [user, isSessionLoading, momSetupData, isNavigatingFromSetup]);
+  }, [user, isSessionLoading, momSetupData]);
 
   // ... rest of the component remains the same (handleDone, render, etc.)
 
@@ -151,25 +113,7 @@ const ChildSetupScreen: React.FC = () => {
     );
   }, [children]);
 
-  const canSubmit = useCallback(() => {
-    return (
-      !!momSetupData &&
-      areAllFilledChildrenComplete() &&
-      !!user &&
-      !isSessionLoading
-    );
-  }, [momSetupData, areAllFilledChildrenComplete, user, isSessionLoading]);
-
   const handleDone = async () => {
-    if (!user) {
-      showToast.error(
-        "Authentication Error",
-        "User session not found. Please log in again."
-      );
-      router.replace("/(auth)/SignInScreen");
-      return;
-    }
-
     if (!momSetupData) {
       showToast.error(
         "Error",
@@ -201,6 +145,7 @@ const ChildSetupScreen: React.FC = () => {
       if (result.success) {
         // Mark setup complete
         await AsyncStorage.setItem("hasCompletedSetup", "true");
+        localStorage.setItem("hasCompletedSetup", "true");
         show(); // success modal
       } else {
         // Normalize the backend error
@@ -238,7 +183,7 @@ const ChildSetupScreen: React.FC = () => {
   }, [hide]);
 
   // Render a loading state if session is loading OR we are in the initial navigation buffer
-  if (isSessionLoading || isNavigatingFromSetup) {
+  if (isSessionLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />

@@ -6,7 +6,6 @@ import { signInWithGoogle } from "@/src/core/services/googleAuthservice";
 import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, rfs } from "@/src/core/styles/scaling";
 import { showToast } from "@/src/core/utils/toast";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AxiosError } from "axios";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -46,8 +45,10 @@ export default function SignInScreen() {
   const redirectAfterLogin = async () => {
     try {
       const profile = await getProfileSetup();
-      if (profile?.id) router.replace("/(tabs)/Home");
-      else router.replace("/setup/Mum");
+      console.log("profile", profile);
+      if (profile?.mom_status) {
+        router.replace("/(tabs)/Home");
+      } else router.replace("/setup/Mum");
     } catch (err) {
       console.error("Error fetching profile setup:", err);
       router.replace("/setup/Mum");
@@ -110,22 +111,22 @@ export default function SignInScreen() {
     return isValid;
   };
 
-  const checkAndNavigateUser = async () => {
-    try {
-      const hasCompletedSetup = await AsyncStorage.getItem("hasCompletedSetup");
-      const hasCompletedSetup2 = await AsyncStorage.getItem("isSetupComplete");
+  // const checkAndNavigateUser = async () => {
+  //   try {
+  //     const hasCompletedSetup = await AsyncStorage.getItem("hasCompletedSetup");
+  //     const hasCompletedSetup2 = await AsyncStorage.getItem("isSetupComplete");
 
-      console.log(hasCompletedSetup, "has com", hasCompletedSetup2);
-      if (hasCompletedSetup === "true" || hasCompletedSetup2 === "true") {
-        router.replace("/(tabs)/Home");
-      } else {
-        router.replace("/setup/Mum");
-      }
-    } catch (error) {
-      console.error("Error checking setup status:", error);
-      router.replace("/(tabs)/Home");
-    }
-  };
+  //     console.log(hasCompletedSetup, "has com", hasCompletedSetup2);
+  //     if (hasCompletedSetup === "true" || hasCompletedSetup2 === "true") {
+  //       router.replace("/(tabs)/Home");
+  //     } else {
+  //       router.replace("/setup/Mum");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error checking setup status:", error);
+  //     router.replace("/(tabs)/Home");
+  //   }
+  // };
 
   // Update your handleLogin
   const handleLogin = async () => {
@@ -137,8 +138,8 @@ export default function SignInScreen() {
 
     try {
       await login({ email: email.toLowerCase(), password });
+      await redirectAfterLogin();
       showToast.success("Welcome Back!", "Login successful.");
-      await checkAndNavigateUser();
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       const statusCode = axiosError.response?.status;

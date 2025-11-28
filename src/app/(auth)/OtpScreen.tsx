@@ -143,8 +143,6 @@ function OtpScreen() {
       try {
         const result: ServiceResponse<TokenResponse> =
           await verifyValue(payload);
-        console.log("📦 Result:", result);
-        console.log(context);
 
         if (result.success) {
           // 🔥 Change back to result.success, not result.status
@@ -243,11 +241,8 @@ function OtpScreen() {
   const handleResendCode = useCallback(async () => {
     // Add more defensive checks
     if (timer > 0 || isResending || isLoading || !email) {
-      console.log("Resend blocked:", { timer, isResending, isLoading });
       return;
     }
-
-    console.log("🔄 Resend code initiated");
 
     setIsResending(true);
     setVerificationError("");

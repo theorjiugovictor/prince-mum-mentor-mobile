@@ -125,11 +125,6 @@ export async function login(payload: LoginPayload): Promise<AuthTokenData> {
       payload
     );
 
-    console.log("=".repeat(60));
-    console.log("🔐 LOGIN RESPONSE RECEIVED");
-    console.log("=".repeat(60));
-    console.log("Full response:", JSON.stringify(response.data, null, 2));
-
     const tokenData = response.data.data;
     const token = tokenData?.access_token;
 
@@ -138,19 +133,16 @@ export async function login(payload: LoginPayload): Promise<AuthTokenData> {
 
       // Verify token was actually stored
       const storedToken = await getAuthToken();
-      console.log("Token verification - stored:", storedToken ? "YES" : "NO");
 
       if (!storedToken) {
         console.error("CRITICAL: Token was not stored despite no errors!");
       }
 
-      // ✅ Fetch and store profile_setup_id after successful login
-      console.log("🔄 Fetching profile setup...");
+      // Fetch and store profile_setup_id after successful login
       try {
         await getProfileSetup();
-        console.log("✅ Profile setup fetched and stored");
       } catch (profileError) {
-        console.error("⚠️ Could not fetch profile setup:", profileError);
+        console.error("Could not fetch profile setup:", profileError);
         // Don't fail login if profile setup fetch fails
       }
     } else {
@@ -184,20 +176,14 @@ export async function loginWithGoogle(
 
       // Verify token was actually stored
       const storedToken = await getAuthToken();
-      console.log(
-        "Google auth token verification - stored:",
-        storedToken ? "YES" : "NO"
-      );
 
       if (!storedToken) {
         console.error("CRITICAL: Token was not stored despite no errors!");
       }
 
-      // ✅ Fetch and store profile_setup_id after successful Google login
-      console.log("🔄 Fetching profile setup...");
+      // Fetch and store profile_setup_id after successful Google login
       try {
         await getProfileSetup();
-        console.log("✅ Profile setup fetched and stored");
       } catch (profileError) {
         console.error("⚠️ Could not fetch profile setup:", profileError);
         // Don't fail login if profile setup fetch fails
@@ -289,16 +275,11 @@ export async function verifyValue(
       }
 
       const token = tokenData?.access_token;
-      console.log(
-        "✅ Email verification token:",
-        token?.substring(0, 20) + "..."
-      );
 
       if (token && token.length > 0) {
         await setAuthToken(token);
-        console.log("Email verification successful. Token stored.");
 
-        // ✅ Fetch profile setup after email verification
+        // Fetch profile setup after email verification
         try {
           await getProfileSetup();
         } catch (profileError) {
@@ -311,10 +292,6 @@ export async function verifyValue(
         );
       }
     } else if (payload.type === "password_reset") {
-      // ✅ Password reset OTP verify returns just a string message, NOT a token
-      // The OTP code itself will be used as the "token" for the reset-password endpoint
-      console.log("Password reset OTP verified successfully");
-      console.log("API Response:", response.data);
 
       // Use the OTP code as the verification token for the next step
       const otpCode = payload.verification_value;
@@ -328,7 +305,6 @@ export async function verifyValue(
         },
       };
 
-      console.log("✅ Using OTP code as verification token for password reset");
     } else {
       throw new Error("Invalid verification type provided.");
     }

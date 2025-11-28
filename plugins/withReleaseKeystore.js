@@ -17,7 +17,6 @@ const withReleaseKeystore = (config, props) => {
 
    // Check if release signing config already exists
    if (buildGradle.includes('signingConfigs.release')) {
-     console.log('Release keystore configuration already exists, skipping...');
      return config;
    }
 

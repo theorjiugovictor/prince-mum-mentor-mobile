@@ -28,6 +28,7 @@ import {
   parseDateFromApi,
 } from "../../core/services/childProfile.service";
 import { ChildProfile, UpdateChildProfileRequest } from "../../types/child.types";
+import GenderDropdown from "../components/GenderDropdown";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const userPic = require("../../assets/images/user-pic.png");
@@ -284,21 +285,12 @@ export function EditChildModal({
             {/* Gender Field */}
             <View style={styles.formSection}>
               <Text style={styles.label}>Gender</Text>
-              <View style={styles.inputContainer}>
-                <Feather
-                  name="users"
-                  size={20}
-                  color="#666"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={gender}
-                  onChangeText={setGender}
-                  placeholder="Enter gender"
-                  editable={!loading}
-                />
-              </View>
+            <GenderDropdown
+              label="Child's Gender"
+              value={gender}
+              onValueChange={(gender) => setGender(gender)}
+            />
+               
             </View>
 
             {/* Date of Birth Field */}

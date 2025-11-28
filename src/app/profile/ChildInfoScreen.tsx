@@ -43,7 +43,7 @@ export default function ChildInfoScreen({ navigation }: any) {
 const getFullImageUrl = (relativeUrl?: string) => {
   if (!relativeUrl) return undefined;
   if (relativeUrl.startsWith("http")) return relativeUrl;
-  return `https://api.staging.kaizen.emerj.net${relativeUrl}`;
+  return `https://api.staging.kaizen.emerj.net/api/v1${relativeUrl}`;
 };
 
 

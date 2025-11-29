@@ -3,14 +3,7 @@
 import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, rh, rw } from "@/src/core/styles/scaling";
 import React, { useState } from "react";
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import CustomInput from "./CustomInput";
 import DatePickerInput from "./DatePickerInput";
 import DeleteConfirmModal from "./DeleteConfirmationModal";
@@ -50,13 +43,13 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
 
       // Check if the date is valid
       if (isNaN(birth.getTime())) {
-        console.warn("Invalid date provided:", dob);
+        console.warn("[ChildSetupItem] Invalid date provided:", dob);
         return "";
       }
 
       // Check if date is in the future
       if (birth > today) {
-        console.warn("Date of birth is in the future:", dob);
+        console.warn("[ChildSetupItem] Date of birth is in the future:", dob);
         return "";
       }
 
@@ -65,7 +58,10 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
       const monthDiff = today.getMonth() - birth.getMonth();
 
       // Adjust if birthday hasn't occurred yet this year
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birth.getDate())
+      ) {
         age--;
       }
 
@@ -74,20 +70,26 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
 
       return age.toString();
     } catch (error) {
-      console.error("Error computing age:", error);
+      console.error("[ChildSetupItem] Error computing age:", error);
       return "";
     }
   };
 
   const handleChange = (key: keyof ChildData, value: string) => {
+    console.log(`[ChildSetupItem] handleChange - key: ${key}, value: ${value}`);
+
     let updated: ChildData = { ...childData, [key]: value };
 
     // Auto-calculate age when DOB changes
     if (key === "dob") {
       const newAge = computeAge(value);
+      console.log(
+        `[ChildSetupItem] Computed age: ${newAge} from DOB: ${value}`
+      );
       updated.age = newAge;
     }
 
+    console.log(`[ChildSetupItem] Sending updated data to parent:`, updated);
     onUpdate(index, updated);
   };
 
@@ -138,40 +140,30 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
               iconName="person-outline"
             />
 
-            {/* Date of Birth - Now with Calendar Picker */}
-            {Platform.OS === "web" ? (
-              <input
-                type="date"
-                value={childData.dob}
-                onChange={(e) => handleChange("dob", e.target.value)}
-                style={{
-                  padding: 12,
-                  borderRadius: 8,
-                  border: "1px solid #ccc",
-                  width: "100%",
-                  fontSize: 16,
-                }}
-              />
-            ) : (
-              <DatePickerInput
-                label="Child's Date Of Birth"
-                placeholder="Select Date"
-                value={childData.dob}
-                onDateChange={(date) => handleChange("dob", date)}
-              />
-            )}
+            {/* Date of Birth */}
+            <DatePickerInput
+              label="Child's Date Of Birth"
+              placeholder="Select Date"
+              value={childData.dob}
+              onDateChange={(date) => {
+                console.log(
+                  `[ChildSetupItem] DatePickerInput returned: ${date}`
+                );
+                handleChange("dob", date);
+              }}
+            />
 
-            {/* Child Age - Auto-calculated */}
+            {/* Child Age - Auto-calculated and READ-ONLY */}
             <CustomInput
               label="Child's Age"
               placeholder="Auto-calculated from DOB"
               value={childData.age ? `${childData.age} years` : ""}
-              onChangeText={() => {}}
+              onChangeText={() => {}} // No-op because it's read-only
               iconName="calendar-outline"
               editable={false}
             />
 
-            {/* Gender - Now with Dropdown */}
+            {/* Gender - Dropdown */}
             <GenderDropdown
               label="Child's Gender"
               value={childData.gender}

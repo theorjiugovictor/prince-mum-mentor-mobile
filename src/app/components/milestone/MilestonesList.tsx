@@ -37,7 +37,7 @@ export default function MilestonesList({
 const styles = StyleSheet.create({
   // milestones
   milestonesContainer: {
-    marginTop: 0,
+    marginTop: 12,
     gap: 16,
   },
 });

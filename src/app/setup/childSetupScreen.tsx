@@ -2,6 +2,7 @@ import { useAuth } from "@/src/core/services/authContext";
 import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, vs } from "@/src/core/styles/scaling";
 import { showToast } from "@/src/core/utils/toast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
@@ -16,14 +17,53 @@ import {
   View,
 } from "react-native";
 import { useSetup } from "../../core/hooks/setupContext";
-// ✅ FIXED: ChildData interface is correctly imported here
-import AsyncStorage from "@react-native-async-storage/async-storage";
-// import { getProfileSetup } from "../../core/services/profileSetup.service";
 import { completeSetupFlow } from "../../core/services/setupService";
 import ChildSetupItem, { ChildData } from "../components/ChildSetupItem";
 import PrimaryButton from "../components/PrimaryButton";
 import SecondaryButton from "../components/SecondaryButton";
 import { SuccessModal, useSuccessModal } from "../components/SuccessModal";
+
+// Utility function to calculate age from DOB
+const calculateAgeFromDOB = (dob: string): string => {
+  if (!dob) return "";
+
+  try {
+    const birth = new Date(dob);
+    const today = new Date();
+
+    // Check if the date is valid
+    if (isNaN(birth.getTime())) {
+      console.warn("[calculateAge] Invalid date provided:", dob);
+      return "";
+    }
+
+    // Check if date is in the future
+    if (birth > today) {
+      console.warn("[calculateAge] Date of birth is in the future:", dob);
+      return "";
+    }
+
+    // Calculate age
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    // Adjust if birthday hasn't occurred yet this year
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+
+    // Return empty string if age is negative
+    if (age < 0) return "";
+
+    return age.toString();
+  } catch (error) {
+    console.error("[calculateAge] Error computing age:", error);
+    return "";
+  }
+};
 
 const ChildSetupScreen: React.FC = () => {
   const { user, isSessionLoading } = useAuth();
@@ -36,13 +76,10 @@ const ChildSetupScreen: React.FC = () => {
 
   // Check session and redirect if setup already exists or session is invalid
   useEffect(() => {
-    // 1. Always wait for the context to finish its main check OR the buffer period to end.
+    // REDIRECT GUARDS
 
-    // --- REDIRECT GUARDS ---
-
-    // 2. CRITICAL CHECK: User session is NULL AND MomData is NULL (Go back to Auth/Login)
+    // User session is NULL AND MomData is NULL (Go back to Auth/Login)
     if (!user && !momSetupData) {
-      // 📢 CRITICAL LOG: This is the most likely failure point
       console.error(
         `[ChildSetup Guard] REDIRECT: CRITICAL FAILURE. User: NULL, MomData: NULL. Redirecting to LOGIN.`
       );
@@ -50,7 +87,7 @@ const ChildSetupScreen: React.FC = () => {
       return;
     }
 
-    // 3. FLOW CHECK: User is VALID, but Mom data is missing (Go back to Mom setup)
+    // User is VALID, but Mom data is missing (Go back to Mom setup)
     if (user && !momSetupData) {
       console.warn(
         "[ChildSetup Guard] REDIRECT: FLOW BREAK. User is VALID but MomData is MISSING. Redirecting to Mum setup."
@@ -59,9 +96,8 @@ const ChildSetupScreen: React.FC = () => {
       return;
     }
 
-    // 4. EDGE CASE CHECK: User session LOST but Mom data exists (Go back to Login - This is the silent logout)
-    if (!momSetupData) {
-      // 📢 CRITICAL LOG: This captures the silent session failure
+    // User session LOST but Mom data exists (Go back to Login)
+    if (!user && momSetupData) {
       console.error(
         "[ChildSetup Guard] REDIRECT: SESSION LOST. User is NULL but MomData EXISTS. Redirecting to LOGIN."
       );
@@ -69,8 +105,6 @@ const ChildSetupScreen: React.FC = () => {
       return;
     }
   }, [user, isSessionLoading, momSetupData]);
-
-  // ... rest of the component remains the same (handleDone, render, etc.)
 
   const addChild = useCallback(() => {
     setChildren((prev) => [
@@ -80,6 +114,15 @@ const ChildSetupScreen: React.FC = () => {
   }, []);
 
   const updateChild = useCallback((index: number, updatedChild: ChildData) => {
+    // CRITICAL FIX: Always recalculate age when DOB is present
+    if (updatedChild.dob) {
+      const calculatedAge = calculateAgeFromDOB(updatedChild.dob);
+      updatedChild.age = calculatedAge;
+      console.log(
+        `[updateChild] Recalculated age for child ${index}: ${calculatedAge} from DOB: ${updatedChild.dob}`
+      );
+    }
+
     setChildren((prev) => prev.map((c, i) => (i === index ? updatedChild : c)));
   }, []);
 
@@ -145,28 +188,28 @@ const ChildSetupScreen: React.FC = () => {
       if (result.success) {
         // Mark setup complete
         await AsyncStorage.setItem("hasCompletedSetup", "true");
-        localStorage.setItem("hasCompletedSetup", "true");
+        if (typeof window !== "undefined" && window.localStorage) {
+          localStorage.setItem("hasCompletedSetup", "true");
+        }
         show(); // success modal
       } else {
         // Normalize the backend error
         const errorToThrow = {
           message: result.error?.message || "Setup failed",
-          status_code: result.error?.status_code, // backend status code
-          detail: result.error?.detail, // backend detail message
+          status_code: result.error?.status_code,
+          detail: result.error?.detail,
         };
 
-        // Throw it so it can be handled in catch
         throw errorToThrow;
       }
     } catch (error: any) {
-      // Extract fields from thrown error
       const message =
         error?.detail || error?.message || "Failed to complete setup";
 
       // Handle toasts and redirects based on backend status
       if (message === "Profile setup already exists") {
         await AsyncStorage.setItem("hasCompletedSetup", "true");
-        showToast.warning(message); // now uses backend message
+        showToast.warning(message);
         setTimeout(() => router.replace("/(tabs)/Home"), 100);
       } else {
         showToast.error("Setup Error", message);
@@ -181,7 +224,7 @@ const ChildSetupScreen: React.FC = () => {
     router.replace("/(tabs)/Home");
   }, [hide]);
 
-  // Render a loading state if session is loading OR we are in the initial navigation buffer
+  // Render a loading state if session is loading
   if (isSessionLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -228,7 +271,7 @@ const ChildSetupScreen: React.FC = () => {
           message="Your profile is ready. Let's get started!"
           iconComponent={
             <Image
-              source={require("../../assets/images/success-icon.png")}
+              source={require("@/src/assets/images/success-icon.png")}
               style={styles.successIcon}
             />
           }
@@ -238,7 +281,6 @@ const ChildSetupScreen: React.FC = () => {
           <PrimaryButton
             title="Done"
             onPress={handleDone}
-            // disabled={!isFormComplete() || isLoading || !user}
             isLoading={isLoading}
           />
           <SecondaryButton
@@ -252,7 +294,6 @@ const ChildSetupScreen: React.FC = () => {
   );
 };
 
-// IMPORTANT: Define the component export outside the const definition
 export default ChildSetupScreen;
 
 const styles = StyleSheet.create({

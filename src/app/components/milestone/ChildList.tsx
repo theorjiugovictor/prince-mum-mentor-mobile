@@ -1,5 +1,6 @@
 import { getChildProfiles } from "@/src/core/services/milestoneService";
 import { colors, typography } from "@/src/core/styles";
+import { getAge } from "@/src/core/utils/dates";
 import { showToast } from "@/src/core/utils/toast";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -47,14 +48,19 @@ export default function ChildList() {
         >
           <Image
             source={{
-              uri: child.profile_picture_url || "https://via.placeholder.com/53", // fallback avatar
+              uri:
+                child.profile_picture_url || "https://via.placeholder.com/53", // fallback avatar
             }}
             style={styles.childBoxAvatar}
           />
 
           <View style={styles.childBoxTextBox}>
-            <Text style={styles.childBoxTitle}>{child.full_name || "Unknown"}</Text>
-            <Text style={styles.childBoxDesc}>5 months old</Text>
+            <Text style={styles.childBoxTitle}>
+              {child.full_name || "Unknown"}
+            </Text>
+            <Text style={styles.childBoxDesc}>
+              {getAge(child.date_of_birth)} old
+            </Text>
           </View>
         </TouchableOpacity>
       ))}

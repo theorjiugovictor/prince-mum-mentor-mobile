@@ -26,6 +26,8 @@ export default function DeleteModal() {
       onSuccess: () => {
         onCloseModal();
         queryClient.invalidateQueries({ queryKey: ["milestonesByCat"] });
+        queryClient.invalidateQueries({ queryKey: ["pending-milestones"] });
+        showToast.success("Milestone deleted successfully");
       },
       onError: (error) => {
         showToast.error(error.message);
@@ -36,8 +38,11 @@ export default function DeleteModal() {
     dispatch(onToggleDeleteModal({ isOpenForm: false }));
 
   const handleDeleteMilestone = () => {
-    dispatch(onDeleteMilestone());
-    deleteMilestone(milestoneToDelId);
+    deleteMilestone(milestoneToDelId, {
+      onSuccess: () => {
+        dispatch(onDeleteMilestone());
+      },
+    });
   };
 
   return (

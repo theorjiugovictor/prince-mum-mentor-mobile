@@ -11,9 +11,19 @@ import {
 } from "@/src/store/milestoneSlice";
 import { CreateMilestoneType, MilestoneDataType } from "@/src/types/milestones";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as Crypto from "expo-crypto";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Modal from "react-native-modal";
 
 export default function CreateForm() {
@@ -23,6 +33,7 @@ export default function CreateForm() {
   const queryClient = useQueryClient();
   const { categoryValue, ownerId, childId } = useLocalSearchParams();
 
+  const validChildId = childId ? String(childId) : undefined;
   const isNameInputFilled = !!formData.name;
 
   const { mutate: createNewMilestone, isPending: isCreatingMilestone } =
@@ -41,9 +52,9 @@ export default function CreateForm() {
   function handleMilestoneCreation() {
     const currentDate = new Date().toISOString();
     const newMilestone: MilestoneDataType = {
-      id: crypto.randomUUID(),
+      id: Crypto.randomUUID(),
       owner_id: ownerId as string,
-      owner_type: childId ? "child" : "mother",
+      owner_type: validChildId ? "child" : "mother",
       status: "pending",
       category: categoryValue as string,
       created_at: currentDate,
@@ -70,14 +81,16 @@ export default function CreateForm() {
       backdropOpacity={0.5}
       onBackdropPress={() => dispatch(onToggleCreateForm(false))}
       style={{ justifyContent: "flex-end", margin: 0 }}
-      avoidKeyboard
+      avoidKeyboard={false}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
+      <KeyboardAwareScrollView
+        enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === "ios" ? 20 : 100}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
+        keyboardShouldPersistTaps="handled"
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
+          contentContainerStyle={{ flex: 1, justifyContent: "flex-end" }}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.milestoneFormContainer}>
@@ -143,7 +156,7 @@ export default function CreateForm() {
             </View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </Modal>
   );
 }

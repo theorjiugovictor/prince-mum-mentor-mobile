@@ -84,7 +84,7 @@ export function MilestoneBox({ milestone }: { milestone: MilestoneDataType }) {
 
   return (
     <View style={styles.milestoneBox}>
-      <Pressable onPress={handleToggleStatus}>
+      <Pressable onPress={handleToggleStatus} style={{ marginTop: 4 }}>
         <Image
           source={milestone?.status === "pending" ? uncheckedIcon : checkedIcon}
           style={styles.milestoneCheckbox}
@@ -101,14 +101,19 @@ export function MilestoneBox({ milestone }: { milestone: MilestoneDataType }) {
       <View style={styles.milestoneActionButtons}>
         {ACTION_BUTTONS_ICONS.map((action) => {
           // Hide edit button for completed milestones
-          if (milestone?.status === "completed" && action.actionType === "edit") {
+          if (
+            milestone?.status === "completed" &&
+            action.actionType === "edit"
+          ) {
             return null;
           }
 
           return (
             <Pressable
               key={action.id}
-              onPress={() => handleMilestoneAction(action.actionType as Actions)}
+              onPress={() =>
+                handleMilestoneAction(action.actionType as Actions)
+              }
             >
               <Image source={action.icon} style={styles.actionButtonIcon} />
             </Pressable>
@@ -129,6 +134,7 @@ const styles = StyleSheet.create({
     gap: 16,
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 5,
   },
 
   milestoneDesc: {
@@ -143,12 +149,12 @@ const styles = StyleSheet.create({
 
   milestoneTextBox: {
     gap: 8,
-    width: "70%",
+    flex: 1,
   },
 
   milestoneCheckbox: {
-    height: 32,
-    width: 32,
+    height: 26.67,
+    width: 26.65,
   },
 
   milestoneBox: {
@@ -157,5 +163,6 @@ const styles = StyleSheet.create({
     gap: 8,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "flex-start",
   },
 });

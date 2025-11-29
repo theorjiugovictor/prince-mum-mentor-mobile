@@ -3,6 +3,7 @@
 import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, vs } from "@/src/core/styles/scaling";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -20,6 +21,7 @@ import { useJournal } from "./journalContext";
 import JournalDetails from "./journalDetails";
 
 const JournalList = () => {
+  const router = useRouter();
   const { journalEntries, isLoading, refreshEntries } = useJournal();
 
   const [showForm, setShowForm] = useState(false);
@@ -113,6 +115,14 @@ const JournalList = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>My Journal</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddNew}>
           <Ionicons name="add" size={24} color="#FFFFFF" />
@@ -332,6 +342,11 @@ const styles = StyleSheet.create({
   detailsTitle: {
     ...typography.heading3,
     color: colors.textPrimary,
+  },
+  backButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.xs,
   },
 });
 

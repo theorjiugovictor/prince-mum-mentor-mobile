@@ -10,13 +10,13 @@ import {
   Image,
   Modal,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 // API Imports
 import {
@@ -222,7 +222,15 @@ export function AddChildModal({
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Add Child&apos;s Info</Text>
           </View>
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <KeyboardAwareScrollView 
+            style={styles.content} 
+            showsVerticalScrollIndicator={false}
+            bottomOffset={40}
+            extraKeyboardSpace={20}
+            enabled={true}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContentContainer}
+          >
             <View style={styles.avatarSection}>
               <Image
                 source={{
@@ -251,7 +259,7 @@ export function AddChildModal({
               </View>
             </View>
 
-            {/* Gender - FIXED: Removed inputContainer wrapper */}
+            {/* Gender */}
             <View style={styles.formSection}>
               <Text style={styles.label}>Gender</Text>
               <GenderDropdown 
@@ -305,7 +313,7 @@ export function AddChildModal({
             <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </View>
     </Modal>
@@ -318,7 +326,8 @@ const styles = StyleSheet.create({
   modalContainer: { backgroundColor: "#FFF", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: SCREEN_HEIGHT * 0.9, overflow: "hidden" },
   header: { paddingHorizontal: 20, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: "#F0F0F0" },
   headerTitle: { fontSize: 24, fontWeight: "700" },
-  content: { paddingHorizontal: 20, paddingTop: 20 },
+  content: { flex: 1 },
+  scrollContentContainer: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
   avatarSection: { alignItems: "center", marginBottom: 24 },
   avatar: { width: 120, height: 120, borderRadius: 60 },
   cameraButton: { position: "absolute", bottom: 0, right: "35%", backgroundColor: "#666", width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" },

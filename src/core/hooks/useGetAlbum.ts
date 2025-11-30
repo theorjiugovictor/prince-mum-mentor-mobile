@@ -35,7 +35,7 @@ export const useGetAlbum = (albumId: string, enabled: boolean = true) => {
     enabled: !!albumId && enabled,
 
     queryFn: async () => {
-      const res = await authApi.get(`/api/v1/albums/${albumId}`);
+      const res = await authApi.get(`/api/v1/album/${albumId}`);
       return res.data;
     },
   });

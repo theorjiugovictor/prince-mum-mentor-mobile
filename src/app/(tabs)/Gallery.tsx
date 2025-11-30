@@ -72,7 +72,6 @@ export default function GalleryScreen() {
     try {
       const newAlbum = await galleryService.createAlbum(albumName);
 
-      alert(newAlbum?.album_id);
       setCreatedAlbumName(albumName);
       setCreatedAlbumId(newAlbum?.album_id || "");
       setIsCreateModalVisible(false);

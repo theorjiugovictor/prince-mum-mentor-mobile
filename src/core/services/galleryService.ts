@@ -1,9 +1,9 @@
 // src/core/services/galleryService.ts
 
-import {authApi} from "@/src/lib/api";
+import { authApi } from "@/src/lib/api";
 
 const ALBUMS_ENDPOINT = "/api/v1/album/";
-const ALBUMS_ENDPOINT_LIST = "/api/v1/albums/";
+const ALBUMS_ENDPOINT_LIST = "/api/v1/album/";
 const MEMORIES_ENDPOINT = "/api/v1/memories/";
 
 // ========== ALBUM ENDPOINTS ==========

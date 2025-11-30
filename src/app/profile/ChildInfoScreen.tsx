@@ -1,17 +1,17 @@
 // screens/ChildInfoScreen.tsx
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,10 +24,11 @@ import { AddChildModal } from "./AddChildModal";
 import { EditChildModal } from "./EditChildModal";
 
 // --- API Imports ---
+import { showToast } from "@/src/core/utils/toast";
 import {
-  getChildProfiles,
-  deleteChildProfile,
   calculateAge,
+  deleteChildProfile,
+  getChildProfiles,
 } from "../../core/services/childProfile.service";
 import { ChildProfile } from "../../types/child.types";
 
@@ -166,7 +167,7 @@ export default function ChildInfoScreen({ navigation }: any) {
           onPress: async () => {
             try {
               await deleteChildProfile(child.id);
-              Alert.alert("Success", "Child profile deleted successfully");
+              showToast.success("Success", "Child profile deleted successfully");
               fetchChildren();
             } catch (error) {
               console.error("Error deleting child:", error);
@@ -192,7 +193,7 @@ export default function ChildInfoScreen({ navigation }: any) {
    * Handle image load error
    */
   const handleImageError = useCallback((childId: string) => {
-    console.log(`❌ Image failed to load for child ${childId}`);
+
     setImageLoadStates(prev => ({
       ...prev,
       [childId]: {
@@ -207,36 +208,35 @@ export default function ChildInfoScreen({ navigation }: any) {
    * Handle image load success
    */
   const handleImageLoad = useCallback((childId: string) => {
-    console.log(`✅ Image loaded for child ${childId}`);
-    setImageLoadStates(prev => ({
-      ...prev,
-      [childId]: {
-        ...prev[childId],
-        loaded: true,
-        error: false
+    setImageLoadStates(prev => {
+      if (prev[childId] && prev[childId].loaded) {
+        return prev; 
       }
-    }));
-  }, []);
+      
+      return {
+        ...prev,
+        [childId]: {
+          ...prev[childId],
+          loaded: true,
+          error: false
+        }
+      };
+    });
+  }, []); 
 
-  /**
-   * Get image source for child
-   */
+
   const getImageSource = useCallback((child: ChildProfile) => {
     const loadState = imageLoadStates[child.id];
     
-    if (!loadState) {
-      // Not initialized yet, use calculated URL
-      const avatarUrl = getStableAvatarUrl(child.profile_picture_url);
-      return { uri: avatarUrl };
-    }
-    
-    if (loadState.error || !child.profile_picture_url) {
+    if (loadState?.error || !child.profile_picture_url) {
       return { uri: PLACEHOLDER_IMAGE };
     }
-    
-    return { uri: loadState.url };
-  }, [imageLoadStates]);
 
+    const avatarUrl = loadState?.url || getStableAvatarUrl(child.profile_picture_url);
+    
+    return { uri: avatarUrl };
+  }, [imageLoadStates]);
+  
   /**
    * Memoized child list to prevent unnecessary re-renders
    */

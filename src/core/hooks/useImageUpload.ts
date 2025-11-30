@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { authApi } from "../../lib/api";
+import { showToast } from "../utils/toast";
 
 interface UploadedImage {
   id: string;
@@ -27,13 +28,15 @@ interface UploadOptions {
 export const useImageUpload = (options?: UploadOptions) => {
   const queryClient = useQueryClient();
 
+  const fallbackErrorMessage = "Image upload failed. Please try again.";
+
   const upload = useMutation<
     ApiResponse<UploadedImage>,
     Error,
     ImagePicker.ImagePickerAsset
   >({
     mutationFn: async (image: ImagePicker.ImagePickerAsset) => {
-      // Get file extension from URI or mimeType
+
       // Convert URI → Blob
       const fileResponse = await fetch(image.uri);
       const blob = await fileResponse.blob();
@@ -62,12 +65,18 @@ export const useImageUpload = (options?: UploadOptions) => {
         });
       }
 
-      // Call custom onSuccess callback
       if (options?.onSuccess) {
         options.onSuccess(response.data);
       }
+      
+     
     },
     onError: (error) => {
+      // 1. Display the error to the user
+      const errorMessage = error.message || fallbackErrorMessage;
+      showToast.error(errorMessage, "error");
+
+      // 2. Call custom onError callback
       if (options?.onError) {
         options.onError(error);
       }
@@ -94,11 +103,13 @@ export const useImageUpload = (options?: UploadOptions) => {
       });
 
       if (!result.canceled && result.assets[0]) {
-        return await upload.mutateAsync(result.assets[0]);
+        // --- FIX 1: Use upload.mutate instead of upload.mutateAsync ---
+        upload.mutate(result.assets[0]);
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      throw error;
+      showToast.error(error instanceof Error ? error.message : fallbackErrorMessage, "error");
+    
     }
   };
 
@@ -121,19 +132,20 @@ export const useImageUpload = (options?: UploadOptions) => {
       });
 
       if (!result.canceled && result.assets[0]) {
-        return await upload.mutateAsync(result.assets[0]);
+        upload.mutate(result.assets[0]);
       }
     } catch (error) {
       console.error("Error taking photo:", error);
-      throw error;
+      showToast.error(error instanceof Error ? error.message : fallbackErrorMessage, "error");
+      
     }
   };
 
   /**
    * Upload an already selected image
    */
-  const uploadImage = async (image: ImagePicker.ImagePickerAsset) => {
-    return await upload.mutateAsync(image);
+  const uploadImage = (image: ImagePicker.ImagePickerAsset) => {
+    return upload.mutateAsync(image); 
   };
 
   return {

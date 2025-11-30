@@ -31,13 +31,15 @@ export default function ChildList() {
   if (error) {
     showToast.error((error as any)?.message || "Something went wrong"); // safe error handling
   }
+   // Ensure children array exists
+  const children = childProfiles?.children ?? [];
+
 
   if (isLoading) {
     return <View>Loading...</View>;
   }
 
-  // Ensure children array exists
-  const children = childProfiles?.children ?? [];
+ 
 
   return (
     <View style={styles.childContainer}>

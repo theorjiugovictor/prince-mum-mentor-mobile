@@ -1,11 +1,12 @@
 // src/screens/ChangePasswordScreen.tsx
 
 import { useChangePassword } from "@/src/core/hooks/useChangePassword";
-import { colors, typography } from "@/src/core/styles";
-import { ms, vs } from "@/src/core/styles/scaling";
+import { colors, spacing, typography } from "@/src/core/styles"; // Import spacing from core styles
+import { ms, rfs, vs } from "@/src/core/styles/scaling";
+import { showToast } from "@/src/core/utils/toast"; // Import showToast
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -18,6 +19,15 @@ import {
 } from "react-native";
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
+
+// Password Validation Types 
+interface PasswordRequirement {
+  label: string;
+  test: (password: string) => boolean;
+  met: boolean;
+}
+
+const MIN_PASSWORD_LENGTH = 8;
 
 interface ChangePasswordPayload {
   old_password: string;
@@ -35,37 +45,109 @@ const ChangePassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Password strength validation
-  const validatePasswordStrength = (password: string) => {
-    return password.length >= 8;
-  };
+  //Password Requirements State 
+  const [passwordRequirements, setPasswordRequirements] = useState<
+    PasswordRequirement[]
+  >([
+    {
+      label: "At least 8 characters",
+      test: (pwd) => pwd.length >= MIN_PASSWORD_LENGTH,
+      met: false,
+    },
+    {
+      label: "At least one uppercase letter",
+      test: (pwd) => /[A-Z]/.test(pwd),
+      met: false,
+    },
+    {
+      label: "At least one lowercase letter",
+      test: (pwd) => /[a-z]/.test(pwd),
+      met: false,
+    },
+    {
+      label: "At least one number",
+      test: (pwd) => /[0-9]/.test(pwd),
+      met: false,
+    },
+    {
+      label: "At least one special character (!@#$%^&*)",
+      test: (pwd) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+      met: false,
+    },
+  ]);
 
-  const isPasswordStrong = validatePasswordStrength(newPassword);
-  const isConfirmPasswordStrong = validatePasswordStrength(confirmNewPassword);
-  const passwordsMatch =
-    newPassword === confirmNewPassword && newPassword.length > 0;
+  // Update Password Requirements on New Password Change
+  useEffect(() => {
+    const updatedRequirements = [
+      {
+        label: "At least 8 characters",
+        test: (pwd: string) => pwd.length >= MIN_PASSWORD_LENGTH,
+        met: newPassword.length >= MIN_PASSWORD_LENGTH,
+      },
+      {
+        label: "At least one uppercase letter",
+        test: (pwd: string) => /[A-Z]/.test(pwd),
+        met: /[A-Z]/.test(newPassword),
+      },
+      {
+        label: "At least one lowercase letter",
+        test: (pwd: string) => /[a-z]/.test(pwd),
+        met: /[a-z]/.test(newPassword),
+      },
+      {
+        label: "At least one number",
+        test: (pwd: string) => /[0-9]/.test(pwd),
+        met: /[0-9]/.test(newPassword),
+      },
+      {
+        label: "At least one special character (!@#$%^&*)",
+        test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+        met: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword),
+      },
+    ];
+    setPasswordRequirements(updatedRequirements);
+  }, [newPassword]);
 
-  const handleChangePassword = async () => {
-    setErrors({});
+  const allPasswordRequirementsMet = useMemo(() => {
+    return passwordRequirements.every((req) => req.met);
+  }, [passwordRequirements]);
 
-    const newErrors: any = {};
 
-    if (!oldPassword) newErrors.oldPassword = "Old password is required";
-    if (!newPassword) newErrors.newPassword = "New password is required";
-    else if (!isPasswordStrong)
-      newErrors.newPassword = "Password must be at least 8 characters";
+  // Client-Side Validation Logic 
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+    let isValid = true;
 
-    if (!confirmNewPassword)
-      newErrors.confirmNewPassword = "Please confirm your password";
-    else if (newPassword !== confirmNewPassword)
-      newErrors.confirmNewPassword = "Passwords do not match";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+    if (!oldPassword) {
+      newErrors.oldPassword = "Old password is required.";
+      isValid = false;
     }
 
+    if (!newPassword) {
+      newErrors.newPassword = "New password is required.";
+      isValid = false;
+    } else if (!allPasswordRequirementsMet) {
+      newErrors.newPassword = "Password does not meet all requirements.";
+      isValid = false;
+    }
+
+    if (!confirmNewPassword) {
+      newErrors.confirmNewPassword = "Please confirm your password.";
+      isValid = false;
+    } else if (confirmNewPassword !== newPassword) {
+      newErrors.confirmNewPassword = "Passwords do not match.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleChangePassword = async () => {
+    if (!validate()) return;
+
     setIsLoading(true);
+    setErrors({}); 
 
     try {
       await changePasswordMutation.mutateAsync({
@@ -76,6 +158,8 @@ const ChangePassword = () => {
         },
       });
 
+      // Success handling
+      showToast.success("Success", "Password changed successfully.");
       setOldPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
@@ -84,38 +168,48 @@ const ChangePassword = () => {
       console.log("❌ Password change error:", err);
 
       const backend = err.response?.data;
+      const statusCode = err.response?.status;
+      let apiErrors: { [key: string]: string } = {};
+      let errorMessage = "Failed to change password. Please try again.";
 
-      // 401 – Old password incorrect
-      if (err.response?.status === 401) {
-        return setErrors({ oldPassword: "Old password is incorrect" });
-      }
-
-      // 422 – Validation errors from backend
-      if (err.response?.status === 422) {
-        const errorsFromBackend =
-          backend?.error?.errors || backend?.detail || backend?.errors;
+      //Error Handling Logic 
+      if (statusCode === 401) {
+        // Specific error for old password mismatch
+        apiErrors.oldPassword = backend?.detail || "Old password is incorrect.";
+        errorMessage = apiErrors.oldPassword;
+      } else if (statusCode === 422) {
+        // Handle 422 validation errors with loc, msg structure
+        const errorsFromBackend = backend?.detail;
 
         if (Array.isArray(errorsFromBackend)) {
-          const formatted: any = {};
-          errorsFromBackend.forEach((e: any) => {
-            const field = e.loc?.[e.loc.length - 1];
-            if (field) {
-              formatted[field] = e.msg;
-            }
-          });
-          return setErrors(formatted);
+            errorsFromBackend.forEach((e: any) => {
+                const field = e.loc?.[e.loc.length - 1];
+                const message = e.msg;
+
+                // Map API field names to state variable names
+                if (field === "old_password") {
+                  apiErrors.oldPassword = message;
+                } else if (field === "new_password") {
+                  apiErrors.newPassword = message;
+                } else if (field === "confirm_password") {
+                  apiErrors.confirmNewPassword = message;
+                }
+            });
+             errorMessage = "Please check your highlighted inputs.";
         }
+      } else if (backend?.message) {
+        errorMessage = backend.message;
+      } else if (backend?.detail) {
+        errorMessage = typeof backend.detail === 'string' ? backend.detail : "A server error occurred.";
       }
 
-      if (backend?.message) {
-        return setErrors({ general: backend.message });
-      }
 
-      if (backend?.detail) {
-        return setErrors({ general: backend.detail });
+      // Update specific input errors or show a general alert
+      if (Object.keys(apiErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...apiErrors }));
+      } else {
+        showToast.error("Change Failed", errorMessage);
       }
-
-      setErrors({ general: "Failed to change password. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +230,7 @@ const ChangePassword = () => {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={ms(24)} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Change Password</Text>
         <View style={styles.headerSpacer} />
@@ -148,7 +242,7 @@ const ChangePassword = () => {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
       >
-        {/* General Error Message */}
+        {/* General Error Message (Now handled by showToast or specific fields) */}
         {errors.general && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{errors.general}</Text>
@@ -171,42 +265,42 @@ const ChangePassword = () => {
         <View style={styles.inputWrapper}>
           <CustomInput
             label="Enter New Password"
-            placeholder="Enter New Password"
+            placeholder={`Minimum ${MIN_PASSWORD_LENGTH} characters`}
             value={newPassword}
             onChangeText={setNewPassword}
             iconName="lock-closed-outline"
             isPassword
             isError={!!errors.newPassword}
             errorMessage={errors.newPassword}
-            isValid={isPasswordStrong && newPassword.length > 0}
+            isValid={allPasswordRequirementsMet && newPassword.length > 0}
           />
-
-          {/* Password Strength Indicator */}
+          
+          {/* Password Requirements Display */}
           {newPassword.length > 0 && (
-            <View style={styles.strengthIndicator}>
-              {!isPasswordStrong ? (
-                <>
-                  <Ionicons
-                    name="shield"
-                    size={16}
-                    color="#F59E0B"
-                    style={styles.strengthIcon}
-                  />
-                  <Text style={styles.weakPasswordText}>
-                    Password too weak, must be at least 8 characters
+            <View style={styles.passwordRequirementsContainer}>
+              <Text style={styles.requirementsTitle}>
+                Password must contain:
+              </Text>
+              {passwordRequirements.map((req, index) => (
+                <View key={index} style={styles.requirementRow}>
+                  <View
+                    style={[
+                      styles.requirementIndicator,
+                      req.met && styles.requirementIndicatorMet,
+                    ]}
+                  >
+                    {req.met && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text
+                    style={[
+                      styles.requirementText,
+                      req.met && styles.requirementTextMet,
+                    ]}
+                  >
+                    {req.label}
                   </Text>
-                </>
-              ) : (
-                <>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color={colors.success}
-                    style={styles.strengthIcon}
-                  />
-                  <Text style={styles.strongPasswordText}>Strong password</Text>
-                </>
-              )}
+                </View>
+              ))}
             </View>
           )}
         </View>
@@ -222,35 +316,37 @@ const ChangePassword = () => {
             isPassword
             isError={!!errors.confirmNewPassword}
             errorMessage={errors.confirmNewPassword}
-            isValid={passwordsMatch && isConfirmPasswordStrong}
+            isValid={
+              confirmNewPassword.length > 0 &&
+              confirmNewPassword === newPassword &&
+              allPasswordRequirementsMet
+            }
           />
 
-          {/* Confirm Password Strength Indicator */}
+          {/* Confirm Password Indicator (Simplified) */}
           {confirmNewPassword.length > 0 && (
             <View style={styles.strengthIndicator}>
-              {!isConfirmPasswordStrong || !passwordsMatch ? (
+              {confirmNewPassword === newPassword ? (
                 <>
                   <Ionicons
-                    name="shield"
-                    size={16}
-                    color="#F59E0B"
+                    name="checkmark-circle"
+                    size={ms(16)}
+                    color={colors.success}
                     style={styles.strengthIcon}
                   />
-                  <Text style={styles.weakPasswordText}>
-                    {!passwordsMatch
-                      ? "Passwords do not match"
-                      : "Password too weak, must be at least 8 characters"}
-                  </Text>
+                  <Text style={styles.strongPasswordText}>Passwords match</Text>
                 </>
               ) : (
                 <>
                   <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color={colors.success}
+                    name="close-circle"
+                    size={ms(16)}
+                    color={colors.error}
                     style={styles.strengthIcon}
                   />
-                  <Text style={styles.strongPasswordText}>Strong password</Text>
+                  <Text style={styles.weakPasswordText}>
+                    Passwords do not match
+                  </Text>
                 </>
               )}
             </View>
@@ -266,8 +362,8 @@ const ChangePassword = () => {
             !oldPassword ||
             !newPassword ||
             !confirmNewPassword ||
-            !isPasswordStrong ||
-            !passwordsMatch ||
+            !allPasswordRequirementsMet ||
+            (newPassword !== confirmNewPassword) ||
             isLoading
           }
         />
@@ -321,9 +417,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: ms(20),
+    paddingHorizontal: ms(spacing.lg),
     paddingTop: vs(50),
-    paddingBottom: vs(16),
+    paddingBottom: vs(spacing.md),
     backgroundColor: colors.backgroundMain,
   },
   backButton: {
@@ -344,8 +440,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: ms(20),
-    paddingTop: vs(20),
+    paddingHorizontal: ms(spacing.lg),
+    paddingTop: vs(spacing.md),
     paddingBottom: vs(40),
   },
   errorContainer: {
@@ -362,41 +458,87 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   inputWrapper: {
+    marginBottom: vs(spacing.sm),
+  },
+  // --- New/Updated Styles for Requirements Display ---
+  passwordRequirementsContainer: {
+    backgroundColor: colors.backgroundSoft,
+    borderRadius: ms(8),
+    padding: ms(spacing.md),
+    marginTop: ms(-spacing.sm),
+    marginBottom: ms(spacing.md),
+  },
+  requirementsTitle: {
+    fontSize: rfs(typography.caption.fontSize),
+    fontFamily: typography.bodyMedium.fontFamily,
+    color: colors.textGrey1,
     marginBottom: vs(8),
   },
+  requirementRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: vs(6),
+  },
+  requirementIndicator: {
+    width: ms(18),
+    height: ms(18),
+    borderRadius: ms(9),
+    borderWidth: 2,
+    borderColor: colors.textGrey2,
+    marginRight: ms(8),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  requirementIndicatorMet: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  checkmark: {
+    color: colors.textWhite,
+    fontSize: rfs(12),
+    fontWeight: "bold",
+  },
+  requirementText: {
+    fontSize: rfs(typography.caption.fontSize),
+    fontFamily: typography.bodySmall.fontFamily,
+    color: colors.textGrey2,
+    flex: 1,
+  },
+  requirementTextMet: {
+    color: colors.success,
+  },
+  // --- Existing/Modified Strength Indicator Styles ---
   strengthIndicator: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: vs(4),
     marginBottom: vs(12),
+    paddingHorizontal: ms(8), // Add padding for alignment
   },
   strengthIcon: {
     marginRight: ms(6),
   },
   weakPasswordText: {
-    ...typography.bodySmall,
-    color: "#F59E0B",
-    flex: 1,
+    ...typography.caption,
+    color: colors.error, 
   },
   strongPasswordText: {
-    ...typography.bodySmall,
+    ...typography.caption,
     color: colors.success,
-    flex: 1,
   },
-  // Modal Styles
+  // --- Modal Styles ---
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: ms(40),
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: colors.textWhite,
+    width: "80%",
+    backgroundColor: colors.backgroundMain,
     borderRadius: ms(16),
-    padding: ms(32),
+    padding: ms(spacing.xl),
     alignItems: "center",
-    width: "100%",
-    maxWidth: ms(320),
   },
   successIconContainer: {
     marginBottom: vs(20),
@@ -404,20 +546,19 @@ const styles = StyleSheet.create({
   successTitle: {
     ...typography.heading3,
     color: colors.textPrimary,
+    marginBottom: vs(30),
     textAlign: "center",
-    marginBottom: vs(24),
   },
   doneButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: vs(14),
-    paddingHorizontal: ms(48),
-    borderRadius: ms(8),
     width: "100%",
-    alignItems: "center",
+    backgroundColor: colors.primary,
+    paddingVertical: vs(12),
+    borderRadius: ms(8),
   },
   doneButtonText: {
     ...typography.bodyLarge,
     color: colors.textWhite,
+    textAlign: "center",
     fontWeight: "600",
   },
 });

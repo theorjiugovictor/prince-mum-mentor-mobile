@@ -70,7 +70,7 @@ export default function SignInScreen() {
     try {
       const profile = await getProfileSetup();
       if (profile?.mom_status) {
-        router.replace("/(tabs)/Home");
+        router.replace("/Home");
       } else router.replace("/setup/Mum");
     } catch (err) {
       console.error("Error fetching profile setup:", err);

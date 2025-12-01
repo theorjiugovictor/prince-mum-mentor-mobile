@@ -1,4 +1,5 @@
 import { api, authApi } from "@/src/lib/api";
+import { auth } from "@/src/lib/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AxiosError, isAxiosError } from "axios";
 import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
@@ -349,6 +350,7 @@ export async function logoutUser(): Promise<MessageResponse> {
     console.log("Logout failed:", error);
     throw error as AxiosError<ApiErrorResponse>;
   } finally {
+    await auth.clearTokens();
     await removeAuthToken();
     await AsyncStorage.clear(); // clears all stored keys
   }

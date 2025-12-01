@@ -31,7 +31,6 @@ import {
 
 // Destructure theme values outside component to prevent re-renders
 const { colors, typography } = defaultTheme;
-const arrowIcon = require("../../assets/images/arrow.png");
 
 export default function ResetPassword() {
   const params = useLocalSearchParams<{
@@ -114,7 +113,6 @@ export default function ResetPassword() {
       // Show success modal
       setShowSuccessModal(true);
     } catch (error) {
-
       let errorMessage = "Failed to reset password. Please try again.";
 
       if ((error as any).isAxiosError) {
@@ -158,7 +156,10 @@ export default function ResetPassword() {
               router.back();
             }}
           >
-            <Image source={arrowIcon} style={styles.arrowImage} />
+            <Image
+              source={require("../../assets/images/arrow.png")}
+              style={styles.arrowImage}
+            />
           </TouchableOpacity>
           <Text style={styles.title}>Reset Password</Text>
         </View>

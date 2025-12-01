@@ -1,5 +1,6 @@
 // src/app/album-detail.tsx
 
+import { useDeleteAlbum } from "@/src/core/hooks/useDeleteAlbum";
 import { useGetAlbum } from "@/src/core/hooks/useGetAlbum";
 import * as galleryStorage from "@/src/core/services/galleryStorageService";
 import { colors, spacing, typography } from "@/src/core/styles";
@@ -43,7 +44,7 @@ export default function AlbumDetailScreen() {
   const params = useLocalSearchParams();
   const albumId = params.albumId as string;
   const albumName = (params.albumName as string) || "Album";
-
+  const { create: deleteAlbum } = useDeleteAlbum({ album_id: albumId });
   const { data, isLoading, refetch } = useGetAlbum(albumId);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,7 +70,6 @@ export default function AlbumDetailScreen() {
 
   const handleMenu = () => {
     Alert.alert("Album Options", "What would you like to do?", [
-      { text: "Edit Album Name", onPress: () => console.log("Edit album") },
       {
         text: "Delete Album",
         onPress: () => handleDeleteAlbum(),
@@ -90,9 +90,15 @@ export default function AlbumDetailScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await galleryStorage.deleteAlbum(albumId);
-              showToast.success("Success", "Album deleted successfully");
-              router.back();
+              await deleteAlbum.mutateAsync(
+                {},
+                {
+                  onSuccess() {
+                    showToast.success("Success", "Album deleted successfully");
+                    router.back();
+                  },
+                }
+              );
             } catch (error) {
               console.error("Error deleting album:", error);
               showToast.error("Error", "Failed to delete album");
@@ -134,7 +140,7 @@ export default function AlbumDetailScreen() {
       />
     </View>
   );
-  console.log(data)
+  console.log(data);
 
   const hasPhotos = photos.length > 0;
 
@@ -263,6 +269,7 @@ export default function AlbumDetailScreen() {
           onClose={handleCloseAddMemoryModal}
           setIsAddMemoryModalVisible={setIsAddMemoryModalVisible}
           albumName={albumName}
+          refetch={refetch}
         />
       </View>
     </>

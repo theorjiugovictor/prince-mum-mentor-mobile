@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Image,
@@ -15,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
 
 // --- Imports from Core Components and Styles ---
 import { colors, spacing, typography } from "../../core/styles/index";
@@ -29,36 +32,77 @@ import {
 } from "@/src/core/services/appleAuthService";
 import { signInWithGoogle } from "@/src/core/services/googleAuthservice";
 import { showToast } from "@/src/core/utils/toast";
-import {
-  ApiErrorResponse,
-  register,
-  RegisterPayload,
-} from "../../core/services/authService";
+import { ApiErrorResponse, register } from "../../core/services/authService";
 import { getProfileSetup } from "../../core/services/profileSetup.service";
 
-// --- Password Validation Types ---
-interface PasswordRequirement {
-  label: string;
-  test: (password: string) => boolean;
-  met: boolean;
-}
+// --- Validation Schema ---
+const signUpSchema = z
+  .object({
+    fullName: z.string().min(1, "Full Name is required"),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Please enter a valid email address"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain an uppercase letter")
+      .regex(/[a-z]/, "Password must contain a lowercase letter")
+      .regex(/[0-9]/, "Password must contain a number")
+      .regex(
+        /[!@#$%^&*(),.?":{}|<>]/,
+        "Password must contain a special character"
+      ),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    isAgreed: z.boolean().refine((v) => v === true, {
+      message: "You must agree to the Terms & Conditions",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
-// --- Constants for Validation ---
-const MIN_PASSWORD_LENGTH = 8;
+type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isAgreed, setIsAgreed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  // const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [generalError, setGeneralError] = useState<string | null>(null);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      isAgreed: false,
+    },
+    mode: "onChange",
+  });
+
+  const password = watch("password");
+  const isAgreed = watch("isAgreed");
+
+  // Password strength indicators
+  const passwordChecks = {
+    length: password?.length >= 8,
+    uppercase: /[A-Z]/.test(password || ""),
+    lowercase: /[a-z]/.test(password || ""),
+    number: /[0-9]/.test(password || ""),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password || ""),
+  };
+
+  const allPasswordRequirementsMet = Object.values(passwordChecks).every(
+    (check) => check
+  );
 
   // Check if Apple Sign-In is available
   useEffect(() => {
@@ -68,111 +112,6 @@ export default function SignUpScreen() {
     };
     checkAppleAuth();
   }, []);
-
-  // --- Password Requirements State ---
-  const [passwordRequirements, setPasswordRequirements] = useState<
-    PasswordRequirement[]
-  >([
-    {
-      label: "At least 8 characters",
-      test: (pwd) => pwd.length >= 8,
-      met: false,
-    },
-    {
-      label: "At least one uppercase letter",
-      test: (pwd) => /[A-Z]/.test(pwd),
-      met: false,
-    },
-    {
-      label: "At least one lowercase letter",
-      test: (pwd) => /[a-z]/.test(pwd),
-      met: false,
-    },
-    {
-      label: "At least one number",
-      test: (pwd) => /[0-9]/.test(pwd),
-      met: false,
-    },
-    {
-      label: "At least one special character (!@#$%^&*)",
-      test: (pwd) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
-      met: false,
-    },
-  ]);
-
-  // --- Update Password Requirements on Password Change ---
-  useEffect(() => {
-    const updatedRequirements = [
-      {
-        label: "At least 8 characters",
-        test: (pwd: string) => pwd.length >= 8,
-        met: password.length >= 8,
-      },
-      {
-        label: "At least one uppercase letter",
-        test: (pwd: string) => /[A-Z]/.test(pwd),
-        met: /[A-Z]/.test(password),
-      },
-      {
-        label: "At least one lowercase letter",
-        test: (pwd: string) => /[a-z]/.test(pwd),
-        met: /[a-z]/.test(password),
-      },
-      {
-        label: "At least one number",
-        test: (pwd: string) => /[0-9]/.test(pwd),
-        met: /[0-9]/.test(password),
-      },
-      {
-        label: "At least one special character (!@#$%^&*)",
-        test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
-        met: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-      },
-    ];
-    setPasswordRequirements(updatedRequirements);
-  }, [password]);
-
-  // --- Check if all password requirements are met ---
-  const allPasswordRequirementsMet = useMemo(() => {
-    return passwordRequirements.every((req) => req.met);
-  }, [passwordRequirements]);
-
-  // --- Client-Side Validation Logic ---
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-    let isValid = true;
-
-    if (!fullName.trim()) {
-      newErrors.fullName = "Full Name is required.";
-      isValid = false;
-    }
-
-    if (!email || !email.includes("@") || !email.includes(".")) {
-      newErrors.email = "Incorrect Email format.";
-      isValid = false;
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required.";
-      isValid = false;
-    } else if (!allPasswordRequirementsMet) {
-      newErrors.password = "Password does not meet all requirements.";
-      isValid = false;
-    }
-
-    if (confirmPassword !== password) {
-      newErrors.confirmPassword = "Passwords do not match.";
-      isValid = false;
-    }
-
-    if (!isAgreed) {
-      newErrors.agreement = "You must agree to the Terms & Conditions.";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
 
   const redirectAfterLogin = async () => {
     try {
@@ -186,93 +125,49 @@ export default function SignUpScreen() {
     }
   };
 
-  const handleSignup = async () => {
-    if (!validate()) return;
+  const onSubmit = async (data: SignUpFormData) => {
+    setGeneralError(null);
 
-    setIsLoading(true);
-    setErrors({});
-
-    const payload: RegisterPayload = {
-      full_name: fullName.trim(),
-      email: email.toLowerCase(),
-      password: password,
-      confirm_password: confirmPassword,
+    const payload = {
+      full_name: data.fullName.trim(),
+      email: data.email.toLowerCase(),
+      password: data.password,
+      confirm_password: data.confirmPassword,
     };
 
-    // --- LIVE API CALL INTEGRATION ---
     try {
       await register(payload);
 
-      // Success: Redirect to the verification screen, passing the email as a parameter
       showToast.success(
         "Success!",
         "Account created. Please check your email."
       );
 
-      // Navigate to the reusable verification screen, passing context and email
       router.replace({
         pathname: "/(auth)/SignInScreen",
         params: {
           context: "register",
-          email: email,
+          email: data.email,
         },
       });
     } catch (error) {
-      // --- SAFELY HANDLE AXIOS ERROR ---
       const axiosError = error as AxiosError<ApiErrorResponse>;
-      let errorMessage = "Signup Failed. Please try again.";
-      let apiErrors: { [key: string]: string } = {};
+      const errorMessage =
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.detail ||
+        "Signup Failed. Please try again.";
 
-      // Safely check for the response data
-      if (axiosError.response && axiosError.response.data) {
-        const detail = axiosError.response.data.detail;
-
-        if (typeof detail === "string") {
-          // Handle general 400/409 errors (e.g., "user already exists")
-          if (
-            detail.toLowerCase().includes("already exists") ||
-            detail.toLowerCase().includes("already registered")
-          ) {
-            apiErrors.email =
-              "This email is already registered. Try logging in.";
-          } else {
-            errorMessage = detail;
-          }
-        } else if (Array.isArray(detail)) {
-          // Handle 422 validation errors with loc, msg structure
-          detail.forEach((err: any) => {
-            const field = err.loc[err.loc.length - 1];
-            const message = err.msg;
-
-            // Map API field names to state variable names
-            if (field === "email") {
-              apiErrors.email = message;
-            } else if (field === "password") {
-              apiErrors.password = message;
-            } else if (field === "confirm_password") {
-              apiErrors.confirmPassword = message;
-            } else if (field === "full_name") {
-              apiErrors.fullName = message;
-            }
-          });
-          errorMessage = "Please check your highlighted inputs.";
-        }
-      }
-
-      // Update specific input errors or show a general alert
-      if (Object.keys(apiErrors).length > 0) {
-        setErrors((prev) => ({ ...prev, ...apiErrors }));
-      } else {
-        showToast.error("Signup Failed", errorMessage);
-      }
-    } finally {
-      setIsLoading(false);
+      showToast.error(
+        "Signup Failed",
+        typeof errorMessage === "string"
+          ? errorMessage
+          : "Signup Failed. Please try again."
+      );
     }
   };
 
   const handleGooglePress = async () => {
     setIsGoogleLoading(true);
-    setErrors({});
     setGeneralError(null);
 
     try {
@@ -300,10 +195,8 @@ export default function SignUpScreen() {
     }
   };
 
-  // Handle Apple Sign-In
   const handleApplePress = async () => {
     setIsAppleLoading(true);
-    setErrors({});
     setGeneralError(null);
 
     try {
@@ -329,6 +222,7 @@ export default function SignUpScreen() {
       setIsAppleLoading(false);
     }
   };
+
   return (
     <>
       <StatusBar
@@ -346,136 +240,166 @@ export default function SignUpScreen() {
           >
             <View style={styles.innerContainer}>
               <Text style={styles.header}>Sign up</Text>
-              {/* General Error Message Display */}
+
               {generalError && (
                 <Text style={styles.generalErrorText}>{generalError}</Text>
               )}
 
-              {/* Full Name Input */}
-              <CustomInput
-                label="Full Name"
-                placeholder="Enter Full Name"
-                value={fullName}
-                onChangeText={setFullName}
-                isError={!!errors.fullName}
-                errorMessage={errors.fullName}
-                iconName="person-outline"
-                isValid={fullName.trim().length > 0 && !errors.fullName}
+              <Controller
+                control={control}
+                name="fullName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <CustomInput
+                    label="Full Name"
+                    placeholder="Enter Full Name"
+                    value={value || ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    isError={!!errors.fullName}
+                    errorMessage={errors.fullName?.message}
+                    iconName="person-outline"
+                    isValid={
+                      (value || "").trim().length > 0 && !errors.fullName
+                    }
+                  />
+                )}
               />
 
-              {/* Email Input */}
-              <CustomInput
-                label="Email Address"
-                placeholder="Enter Email Address"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                isError={!!errors.email}
-                errorMessage={errors.email}
-                iconName="mail-outline"
-                isValid={
-                  email.includes("@") && email.includes(".") && !errors.email
-                }
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <CustomInput
+                    label="Email Address"
+                    placeholder="Enter Email Address"
+                    value={value || ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    isError={!!errors.email}
+                    errorMessage={errors.email?.message}
+                    iconName="mail-outline"
+                    isValid={
+                      value?.includes("@") &&
+                      value?.includes(".") &&
+                      !errors.email
+                    }
+                  />
+                )}
               />
 
-              {/* Choose Password Input */}
-              <CustomInput
-                label="Choose Password"
-                placeholder={`Minimum ${MIN_PASSWORD_LENGTH} characters`}
-                value={password}
-                onChangeText={setPassword}
-                isPassword
-                iconName="lock-outline"
-                isError={!!errors.password}
-                errorMessage={errors.password}
-                isValid={allPasswordRequirementsMet && !errors.password}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <CustomInput
+                    label="Choose Password"
+                    placeholder="Minimum 8 characters"
+                    value={value || ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    isPassword
+                    iconName="lock-outline"
+                    isError={!!errors.password}
+                    errorMessage={errors.password?.message}
+                    isValid={allPasswordRequirementsMet && !errors.password}
+                  />
+                )}
               />
 
-              {/* Password Requirements Display */}
-              {password.length > 0 && (
-                <View style={styles.passwordRequirementsContainer}>
-                  <Text style={styles.requirementsTitle}>
-                    Password must contain:
-                  </Text>
-                  {passwordRequirements.map((req, index) => (
-                    <View key={index} style={styles.requirementRow}>
+              {password && password.length > 0 && (
+                <View style={styles.passwordStrengthContainer}>
+                  <View style={styles.strengthBarsContainer}>
+                    {[
+                      passwordChecks.length,
+                      passwordChecks.uppercase || passwordChecks.lowercase,
+                      passwordChecks.number,
+                      passwordChecks.special,
+                    ].map((met, index) => (
                       <View
+                        key={index}
                         style={[
-                          styles.requirementIndicator,
-                          req.met && styles.requirementIndicatorMet,
+                          styles.strengthBar,
+                          met && styles.strengthBarActive,
                         ]}
-                      >
-                        {req.met && <Text style={styles.checkmark}>✓</Text>}
-                      </View>
-                      <Text
-                        style={[
-                          styles.requirementText,
-                          req.met && styles.requirementTextMet,
-                        ]}
-                      >
-                        {req.label}
-                      </Text>
-                    </View>
-                  ))}
+                      />
+                    ))}
+                  </View>
+                  <Text style={styles.strengthText}>
+                    {Object.values(passwordChecks).filter(Boolean).length < 3
+                      ? "Weak Password"
+                      : Object.values(passwordChecks).filter(Boolean).length < 5
+                        ? "Medium Password"
+                        : "Strong Password"}
+                  </Text>
                 </View>
               )}
 
-              {/* Confirm Password Input */}
-              <CustomInput
-                label="Confirm Password"
-                placeholder="Enter same password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                isPassword
-                iconName="lock-outline"
-                isError={!!errors.confirmPassword}
-                errorMessage={errors.confirmPassword}
-                isValid={
-                  confirmPassword.length > 0 &&
-                  confirmPassword === password &&
-                  allPasswordRequirementsMet &&
-                  !errors.confirmPassword
-                }
-              />
-
-              {/* Terms & Conditions */}
-              <View style={styles.agreementContainer}>
-                <TouchableOpacity
-                  onPress={() => setIsAgreed(!isAgreed)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons
-                    name={isAgreed ? "checkbox" : "square-outline"}
-                    size={rfs(24)}
-                    color={
-                      isAgreed
-                        ? colors.success
-                        : errors.agreement
-                          ? colors.error
-                          : colors.textPrimary
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <CustomInput
+                    label="Confirm Password"
+                    placeholder="Enter same password"
+                    value={value || ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    isPassword
+                    iconName="lock-outline"
+                    isError={!!errors.confirmPassword}
+                    errorMessage={errors.confirmPassword?.message}
+                    isValid={
+                      (value || "").length > 0 &&
+                      value === password &&
+                      allPasswordRequirementsMet &&
+                      !errors.confirmPassword
                     }
                   />
-                </TouchableOpacity>
-                <Text style={styles.agreementText}>
-                  I agree to all the{" "}
-                  <Text
-                    style={styles.termsLink}
-                    onPress={() => router.push("/TermsAndConditions")}
-                  >
-                    Terms & Conditions
-                  </Text>
-                </Text>
-              </View>
-
-              {/* Sign Up Button */}
-              <PrimaryButton
-                title="Sign up"
-                onPress={handleSignup}
-                isLoading={isLoading}
-                disabled={!isAgreed || isLoading}
+                )}
               />
 
-              {/* Already Have Account */}
+              <Controller
+                control={control}
+                name="isAgreed"
+                render={({ field: { onChange, value } }) => (
+                  <View style={styles.agreementContainer}>
+                    <TouchableOpacity
+                      onPress={() => onChange(!value)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons
+                        name={value ? "checkbox" : "square-outline"}
+                        size={rfs(24)}
+                        color={
+                          value
+                            ? colors.success
+                            : errors.isAgreed
+                              ? colors.error
+                              : colors.textPrimary
+                        }
+                      />
+                    </TouchableOpacity>
+                    <Text style={styles.agreementText}>
+                      I agree to all the{" "}
+                      <Text
+                        style={styles.termsLink}
+                        onPress={() => router.push("/TermsAndConditions")}
+                      >
+                        Terms & Conditions
+                      </Text>
+                    </Text>
+                  </View>
+                )}
+              />
+
+              <PrimaryButton
+                title="Sign up"
+                onPress={handleSubmit(onSubmit)}
+                isLoading={isSubmitting}
+                disabled={!isAgreed || isSubmitting}
+              />
+
               <Text style={styles.loginText}>
                 Already have an account?{" "}
                 <Text
@@ -488,7 +412,6 @@ export default function SignUpScreen() {
 
               <Text style={styles.socialLoginText}>OR CONTINUE WITH</Text>
 
-              {/* Social Login Buttons */}
               <View style={styles.socialButtonsContainer}>
                 <TouchableOpacity
                   style={styles.socialButton}
@@ -540,6 +463,7 @@ export default function SignUpScreen() {
     </>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -558,51 +482,28 @@ const styles = StyleSheet.create({
     marginBottom: ms(spacing.xl),
     textAlign: "center",
   },
-  passwordRequirementsContainer: {
-    backgroundColor: colors.backgroundSoft,
-    borderRadius: ms(8),
-    padding: ms(spacing.md),
+  passwordStrengthContainer: {
     marginTop: ms(-spacing.sm),
     marginBottom: ms(spacing.md),
   },
-  requirementsTitle: {
-    fontSize: rfs(typography.caption.fontSize),
-    fontFamily: typography.bodyMedium.fontFamily,
-    color: colors.textGrey1,
-    marginBottom: vs(8),
-  },
-  requirementRow: {
+  strengthBarsContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: vs(6),
+    gap: ms(6),
+    marginBottom: vs(4),
   },
-  requirementIndicator: {
-    width: ms(18),
-    height: ms(18),
-    borderRadius: ms(9),
-    borderWidth: 2,
-    borderColor: colors.textGrey2,
-    marginRight: ms(8),
-    justifyContent: "center",
-    alignItems: "center",
+  strengthBar: {
+    flex: 1,
+    height: vs(4),
+    backgroundColor: colors.backgroundSoft,
+    borderRadius: ms(2),
   },
-  requirementIndicatorMet: {
+  strengthBarActive: {
     backgroundColor: colors.success,
-    borderColor: colors.success,
   },
-  checkmark: {
-    color: colors.textWhite,
-    fontSize: rfs(12),
-    fontWeight: "bold",
-  },
-  requirementText: {
+  strengthText: {
     fontSize: rfs(typography.caption.fontSize),
     fontFamily: typography.bodySmall.fontFamily,
-    color: colors.textGrey2,
-    flex: 1,
-  },
-  requirementTextMet: {
-    color: colors.success,
+    color: colors.textGrey1,
   },
   agreementContainer: {
     flexDirection: "row",

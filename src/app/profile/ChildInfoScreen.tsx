@@ -37,35 +37,35 @@ const getStableAvatarUrl = (profilePictureUrl?: string): string => {
   if (!profilePictureUrl) {
     return "https://i.pravatar.cc/150?img=1";
   }
-  
+
   // If it's already a full URL (including our avatar endpoint), return as-is
-  if (profilePictureUrl.includes('child-profiles/avatar/')) {
+  if (profilePictureUrl.includes("child-profiles/avatar/")) {
     return profilePictureUrl;
   }
-  
+
   // If it's already a full URL but not our avatar endpoint, use it directly
-  if (profilePictureUrl.startsWith('http')) {
+  if (profilePictureUrl.startsWith("http")) {
     return profilePictureUrl;
   }
-  
+
   // Extract filename from the profile_picture_url
   let filename: string;
-  
-  if (profilePictureUrl.includes('/')) {
-    filename = profilePictureUrl.split('/').pop() || '';
+
+  if (profilePictureUrl.includes("/")) {
+    filename = profilePictureUrl.split("/").pop() || "";
   } else {
     filename = profilePictureUrl;
   }
-  
+
   // If we couldn't extract a valid filename, use placeholder
   if (!filename) {
     return "https://i.pravatar.cc/150?img=1";
   }
-  
+
   // Construct the full avatar URL using the public endpoint
   const baseUrl = "https://api.staging.kaizen.emerj.net/api/v1";
   const avatarUrl = `${baseUrl}/child-profiles/avatar/${filename}`;
-  
+
   return avatarUrl;
 };
 
@@ -80,7 +80,9 @@ export default function ChildInfoScreen({ navigation }: any) {
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [imageLoadStates, setImageLoadStates] = useState<{ [key: string]: { loaded: boolean; error: boolean; url: string } }>({});
+  const [imageLoadStates, setImageLoadStates] = useState<{
+    [key: string]: { loaded: boolean; error: boolean; url: string };
+  }>({});
 
   // Fetch children on mount
   useEffect(() => {
@@ -93,28 +95,33 @@ export default function ChildInfoScreen({ navigation }: any) {
   const fetchChildren = async () => {
     try {
       setLoading(true);
-      
+
       const profiles = await getChildProfiles();
-      
-      console.log("👶 Fetched child profiles:", profiles);
-      
+
+      console.log("Fetched child profiles:", profiles);
+
       // Defensive: ensure we always set an array
       if (Array.isArray(profiles)) {
         setChildren(profiles);
-        
+
         // Pre-initialize image load states
-        const initialLoadStates: { [key: string]: { loaded: boolean; error: boolean; url: string } } = {};
+        const initialLoadStates: {
+          [key: string]: { loaded: boolean; error: boolean; url: string };
+        } = {};
         profiles.forEach((child) => {
           const avatarUrl = getStableAvatarUrl(child.profile_picture_url);
           initialLoadStates[child.id] = {
             loaded: false,
             error: false,
-            url: avatarUrl
+            url: avatarUrl,
           };
         });
         setImageLoadStates(initialLoadStates);
       } else {
-        console.warn('⚠️ API returned non-array, setting empty array. Received:', profiles);
+        console.warn(
+          "⚠️ API returned non-array, setting empty array. Received:",
+          profiles
+        );
         setChildren([]);
         setImageLoadStates({});
       }
@@ -167,7 +174,10 @@ export default function ChildInfoScreen({ navigation }: any) {
           onPress: async () => {
             try {
               await deleteChildProfile(child.id);
-              showToast.success("Success", "Child profile deleted successfully");
+              showToast.success(
+                "Success",
+                "Child profile deleted successfully"
+              );
               fetchChildren();
             } catch (error) {
               console.error("Error deleting child:", error);
@@ -193,14 +203,13 @@ export default function ChildInfoScreen({ navigation }: any) {
    * Handle image load error
    */
   const handleImageError = useCallback((childId: string) => {
-
-    setImageLoadStates(prev => ({
+    setImageLoadStates((prev) => ({
       ...prev,
       [childId]: {
         ...prev[childId],
         error: true,
-        loaded: true
-      }
+        loaded: true,
+      },
     }));
   }, []);
 
@@ -208,35 +217,38 @@ export default function ChildInfoScreen({ navigation }: any) {
    * Handle image load success
    */
   const handleImageLoad = useCallback((childId: string) => {
-    setImageLoadStates(prev => {
+    setImageLoadStates((prev) => {
       if (prev[childId] && prev[childId].loaded) {
-        return prev; 
+        return prev;
       }
-      
+
       return {
         ...prev,
         [childId]: {
           ...prev[childId],
           loaded: true,
-          error: false
-        }
+          error: false,
+        },
       };
     });
-  }, []); 
+  }, []);
 
+  const getImageSource = useCallback(
+    (child: ChildProfile) => {
+      const loadState = imageLoadStates[child.id];
 
-  const getImageSource = useCallback((child: ChildProfile) => {
-    const loadState = imageLoadStates[child.id];
-    
-    if (loadState?.error || !child.profile_picture_url) {
-      return { uri: PLACEHOLDER_IMAGE };
-    }
+      if (loadState?.error || !child.profile_picture_url) {
+        return { uri: PLACEHOLDER_IMAGE };
+      }
 
-    const avatarUrl = loadState?.url || getStableAvatarUrl(child.profile_picture_url);
-    
-    return { uri: avatarUrl };
-  }, [imageLoadStates]);
-  
+      const avatarUrl =
+        loadState?.url || getStableAvatarUrl(child.profile_picture_url);
+
+      return { uri: avatarUrl };
+    },
+    [imageLoadStates]
+  );
+
   /**
    * Memoized child list to prevent unnecessary re-renders
    */
@@ -269,7 +281,15 @@ export default function ChildInfoScreen({ navigation }: any) {
               {calculateAge(child.date_of_birth)}
             </Text>
             <Text style={styles.childDetails}>
-              {child.gender} • {child.birth_order === 1 ? "First" : child.birth_order === 2 ? "Second" : child.birth_order === 3 ? "Third" : `${child.birth_order}th`} born
+              {child.gender} •{" "}
+              {child.birth_order === 1
+                ? "First"
+                : child.birth_order === 2
+                  ? "Second"
+                  : child.birth_order === 3
+                    ? "Third"
+                    : `${child.birth_order}th`}{" "}
+              born
             </Text>
           </View>
           <View style={styles.actionButtons}>
@@ -294,7 +314,13 @@ export default function ChildInfoScreen({ navigation }: any) {
         </View>
       );
     });
-  }, [children, imageLoadStates, getImageSource, handleImageError, handleImageLoad]);
+  }, [
+    children,
+    imageLoadStates,
+    getImageSource,
+    handleImageError,
+    handleImageLoad,
+  ]);
 
   /**
    * Render loading state
@@ -309,7 +335,11 @@ export default function ChildInfoScreen({ navigation }: any) {
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <Feather name="arrow-left" size={ms(24)} color={colors.textPrimary} />
+            <Feather
+              name="arrow-left"
+              size={ms(24)}
+              color={colors.textPrimary}
+            />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Child Info</Text>
         </View>
@@ -334,7 +364,11 @@ export default function ChildInfoScreen({ navigation }: any) {
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <Feather name="arrow-left" size={ms(24)} color={colors.textPrimary} />
+            <Feather
+              name="arrow-left"
+              size={ms(24)}
+              color={colors.textPrimary}
+            />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Child Info</Text>
         </View>
@@ -355,10 +389,7 @@ export default function ChildInfoScreen({ navigation }: any) {
             <Text style={styles.addButtonText}>Add Your First Child</Text>
           </TouchableOpacity>
         </View>
-        <AddChildModal
-          visible={addModalVisible}
-          onClose={handleModalClose}
-        />
+        <AddChildModal visible={addModalVisible} onClose={handleModalClose} />
       </SafeAreaView>
     );
   }
@@ -413,10 +444,7 @@ export default function ChildInfoScreen({ navigation }: any) {
         child={selectedChild}
       />
 
-      <AddChildModal
-        visible={addModalVisible}
-        onClose={handleModalClose}
-      />
+      <AddChildModal visible={addModalVisible} onClose={handleModalClose} />
     </SafeAreaView>
   );
 }
@@ -463,7 +491,7 @@ const styles = StyleSheet.create({
     borderColor: colors.outlineVariant,
   },
   avatarContainer: {
-    position: 'relative',
+    position: "relative",
     marginRight: ms(spacing.md),
   },
   childAvatar: {
@@ -473,14 +501,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSubtle,
   },
   imageLoadingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderRadius: ms(30),
   },
   childInfo: {

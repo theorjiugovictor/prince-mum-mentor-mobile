@@ -10,6 +10,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   ScrollView,
@@ -28,6 +29,7 @@ interface AddMemoryModalProps {
   onClose: () => void;
   setIsAddMemoryModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
   albumName?: string;
+  refetch: () => void;
 }
 
 export interface MemoryData {
@@ -43,7 +45,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
   visible,
   onClose,
   setIsAddMemoryModalVisible,
-  albumName,
+  refetch,
 }) => {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -119,6 +121,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
       {
         onSuccess(data, variables, onMutateResult, context) {
           setIsAddMemoryModalVisible(false);
+          refetch();
         },
         onSettled(data, error, variables, onMutateResult, context) {
           setIsLoading(false);
@@ -170,6 +173,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                   <Text style={styles.headerTitle}>Add A Memory</Text>
                   <View style={{ width: 20 }} />
                 </View>
+                {isUploading && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={styles.uploadingText}>Uploading image...</Text>
+                  </View>
+                )}
 
                 <ScrollView
                   contentContainerStyle={styles.scrollContent}
@@ -472,5 +481,23 @@ const styles = StyleSheet.create({
     paddingBottom: vs(spacing.xl),
     borderTopWidth: 1,
     borderTopColor: colors.outline,
+  },
+
+  uploadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100, // ensure it's above everything
+  },
+  uploadingText: {
+    ...typography.labelMedium,
+    color: colors.textWhite,
+    marginTop: vs(8),
+    fontSize: rfs(14),
   },
 });

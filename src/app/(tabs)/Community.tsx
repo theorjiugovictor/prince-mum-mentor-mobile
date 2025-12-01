@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "expo-router";
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,35 +17,39 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, fontFamilies, spacing, typography } from "../../core/styles";
+import { ms, rfs, vs } from "../../core/styles/scaling";
 
-import { colors, fontFamilies, spacing, typography } from "../../core/styles"
-import { ms, rfs, vs } from "../../core/styles/scaling"
+import {
+  useCommentOnPost,
+  useCommunityPosts,
+  useCreatePost,
+  useSinglePost,
+  useToggleLike,
+} from "@/src/core/hooks/useCommunity";
+import PrimaryButton from "../components/PrimaryButton";
+import SecondaryButton from "../components/SecondaryButton";
 
-import { useCommentOnPost, useCommunityPosts, useCreatePost, useSinglePost, useToggleLike } from "@/src/core/hooks/useCommunity"
-import PrimaryButton from "../components/PrimaryButton"
-import SecondaryButton from "../components/SecondaryButton"
-
-
-type ImageSource = ImageSourcePropType
+type ImageSource = ImageSourcePropType;
 
 type CommunityPost = {
-  id: string
-  authorName: string
-  authorAvatar: ImageSource
-  timeAgo: string
-  text: string
-  image?: ImageSource
-  likes: number
-  comments: number
-  isLiked: boolean
-}
+  id: string;
+  authorName: string;
+  authorAvatar: ImageSource;
+  timeAgo: string;
+  text: string;
+  image?: ImageSource;
+  likes: number;
+  comments: number;
+  isLiked: boolean;
+};
 
-const avatar = require("../../assets/images/profile-image.png")
-const placeholderImage = require("../../assets/images/home-image.png")
-const likeIcon = require("../../assets/images/new-like.png")
-const commentIcon = require("../../assets/images/new-comment.png")
+const avatar = require("../../assets/images/profile-image.png");
+const placeholderImage = require("../../assets/images/home-image.png");
+const likeIcon = require("../../assets/images/new-like.png");
+const commentIcon = require("../../assets/images/new-comment.png");
 
 // Mock gallery images just to simulate the "select photos" screen
 const GALLERY_IMAGES: ImageSource[] = [
@@ -54,100 +59,119 @@ const GALLERY_IMAGES: ImageSource[] = [
   require("../../assets/images/journal-icon.png"),
   require("../../assets/images/notification.png"),
   require("../../assets/images/user.png"),
-]
+];
 
 interface Props {
-  userId?: string // removed as required parameter since we're now fetching all posts
+  userId?: string; // removed as required parameter since we're now fetching all posts
 }
 
 const Community: React.FC<Props> = ({ userId }) => {
-  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false)
-  const [isGalleryModalVisible, setIsGalleryModalVisible] = useState(false)
-  const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false)
-  const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState(false)
-  const [isDeleteSuccessVisible, setIsDeleteSuccessVisible] = useState(false)
-  const [isPostDetailVisible, setIsPostDetailVisible] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [allPosts, setAllPosts] = useState<CommunityPost[]>([])
-  const [totalPages, setTotalPages] = useState(1)
+  const router = useRouter();
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [isGalleryModalVisible, setIsGalleryModalVisible] = useState(false);
+  const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
+  const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState(false);
+  const [isDeleteSuccessVisible, setIsDeleteSuccessVisible] = useState(false);
+  const [isPostDetailVisible, setIsPostDetailVisible] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allPosts, setAllPosts] = useState<CommunityPost[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const [createText, setCreateText] = useState("")
-  const [createTitle, setCreateTitle] = useState("")
-  const [createImage, setCreateImage] = useState<ImageSource | undefined>()
-  const [createPhotoIds, setCreatePhotoIds] = useState<string[]>([])
+  const [createText, setCreateText] = useState("");
+  const [createTitle, setCreateTitle] = useState("");
+  const [createImage, setCreateImage] = useState<ImageSource | undefined>();
+  const [createPhotoIds, setCreatePhotoIds] = useState<string[]>([]);
 
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
-  const [postIdForOptions, setPostIdForOptions] = useState<string | null>(null)
-  const [postIdForDelete, setPostIdForDelete] = useState<string | null>(null)
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [postIdForOptions, setPostIdForOptions] = useState<string | null>(null);
+  const [postIdForDelete, setPostIdForDelete] = useState<string | null>(null);
 
-  const { data: postsResponse, isLoading, error } = useCommunityPosts(currentPage, 20)
-  const { data: selectedPost } = useSinglePost(selectedPostId)
-  const toggleLikeMutation = useToggleLike()
-  const createPostMutation = useCreatePost()
-  const commentMutation = useCommentOnPost()
+  const {
+    data: postsResponse,
+    isLoading,
+    error,
+  } = useCommunityPosts(currentPage, 20);
+  const { data: selectedPost } = useSinglePost(selectedPostId);
+  const toggleLikeMutation = useToggleLike();
+  const createPostMutation = useCreatePost();
+  const commentMutation = useCommentOnPost();
 
   useEffect(() => {
     if (postsResponse?.posts) {
       if (currentPage === 1) {
-        setAllPosts(transformPosts(postsResponse.posts))
+        setAllPosts(transformPosts(postsResponse.posts));
       } else {
-        setAllPosts((prev) => [...prev, ...transformPosts(postsResponse.posts)])
+        setAllPosts((prev) => [
+          ...prev,
+          ...transformPosts(postsResponse.posts),
+        ]);
       }
 
       if (postsResponse.meta) {
-        setTotalPages(postsResponse.meta.total_pages || 1)
+        setTotalPages(postsResponse.meta.total_pages || 1);
       }
     }
-  }, [postsResponse])
+  }, [postsResponse]);
 
   const transformPosts = (apiPosts: any[]): CommunityPost[] => {
     return apiPosts.map((post: any) => ({
       id: post.id,
-      authorName: post.authorName || post.author_name || "Anonymous",
+      userId: post.user_id,
+      authorName:
+        post.authorName ||
+        post.author_name ||
+        post?.user?.full_name ||
+        "Anonymous",
       authorAvatar: avatar,
       timeAgo: formatTimeAgo(post.createdAt || post.created_at),
       text: post.content || post.text || "",
-      image: post.image || placeholderImage,
-      likes: post.likes || 0,
-      comments: post.comments || 0,
-      isLiked: post.isLiked || false,
-    }))
-  }
+      image: post?.photos[0]?.url,
+      likes: post.likes_count || 0,
+      comments: post.comments_count || 0,
+      isLiked: post.is_liked || false,
+    }));
+  };
 
-  const posts: CommunityPost[] = allPosts
+  const posts: CommunityPost[] = allPosts;
 
-  const postForOptions = useMemo(() => posts.find((p) => p.id === postIdForOptions) || null, [posts, postIdForOptions])
+  const postForOptions = useMemo(
+    () => posts.find((p) => p.id === postIdForOptions) || null,
+    [posts, postIdForOptions]
+  );
 
-  const postForDelete = useMemo(() => posts.find((p) => p.id === postIdForDelete) || null, [posts, postIdForDelete])
+  const postForDelete = useMemo(
+    () => posts.find((p) => p.id === postIdForDelete) || null,
+    [posts, postIdForDelete]
+  );
 
   const formatTimeAgo = (dateString: string): string => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return "Just now"
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`
-    return `${Math.floor(diffInSeconds / 86400)}d`
-  }
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    return `${Math.floor(diffInSeconds / 86400)}d`;
+  };
 
   // ---- Actions ----
 
   const openCreateModal = () => {
-    setCreateText("")
-    setCreateTitle("")
-    setCreateImage(undefined)
-    setCreatePhotoIds([])
-    setIsCreateModalVisible(true)
-  }
+    setCreateText("");
+    setCreateTitle("");
+    setCreateImage(undefined);
+    setCreatePhotoIds([]);
+    setIsCreateModalVisible(true);
+  };
 
   const closeCreateModal = () => {
-    setIsCreateModalVisible(false)
-  }
+    setIsCreateModalVisible(false);
+  };
 
   const handleSubmitPost = async () => {
     if (!createText.trim() && !createTitle.trim()) {
-      return
+      return;
     }
 
     try {
@@ -155,74 +179,74 @@ const Community: React.FC<Props> = ({ userId }) => {
         title: createTitle.trim(),
         content: createText.trim(),
         photo_ids: createPhotoIds.length > 0 ? createPhotoIds : undefined,
-      })
+      });
 
-      setIsCreateModalVisible(false)
-      setCreateText("")
-      setCreateTitle("")
-      setCreateImage(undefined)
-      setCreatePhotoIds([])
+      setIsCreateModalVisible(false);
+      setCreateText("");
+      setCreateTitle("");
+      setCreateImage(undefined);
+      setCreatePhotoIds([]);
     } catch (err) {
-      console.error("[v0] Failed to create post:", err)
+      console.error("[v0] Failed to create post:", err);
     }
-  }
+  };
 
   const handleToggleLike = async (id: string) => {
     try {
-      await toggleLikeMutation.mutateAsync(id)
+      await toggleLikeMutation.mutateAsync(id);
     } catch (err) {
-      console.error("[v0] Failed to toggle like:", err)
+      console.error("[v0] Failed to toggle like:", err);
     }
-  }
+  };
 
   const openOptionsForPost = (id: string) => {
-    setPostIdForOptions(id)
-    setIsOptionsModalVisible(true)
-  }
+    setPostIdForOptions(id);
+    setIsOptionsModalVisible(true);
+  };
 
   const closeOptionsModal = () => {
-    setIsOptionsModalVisible(false)
-    setPostIdForOptions(null)
-  }
+    setIsOptionsModalVisible(false);
+    setPostIdForOptions(null);
+  };
 
   const openDeleteConfirm = () => {
-    if (!postForOptions) return
-    setPostIdForDelete(postForOptions.id)
-    setIsOptionsModalVisible(false)
-    setIsDeleteConfirmVisible(true)
-  }
+    if (!postForOptions) return;
+    setPostIdForDelete(postForOptions.id);
+    setIsOptionsModalVisible(false);
+    setIsDeleteConfirmVisible(true);
+  };
 
   const confirmDeletePost = () => {
-    if (!postIdForDelete) return
-    setIsDeleteConfirmVisible(false)
-    setPostIdForDelete(null)
-    setIsDeleteSuccessVisible(true)
-  }
+    if (!postIdForDelete) return;
+    setIsDeleteConfirmVisible(false);
+    setPostIdForDelete(null);
+    setIsDeleteSuccessVisible(true);
+  };
 
   const openGallery = () => {
-    setIsGalleryModalVisible(true)
-  }
+    setIsGalleryModalVisible(true);
+  };
 
   const selectGalleryImage = (img: ImageSource) => {
-    setCreateImage(img)
-    setIsGalleryModalVisible(false)
-  }
+    setCreateImage(img);
+    setIsGalleryModalVisible(false);
+  };
 
   const openPostDetail = (id: string) => {
-    setSelectedPostId(id)
-    setIsPostDetailVisible(true)
-  }
+    setSelectedPostId(id);
+    setIsPostDetailVisible(true);
+  };
 
   const closePostDetail = () => {
-    setIsPostDetailVisible(false)
-    setSelectedPostId(null)
-  }
+    setIsPostDetailVisible(false);
+    setSelectedPostId(null);
+  };
 
   const handleEndReached = () => {
     if (currentPage < totalPages && !isLoading) {
-      setCurrentPage((prev) => prev + 1)
+      setCurrentPage((prev) => prev + 1);
     }
-  }
+  };
 
   // ---- Render helpers ----
 
@@ -238,19 +262,25 @@ const Community: React.FC<Props> = ({ userId }) => {
           </View>
         </View>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => openOptionsForPost(item.id)}
           accessibilityRole="button"
           accessibilityLabel="Post options"
         >
           <Text style={styles.moreText}>•••</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Body */}
       <Text style={styles.postText}>{item.text}</Text>
 
-      {item.image && <Image source={item.image} style={styles.postImage} resizeMode="cover" />}
+      {item.image && (
+        <Image
+          source={item.image}
+          style={styles.postImage}
+          resizeMode="cover"
+        />
+      )}
 
       {/* Footer */}
       <View style={styles.postFooter}>
@@ -259,17 +289,30 @@ const Community: React.FC<Props> = ({ userId }) => {
           onPress={() => handleToggleLike(item.id)}
           disabled={toggleLikeMutation.isPending}
         >
-          <Image source={likeIcon} style={[styles.footerIcon, item.isLiked && styles.footerIconActive]} />
-          <Text style={[styles.footerButtonText, item.isLiked && styles.footerButtonTextActive]}>{item.likes}</Text>
+          <Image
+            source={likeIcon}
+            style={[styles.footerIcon, item.isLiked && styles.footerIconActive]}
+          />
+          <Text
+            style={[
+              styles.footerButtonText,
+              item.isLiked && styles.footerButtonTextActive,
+            ]}
+          >
+            {item.likes}
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.footerButton} onPress={() => openPostDetail(item.id)}>
+        <TouchableOpacity
+          style={styles.footerButton}
+          onPress={() => openPostDetail(item.id)}
+        >
           <Image source={commentIcon} style={styles.footerIcon} />
           <Text style={styles.footerButtonText}>{item.comments}</Text>
         </TouchableOpacity>
       </View>
     </Pressable>
-  )
+  );
 
   const styles = StyleSheet.create({
     safeArea: {
@@ -633,17 +676,50 @@ const Community: React.FC<Props> = ({ userId }) => {
       alignItems: "center",
       justifyContent: "center",
     },
-  })
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    backButton: {
+      justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.xs,
+    },
+    arrowImage: {
+      width: 24,
+      height: 24,
+      resizeMode: "contain",
+    },
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.backgroundMain} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={colors.backgroundMain}
+      />
 
       <View style={styles.container}>
         {/* Top bar */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Community</Text>
-          <Text style={styles.headerSubtitle}>Connect with mums, ask questions and share your journey.</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => {
+                router.back();
+              }}
+            >
+              <Image
+                source={require("../../assets/images/arrow.png")}
+                style={styles.arrowImage}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Community</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>
+            Connect with mums, ask questions and share your journey.
+          </Text>
         </View>
 
         {/* Feed */}
@@ -686,7 +762,11 @@ const Community: React.FC<Props> = ({ userId }) => {
       </View>
 
       {/* Create Post Modal */}
-      <Modal visible={isCreateModalVisible} animationType="slide" onRequestClose={closeCreateModal}>
+      <Modal
+        visible={isCreateModalVisible}
+        animationType="slide"
+        onRequestClose={closeCreateModal}
+      >
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={closeCreateModal}>
@@ -694,13 +774,18 @@ const Community: React.FC<Props> = ({ userId }) => {
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Create Post</Text>
             <TouchableOpacity
-              disabled={(!createText.trim() && !createTitle.trim()) || createPostMutation.isPending}
+              disabled={
+                (!createText.trim() && !createTitle.trim()) ||
+                createPostMutation.isPending
+              }
               onPress={handleSubmitPost}
             >
               <Text
                 style={[
                   styles.modalPostButton,
-                  !createText.trim() && !createTitle.trim() && styles.modalPostButtonDisabled,
+                  !createText.trim() &&
+                    !createTitle.trim() &&
+                    styles.modalPostButtonDisabled,
                 ]}
               >
                 {createPostMutation.isPending ? "Posting..." : "Post"}
@@ -708,7 +793,10 @@ const Community: React.FC<Props> = ({ userId }) => {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalBody} contentContainerStyle={{ paddingBottom: vs(40) }}>
+          <ScrollView
+            style={styles.modalBody}
+            contentContainerStyle={{ paddingBottom: vs(40) }}
+          >
             <View style={styles.createRow}>
               <Image source={avatar} style={styles.avatar} />
               <Text style={styles.createAuthor}>Posting as You</Text>
@@ -723,7 +811,7 @@ const Community: React.FC<Props> = ({ userId }) => {
             />
 
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { minHeight: 100 }]}
               value={createText}
               onChangeText={setCreateText}
               placeholder="Write something..."
@@ -731,10 +819,20 @@ const Community: React.FC<Props> = ({ userId }) => {
               multiline
             />
 
-            {createImage && <Image source={createImage} style={styles.selectedImage} resizeMode="cover" />}
-            <View style={styles.createActions}>
-              <SecondaryButton title="Add photo" onPress={openGallery} style={styles.addPhotoButton} />
-            </View>
+            {createImage && (
+              <Image
+                source={createImage}
+                style={styles.selectedImage}
+                resizeMode="cover"
+              />
+            )}
+            {/* <View style={styles.createActions}>
+              <SecondaryButton
+                title="Add photo"
+                onPress={openGallery}
+                style={styles.addPhotoButton}
+              />
+            </View> */}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -756,7 +854,11 @@ const Community: React.FC<Props> = ({ userId }) => {
 
           <View style={styles.galleryGrid}>
             {GALLERY_IMAGES.map((img, index) => (
-              <TouchableOpacity key={String(index)} style={styles.galleryItem} onPress={() => selectGalleryImage(img)}>
+              <TouchableOpacity
+                key={String(index)}
+                style={styles.galleryItem}
+                onPress={() => selectGalleryImage(img)}
+              >
                 <Image source={img} style={styles.galleryImage} />
               </TouchableOpacity>
             ))}
@@ -765,7 +867,12 @@ const Community: React.FC<Props> = ({ userId }) => {
       </Modal>
 
       {/* Post Options Bottom Sheet */}
-      <Modal visible={isOptionsModalVisible} transparent animationType="fade" onRequestClose={closeOptionsModal}>
+      <Modal
+        visible={isOptionsModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeOptionsModal}
+      >
         <View style={styles.bottomSheetOverlay}>
           <View style={styles.bottomSheet}>
             <View style={styles.sheetHandle} />
@@ -775,19 +882,29 @@ const Community: React.FC<Props> = ({ userId }) => {
               style={styles.sheetButton}
               onPress={() => {
                 if (postForOptions) {
-                  openPostDetail(postForOptions.id)
+                  openPostDetail(postForOptions.id);
                 }
-                closeOptionsModal()
+                closeOptionsModal();
               }}
             >
               <Text style={styles.sheetButtonText}>Edit Post</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.sheetButton, styles.sheetButtonDestructive]} onPress={openDeleteConfirm}>
-              <Text style={[styles.sheetButtonText, styles.sheetButtonTextDanger]}>Delete Post</Text>
+            <TouchableOpacity
+              style={[styles.sheetButton, styles.sheetButtonDestructive]}
+              onPress={openDeleteConfirm}
+            >
+              <Text
+                style={[styles.sheetButtonText, styles.sheetButtonTextDanger]}
+              >
+                Delete Post
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sheetCancel} onPress={closeOptionsModal}>
+            <TouchableOpacity
+              style={styles.sheetCancel}
+              onPress={closeOptionsModal}
+            >
               <Text style={styles.sheetCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -805,7 +922,8 @@ const Community: React.FC<Props> = ({ userId }) => {
           <View style={styles.confirmCard}>
             <Text style={styles.confirmTitle}>Delete post?</Text>
             <Text style={styles.confirmText}>
-              Are you sure you want to delete this post? This action cannot be undone.
+              Are you sure you want to delete this post? This action cannot be
+              undone.
             </Text>
 
             <View style={styles.confirmButtons}>
@@ -814,7 +932,11 @@ const Community: React.FC<Props> = ({ userId }) => {
                 onPress={() => setIsDeleteConfirmVisible(false)}
                 style={styles.confirmButton}
               />
-              <PrimaryButton title="Delete" onPress={confirmDeletePost} style={styles.confirmDeleteButton} />
+              <PrimaryButton
+                title="Delete"
+                onPress={confirmDeletePost}
+                style={styles.confirmDeleteButton}
+              />
             </View>
           </View>
         </View>
@@ -833,13 +955,21 @@ const Community: React.FC<Props> = ({ userId }) => {
               <Text style={styles.successIconText}>✓</Text>
             </View>
             <Text style={styles.successTitle}>Post deleted</Text>
-            <PrimaryButton title="Okay" onPress={() => setIsDeleteSuccessVisible(false)} style={styles.successButton} />
+            <PrimaryButton
+              title="Okay"
+              onPress={() => setIsDeleteSuccessVisible(false)}
+              style={styles.successButton}
+            />
           </View>
         </View>
       </Modal>
 
       {/* Full Post Modal */}
-      <Modal visible={isPostDetailVisible && !!selectedPost} animationType="slide" onRequestClose={closePostDetail}>
+      <Modal
+        visible={isPostDetailVisible && !!selectedPost}
+        animationType="slide"
+        onRequestClose={closePostDetail}
+      >
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={closePostDetail}>
@@ -850,14 +980,24 @@ const Community: React.FC<Props> = ({ userId }) => {
           </View>
 
           {selectedPost && (
-            <ScrollView style={styles.modalBody} contentContainerStyle={{ paddingBottom: vs(40) }}>
+            <ScrollView
+              style={styles.modalBody}
+              contentContainerStyle={{ paddingBottom: vs(40) }}
+            >
               <View style={styles.postCard}>
                 <View style={styles.postHeader}>
                   <View style={styles.postHeaderLeft}>
-                    <Image source={selectedPost.authorAvatar} style={styles.avatar} />
+                    <Image
+                      source={selectedPost.authorAvatar}
+                      style={styles.avatar}
+                    />
                     <View>
-                      <Text style={styles.authorName}>{selectedPost.authorName}</Text>
-                      <Text style={styles.postMeta}>{selectedPost.timeAgo}</Text>
+                      <Text style={styles.authorName}>
+                        {selectedPost.authorName}
+                      </Text>
+                      <Text style={styles.postMeta}>
+                        {selectedPost.timeAgo}
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -865,18 +1005,32 @@ const Community: React.FC<Props> = ({ userId }) => {
                 <Text style={styles.postText}>{selectedPost.text}</Text>
 
                 {selectedPost.image && (
-                  <Image source={selectedPost.image} style={styles.postImage} resizeMode="cover" />
+                  <Image
+                    source={selectedPost.image}
+                    style={styles.postImage}
+                    resizeMode="cover"
+                  />
                 )}
 
                 <View style={styles.postFooter}>
-                  <TouchableOpacity style={styles.footerButton} onPress={() => handleToggleLike(selectedPost.id)}>
-                    <Text style={[styles.footerButtonText, selectedPost.isLiked && styles.footerButtonTextActive]}>
+                  <TouchableOpacity
+                    style={styles.footerButton}
+                    onPress={() => handleToggleLike(selectedPost.id)}
+                  >
+                    <Text
+                      style={[
+                        styles.footerButtonText,
+                        selectedPost.isLiked && styles.footerButtonTextActive,
+                      ]}
+                    >
                       ♥ {selectedPost.likes}
                     </Text>
                   </TouchableOpacity>
 
                   <View style={styles.footerButton}>
-                    <Text style={styles.footerButtonText}>💬 {selectedPost.comments} comments</Text>
+                    <Text style={styles.footerButtonText}>
+                      💬 {selectedPost.comments} comments
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -884,14 +1038,16 @@ const Community: React.FC<Props> = ({ userId }) => {
               {/* Simple static comments area */}
               <View style={styles.commentsSection}>
                 <Text style={styles.commentsTitle}>Comments</Text>
-                <Text style={styles.emptyCommentsText}>Comments will appear here.</Text>
+                <Text style={styles.emptyCommentsText}>
+                  Comments will appear here.
+                </Text>
               </View>
             </ScrollView>
           )}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default Community
+export default Community;

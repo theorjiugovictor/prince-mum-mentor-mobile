@@ -3,9 +3,9 @@ export const API_BASE_URL = "https://api.staging.kaizen.emerj.net";
 
 export const API_ENDPOINTS = {
   LOGIN: "/api/v1/auth/login",
-  REGISTER: "/auth/register",
-  REFRESH_TOKEN: "/auth/refresh",
-  LOGOUT: "/auth/logout",
+  REGISTER: "/api/v1/auth/register",
+  REFRESH_TOKEN: "/api/v1/auth/refresh/",
+  LOGOUT: "/api/v1/auth/logout",
   // Add other endpoints
   USER_PROFILE: "/api/v1/auth/profile",
 };

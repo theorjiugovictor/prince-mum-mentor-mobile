@@ -1,19 +1,19 @@
 // lib/api.ts
 import axios, {
-  AxiosInstance,
   AxiosError,
+  AxiosInstance,
   AxiosResponse,
-  InternalAxiosRequestConfig
+  InternalAxiosRequestConfig,
 } from "axios";
 import { API_BASE_URL } from "../constants";
 import { auth } from "./auth";
 
 // Mutex to prevent multiple simultaneous token refresh attempts
 let isRefreshing = false;
-let failedQueue: Array<{
+let failedQueue: {
   resolve: (value: string) => void;
   reject: (reason?: unknown) => void;
-}> = [];
+}[] = [];
 
 const processQueue = (error: unknown, token: string | null = null): void => {
   failedQueue.forEach((prom) => {
@@ -68,16 +68,23 @@ export const apiAuth = (axiosInstance: AxiosInstance): void => {
       if (error.response?.status === 401 && !originalRequest._retry) {
         // Check if this is the refresh endpoint itself failing
         if (originalRequest.url?.includes("/auth/refresh")) {
-          console.error("[API] Refresh token is invalid or expired. Logging out.");
+          console.error(
+            "[API] Refresh token is invalid or expired. Logging out."
+          );
           await auth.logout();
           return Promise.reject(error);
         }
 
         // If already refreshing, queue this request
         if (isRefreshing) {
-          return new Promise<string>((resolve: (value: string) => void, reject: (reason?: unknown) => void) => {
-            failedQueue.push({ resolve, reject });
-          })
+          return new Promise<string>(
+            (
+              resolve: (value: string) => void,
+              reject: (reason?: unknown) => void
+            ) => {
+              failedQueue.push({ resolve, reject });
+            }
+          )
             .then((token: string) => {
               originalRequest.headers.Authorization = `Bearer ${token}`;
               return axiosInstance(originalRequest);

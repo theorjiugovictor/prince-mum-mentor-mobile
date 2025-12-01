@@ -1,3 +1,4 @@
+import { useAuth } from "@/src/core/hooks/useAuth";
 import {
   isAppleAuthAvailable,
   signInWithApple,
@@ -23,7 +24,7 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { ApiErrorResponse, login } from "../../core/services/authService";
+import { ApiErrorResponse } from "../../core/services/authService";
 import { getProfileSetup } from "../../core/services/profileSetup.service";
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
@@ -40,6 +41,7 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>;
 
 export default function SignInScreen() {
+  const { login } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);

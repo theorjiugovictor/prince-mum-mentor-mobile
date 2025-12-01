@@ -1,34 +1,55 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // --- Style Imports ---
+import { logoutUser } from "@/src/core/services/authService";
+import { showToast } from "@/src/core/utils/toast";
+import { router } from "expo-router";
 import { colors, fontFamilies, spacing, typography } from "../../core/styles";
 import { ms } from "../../core/styles/scaling";
+import PrimaryButton from "../components/PrimaryButton";
 
 interface Props {
   visible: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
 }
 
-const LogoutModal: React.FC<Props> = ({ visible, onCancel, onConfirm }) => {
+const LogoutModal: React.FC<Props> = ({ visible, onCancel }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoading(true);
+    showToast.success("Logged out successfully");
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error("Error logging out:", error);
+    } finally {
+      router.replace("/(auth)/SignInScreen");
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modalCard}>
-          <Ionicons 
-            name="lock-closed-outline" 
-            size={ms(32)} 
-            color={colors.textPrimary} 
+          <Ionicons
+            name="lock-closed-outline"
+            size={ms(32)}
+            color={colors.textPrimary}
           />
           <Text style={styles.title}>Log Out</Text>
           <Text style={styles.message}>Are you sure you want to log out?</Text>
-          
-          <TouchableOpacity style={styles.logoutBtn} onPress={onConfirm}>
-            <Text style={styles.logoutText}>Log Out</Text>
-          </TouchableOpacity>
-          
+
+          <PrimaryButton
+            title="Log Out"
+            onPress={handleLogout}
+            disabled={isLoading}
+            isLoading={isLoading}
+          />
+
           <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
             <Text style={styles.cancelText}>Go back</Text>
           </TouchableOpacity>

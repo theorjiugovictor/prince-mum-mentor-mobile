@@ -46,7 +46,7 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
     if (!dob) return "";
 
     try {
-      const parts = dob.split("/");
+      const parts = dob.split("-");
       if (parts.length !== 3) {
         console.warn("DOB format is incorrect:", dob);
         return "";

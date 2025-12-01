@@ -3,7 +3,7 @@ import { colors, typography } from "@/src/core/styles";
 import { showToast } from "@/src/core/utils/toast";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 // import Checkbox from "@/src/assets/images/tick-square.png";
 
 export default function PendingMilestones({ childId }: { childId?: string }) {
@@ -21,7 +21,18 @@ export default function PendingMilestones({ childId }: { childId?: string }) {
   }, [error]);
 
   if (isLoading) {
-    return <View>Loading</View>;
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100%",
+        }}
+      >
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (

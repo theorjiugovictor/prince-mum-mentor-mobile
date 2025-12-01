@@ -22,11 +22,7 @@ export default function CategoryBox({
   ownerId,
   childId,
 }: CategoryBoxType) {
-  const {
-    data: milestoneData,
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: milestoneData, error } = useQuery({
     queryKey: ["milestonesByCat", category.label, childId],
     queryFn: () => getMilestonesByCategory(category.label, childId),
   });
@@ -48,14 +44,6 @@ export default function CategoryBox({
       (error as any)?.message ||
       "Something went wrong while fetching milestone data";
     showToast.error(errMsg);
-  }
-
-  if (isLoading) {
-    return (
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    );
   }
 
   return (

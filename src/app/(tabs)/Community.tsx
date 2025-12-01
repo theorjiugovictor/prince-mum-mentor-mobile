@@ -272,7 +272,6 @@ const Community: React.FC = () => {
     </Pressable>
   );
 
-  // ---- Main Render ----
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -606,14 +605,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.backgroundMain,
+    paddingHorizontal: ms(spacing.lg),
+    paddingVertical: ms(spacing.lg),
   },
   header: {
-    paddingHorizontal: ms(spacing.lg),
     paddingTop: vs(10),
     paddingBottom: vs(4),
   },
   headerTitle: {
-    ...typography.heading2,
+   ...typography.heading2,
     color: colors.textPrimary,
   },
   headerSubtitle: {
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   listContent: {
-    paddingHorizontal: ms(spacing.lg),
+    // paddingHorizontal: ms(spacing.lg),
     paddingBottom: vs(100),
   },
   postCard: {
@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
 
   fab: {
     position: "absolute",
-    right: ms(20),
+    right: ms(spacing.lg), 
     bottom: vs(30),
     width: ms(56),
     height: ms(56),
@@ -733,6 +733,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: colors.backgroundMain,
+    paddingVertical: vs(16),
   },
   modalHeader: {
     flexDirection: "row",
@@ -740,6 +741,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: ms(spacing.lg),
     paddingVertical: vs(12),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outlineVariant,
   },
   modalCancel: {
     fontFamily: fontFamilies.regular,
@@ -761,13 +764,13 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     flex: 1,
-    paddingHorizontal: ms(spacing.lg),
   },
   createRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: vs(12),
     marginBottom: vs(12),
+    paddingHorizontal: ms(spacing.lg),
   },
   createAuthor: {
     fontFamily: fontFamilies.medium,
@@ -780,15 +783,18 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: rfs(14),
     color: colors.textPrimary,
+    paddingHorizontal: ms(spacing.lg),
   },
   selectedImage: {
     marginTop: vs(12),
     borderRadius: ms(12),
     width: "100%",
     height: vs(200),
+    marginHorizontal: ms(spacing.lg),
   },
   createActions: {
     marginTop: vs(20),
+    paddingHorizontal: ms(spacing.lg),
   },
   addPhotoButton: {
     alignSelf: "flex-start",
@@ -798,7 +804,7 @@ const styles = StyleSheet.create({
   galleryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: ms(spacing.lg),
+   paddingHorizontal: ms(spacing.lg), 
     paddingTop: vs(12),
   },
   galleryItem: {
@@ -823,9 +829,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.textWhite,
     borderTopLeftRadius: ms(20),
     borderTopRightRadius: ms(20),
-    paddingHorizontal: ms(spacing.lg),
-    paddingTop: vs(8),
-    paddingBottom: vs(20),
+    paddingHorizontal: ms(spacing.lg), 
+    paddingTop: vs(16), // Increased
+    paddingBottom: vs(30), // Increased
   },
   sheetHandle: {
     alignSelf: "center",
@@ -833,7 +839,7 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.outlineVariant,
-    marginBottom: vs(8),
+    marginBottom: vs(12),
   },
   sheetTitle: {
     fontFamily: fontFamilies.medium,
@@ -842,21 +848,23 @@ const styles = StyleSheet.create({
     marginBottom: vs(12),
   },
   sheetButton: {
-    paddingVertical: vs(10),
+    paddingVertical: vs(12),
   },
   sheetButtonDestructive: {
-    marginTop: vs(4),
+    marginTop: vs(8),
   },
   sheetButtonText: {
     fontFamily: fontFamilies.regular,
     fontSize: rfs(14),
     color: colors.textPrimary,
+  
   },
-  sheetButtonTextDanger: {
+sheetButtonTextDanger: {
     color: colors.error,
   },
   sheetCancel: {
-    marginTop: vs(10),
+    marginTop: vs(16), // Increased
+    paddingVertical: vs(8),
   },
   sheetCancelText: {
     fontFamily: fontFamilies.medium,
@@ -876,19 +884,19 @@ const styles = StyleSheet.create({
     width: "80%",
     backgroundColor: colors.textWhite,
     borderRadius: ms(16),
-    padding: ms(spacing.lg),
+    padding: ms(spacing.xl), 
   },
   confirmTitle: {
     fontFamily: fontFamilies.semiBold,
     fontSize: rfs(16),
     color: colors.textPrimary,
-    marginBottom: vs(8),
+    marginBottom: vs(12), 
   },
   confirmText: {
     fontFamily: fontFamilies.regular,
     fontSize: rfs(13),
     color: colors.textGrey2,
-    marginBottom: vs(16),
+    marginBottom: vs(20), 
   },
   confirmButtons: {
     flexDirection: "row",
@@ -896,7 +904,7 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     flex: 1,
-    marginRight: ms(8),
+    marginRight: ms(10), 
   },
   confirmDeleteButton: {
     flex: 1,
@@ -905,7 +913,7 @@ const styles = StyleSheet.create({
     width: "70%",
     backgroundColor: colors.textWhite,
     borderRadius: ms(16),
-    padding: ms(spacing.lg),
+    padding: ms(spacing.xl), 
     alignItems: "center",
   },
   successIconCircle: {
@@ -915,7 +923,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.successLight,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: vs(12),
+    marginBottom: vs(16), 
   },
   successIconText: {
     fontFamily: fontFamilies.bold,
@@ -926,7 +934,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.medium,
     fontSize: rfs(16),
     color: colors.textPrimary,
-    marginBottom: vs(12),
+    marginBottom: vs(16), 
   },
   successButton: {
     width: "100%",
@@ -935,6 +943,7 @@ const styles = StyleSheet.create({
   // Comments
   commentsSection: {
     marginTop: vs(16),
+    paddingHorizontal: ms(spacing.lg), 
   },
   commentsTitle: {
     fontFamily: fontFamilies.semiBold,

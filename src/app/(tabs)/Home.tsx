@@ -208,13 +208,13 @@ const Home = () => {
             <Text style={styles.greetingTitle}>{greeting}</Text>
           </View>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => router.push("../notifications")}
             accessibilityLabel="Notifications"
             accessibilityRole="button"
           >
             <Image source={notificationIcon} style={styles.notificationIcon} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* === Hero Card === */}

@@ -45,6 +45,7 @@ interface CustomInputProps {
   multiline?: boolean;
   editable?: boolean;
   defaultValue?: string;
+  onBlur?: () => void;
 }
 
 // --- COMPONENT ---
@@ -64,6 +65,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   multiline,
   editable = true,
   defaultValue,
+  onBlur,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(!isPassword);
@@ -87,7 +89,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
     label: {
       fontSize: rfs(typography.labelMedium.fontSize),
       fontFamily: typography.labelMedium.fontFamily,
-      color: colors.textPrimary,
+      color: labelColor,
       marginBottom: ms(spacing.xs),
     },
     inputContainer: {
@@ -157,11 +159,11 @@ const CustomInput: React.FC<CustomInputProps> = ({
           keyboardType={keyboardType}
           secureTextEntry={!isPasswordVisible}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           autoCapitalize="none"
           multiline={multiline}
           editable={editable}
           defaultValue={defaultValue}
+          onBlur={onBlur}
         />
 
         <View style={styles.passwordToggle}>

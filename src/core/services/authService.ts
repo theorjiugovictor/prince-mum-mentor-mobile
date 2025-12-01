@@ -1,8 +1,8 @@
+import { api, authApi } from "@/src/lib/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {AxiosError, isAxiosError} from "axios";
-import {getAuthToken, removeAuthToken, setAuthToken} from "./authStorage";
-import {getProfileSetup} from "./profileSetup.service";
-import {api} from "@/src/lib/api";
+import { AxiosError, isAxiosError } from "axios";
+import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
+import { getProfileSetup } from "./profileSetup.service";
 
 // --- TYPES ---
 export interface AuthTokenData {
@@ -100,7 +100,7 @@ export async function register(
 ): Promise<MessageResponse> {
   try {
     const sanitizedPayload = { ...payload, phone: payload.phone || "" };
-      const response = await api.post<MessageResponse>(
+    const response = await api.post<MessageResponse>(
       "/api/v1/auth/register",
       sanitizedPayload
     );
@@ -120,7 +120,7 @@ export async function register(
 
 export async function login(payload: LoginPayload): Promise<AuthTokenData> {
   try {
-      const response = await api.post<LoginAPIResponse>(
+    const response = await api.post<LoginAPIResponse>(
       "/api/v1/auth/login",
       payload
     );
@@ -164,7 +164,7 @@ export async function loginWithGoogle(
   payload: GoogleAuthPayload
 ): Promise<GoogleAuthResponse> {
   try {
-      const response = await api.post<GoogleAuthResponse>(
+    const response = await api.post<GoogleAuthResponse>(
       "/api/v1/google/login",
       payload
     );
@@ -211,7 +211,7 @@ export async function logout(): Promise<void> {
 export async function forgotPassword(
   payload: EmailPayload
 ): Promise<MessageResponse> {
-    const response = await api.post<MessageResponse>(
+  const response = await api.post<MessageResponse>(
     "/api/v1/auth/forgot-password",
     payload
   );
@@ -221,7 +221,7 @@ export async function forgotPassword(
 export async function resendVerification(
   payload: EmailPayload
 ): Promise<MessageResponse> {
-    const response = await api.post<MessageResponse>(
+  const response = await api.post<MessageResponse>(
     "/api/v1/auth/resend-verification",
     payload
   );
@@ -248,7 +248,7 @@ export async function verifyValueApi(
     throw new Error("Invalid verification type provided.");
   }
 
-    const response = await api.post(apiUrl, requestBody);
+  const response = await api.post(apiUrl, requestBody);
 
   console.log("Raw API Response:", JSON.stringify(response.data, null, 2));
 
@@ -278,8 +278,8 @@ export async function verifyValueApi(
       token?.substring(0, 20) + "..."
     );
 
-      if (token && token.length > 0) {
-        await setAuthToken(token);
+    if (token && token.length > 0) {
+      await setAuthToken(token);
 
       try {
         await getProfileSetup();
@@ -310,10 +310,9 @@ export async function verifyValueApi(
         full_name: "",
       },
     };
-
-    } else {
-      throw new Error("Invalid verification type provided.");
-    }
+  } else {
+    throw new Error("Invalid verification type provided.");
+  }
 
   return tokenData;
 }
@@ -321,7 +320,7 @@ export async function verifyValueApi(
 export async function resetPassword(
   payload: ResetPasswordPayload
 ): Promise<MessageResponse> {
-    const response = await api.patch<MessageResponse>(
+  const response = await api.patch<MessageResponse>(
     "/api/v1/auth/reset-password",
     payload
   );
@@ -332,7 +331,7 @@ export async function changePassword(
   payload: ChangePasswordPayload
 ): Promise<string> {
   try {
-      const response = await api.patch<string>(
+    const response = await api.patch<string>(
       "/api/v1/auth/change-password",
       payload
     );
@@ -344,15 +343,14 @@ export async function changePassword(
 
 export async function logoutUser(): Promise<MessageResponse> {
   try {
-      const response = await api.post<MessageResponse>(
-      "/api/v1/auth/logout"
-    );
+    const response = await authApi.post<MessageResponse>("/api/v1/auth/logout");
     return response.data;
   } catch (error) {
+    console.log("Logout failed:", error);
     throw error as AxiosError<ApiErrorResponse>;
   } finally {
-      await removeAuthToken();
-      await AsyncStorage.clear(); // clears all stored keys
+    await removeAuthToken();
+    await AsyncStorage.clear(); // clears all stored keys
   }
 }
 
@@ -366,7 +364,7 @@ export async function deleteAccount(
   payload: DeleteAccountPayload
 ): Promise<string> {
   try {
-      const response = await api.delete<string>("/api/v1/auth/delete", {
+    const response = await api.delete<string>("/api/v1/auth/delete", {
       data: payload,
     });
     await removeAuthToken();

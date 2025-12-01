@@ -6,9 +6,11 @@ import { signInWithGoogle } from "@/src/core/services/googleAuthservice";
 import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, rfs } from "@/src/core/styles/scaling";
 import { showToast } from "@/src/core/utils/toast";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Image,
@@ -20,20 +22,40 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { z } from "zod";
 import { ApiErrorResponse, login } from "../../core/services/authService";
 import { getProfileSetup } from "../../core/services/profileSetup.service";
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
 
+// Define your validation schema
+const signInSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type SignInFormData = z.infer<typeof signInSchema>;
+
 export default function SignInScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   useEffect(() => {
     (async () => {
@@ -56,7 +78,6 @@ export default function SignInScreen() {
 
   const handleGooglePress = async () => {
     setIsGoogleLoading(true);
-    setErrors({});
     setGeneralError(null);
 
     try {
@@ -83,83 +104,26 @@ export default function SignInScreen() {
       setIsGoogleLoading(false);
     }
   };
-  // --- Validation Logic (Client-Side Check) ---
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-    let isValid = true;
 
-    if (!email || !email.includes("@")) {
-      newErrors.email = "Please enter a valid email.";
-      isValid = false;
-    }
-    if (!password) {
-      newErrors.password = "Password is required.";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    setGeneralError(null);
-    return isValid;
-  };
-
-  // const checkAndNavigateUser = async () => {
-  //   try {
-  //     const hasCompletedSetup = await AsyncStorage.getItem("hasCompletedSetup");
-  //     const hasCompletedSetup2 = await AsyncStorage.getItem("isSetupComplete");
-
-  //     if (hasCompletedSetup === "true" || hasCompletedSetup2 === "true") {
-  //       router.replace("/(tabs)/Home");
-  //     } else {
-  //       router.replace("/setup/Mum");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error checking setup status:", error);
-  //     router.replace("/(tabs)/Home");
-  //   }
-  // };
-
-  // Update your handleLogin
-  const handleLogin = async () => {
-    if (!validate()) return;
-
-    setIsLoading(true);
-    setErrors({});
+  const onSubmit = async (data: SignInFormData) => {
     setGeneralError(null);
 
     try {
-      await login({ email: email.toLowerCase(), password });
+      await login({ email: data.email.toLowerCase(), password: data.password });
       await redirectAfterLogin();
       showToast.success("Welcome Back!", "Login successful.");
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
-      const statusCode = axiosError.response?.status;
+      const errorMessage =
+        axiosError.response?.data?.message ||
+        "An unexpected error occurred. Please try again.";
 
-      console.warn(
-        "Login API Failure (Expected):",
-        statusCode,
-        axiosError.response?.data
-      );
-
-      if (statusCode === 401 || statusCode === 404) {
-        setErrors({
-          email: "The Email Address is incorrect or user not found.",
-          password: "The Password is incorrect.",
-        });
-        setGeneralError(null);
-      } else if (statusCode === 422) {
-        setGeneralError("Validation failed. Check input formats.");
-        setErrors({});
-      } else {
-        setGeneralError("An unexpected error occurred. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
+      showToast.error("Login Failed", errorMessage);
     }
   };
 
   const handleApplePress = async () => {
     setIsAppleLoading(true);
-    setErrors({});
     setGeneralError(null);
 
     try {
@@ -189,26 +153,40 @@ export default function SignInScreen() {
             <Text style={styles.generalErrorText}>{generalError}</Text>
           )}
 
-          <CustomInput
-            label="Email"
-            placeholder="Enter Email Address"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            iconName="mail-outline"
-            isError={!!errors.email}
-            errorMessage={errors.email}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <CustomInput
+                label="Email"
+                placeholder="Enter Email Address"
+                value={value || ""}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                keyboardType="email-address"
+                iconName="mail-outline"
+                isError={!!errors.email}
+                errorMessage={errors.email?.message}
+              />
+            )}
           />
 
-          <CustomInput
-            label="Password"
-            placeholder="Enter Password"
-            value={password}
-            onChangeText={setPassword}
-            isPassword
-            isError={!!errors.password}
-            iconName="lock-outline"
-            errorMessage={errors.password}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <CustomInput
+                label="Password"
+                placeholder="Enter Password"
+                value={value || ""}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                isPassword
+                isError={!!errors.password}
+                iconName="lock-outline"
+                errorMessage={errors.password?.message}
+              />
+            )}
           />
 
           <TouchableOpacity
@@ -219,9 +197,9 @@ export default function SignInScreen() {
 
           <PrimaryButton
             title="Log In"
-            onPress={handleLogin}
-            isLoading={isLoading}
-            disabled={!email || !password || isLoading}
+            onPress={handleSubmit(onSubmit)}
+            isLoading={isSubmitting}
+            disabled={isSubmitting}
           />
 
           <Text style={styles.signupText}>

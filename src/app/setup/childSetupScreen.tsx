@@ -123,7 +123,7 @@ const ChildSetupScreen: React.FC = () => {
     }
 
     if (!areAllFilledChildrenComplete()) {
-      showToast.success(
+      showToast.error(
         "Incomplete Form",
         "Please complete all child details or remove partial entries."
       );

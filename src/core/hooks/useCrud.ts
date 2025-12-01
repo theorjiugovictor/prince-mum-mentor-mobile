@@ -34,7 +34,7 @@ export const usePublicCrud = <TParams, TData>(
   });
 
   const create = useMutation<ApiResponse<TData>, Error, TParams | FormData>({
-    mutationFn: async (data: TParams | FormData) => {
+    mutationFn: async (data?: TParams | FormData) => {
       const res = await api.post(endpoint, data);
       return res.data;
     },

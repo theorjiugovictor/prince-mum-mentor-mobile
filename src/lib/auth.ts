@@ -1,6 +1,7 @@
 // lib/auth.ts
+import storage from "@/src/store/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {RelativePathString, router} from "expo-router";
+import { RelativePathString, router } from "expo-router";
 import {
     ACCESS_TOKEN_KEY,
     API_ENDPOINTS,
@@ -9,8 +10,7 @@ import {
     REDIRECT_AFTER_LOGIN_KEY,
     REFRESH_TOKEN_KEY,
 } from "../constants";
-import {api} from "./api";
-import storage from "@/src/store/storage";
+import { api } from "./api";
 
 export const auth = {
     // Get access token
@@ -138,7 +138,9 @@ export const auth = {
         const refreshToken = await auth.getRefreshToken();
 
         if (!refreshToken) {
-            throw new Error("No refresh token available");
+            // If no refresh token, log out immediately (can't refresh)
+            auth.logout(); 
+            throw new Error("No refresh token available. User logged out.");
         }
 
         try {
@@ -154,8 +156,9 @@ export const auth = {
 
             return access_token;
         } catch (error) {
-            // Clear invalid tokens
-            await auth.clearTokens();
+            // Clear invalid tokens AND log the user out
+            console.error("Token refresh failed. Logging user out.", error);
+            await auth.logout(); // <-- CALL LOGOUT HERE
             throw error;
         }
     },

@@ -4,7 +4,7 @@ import { colors, typography } from "@/src/core/styles";
 import { showToast } from "@/src/core/utils/toast";
 import { Category } from "@/src/types/milestones";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useRouter } from "expo-router";
+import { Link } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import CircularProgress from "react-native-circular-progress-indicator";
@@ -22,14 +22,11 @@ export default function CategoryBox({
   ownerId,
   childId,
 }: CategoryBoxType) {
-  const router = useRouter();
-
-  const { data: milestoneData, isLoading, error } = useQuery({
+  const { data: milestoneData, error } = useQuery({
     queryKey: ["milestonesByCat", category.label, childId],
     queryFn: () => getMilestonesByCategory(category.label, childId),
   });
 
-  // Guard against undefined milestoneData
   const completedMilestones =
     milestoneData?.filter((milestone) => milestone.status === "completed")
       .length ?? 0;
@@ -39,24 +36,14 @@ export default function CategoryBox({
     ? (completedMilestones / milestonesDataLength) * 100
     : 0;
 
-  // Guard against invalid category data
   const categoryData = CATEGORIES[category.label];
   if (!categoryData) return null;
 
-  // Safe error handling
   if (error) {
     const errMsg =
       (error as any)?.message ||
       "Something went wrong while fetching milestone data";
     showToast.error(errMsg);
-  }
-
-  if (isLoading) {
-    return (
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    );
   }
 
   return (

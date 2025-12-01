@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   FlatList,
@@ -311,11 +312,15 @@ export default function PhotoViewerScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <PageHeader title="Loading..." showBack />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading photos...</Text>
-        </View>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100%",
+        }}
+      >
+        <ActivityIndicator size="large" />
       </View>
     );
   }

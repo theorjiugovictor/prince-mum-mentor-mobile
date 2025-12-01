@@ -134,6 +134,7 @@ export default function AlbumDetailScreen() {
       />
     </View>
   );
+  console.log(data)
 
   const hasPhotos = photos.length > 0;
 
@@ -200,7 +201,7 @@ export default function AlbumDetailScreen() {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptySubtitle}>Loading photos...</Text>
           </View>
-        ) : !data?.memories ? (
+        ) : !data?.memories?.length ? (
           /* Empty State - No Photos */
           <View style={styles.emptyContainer}>
             <Image

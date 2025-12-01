@@ -1,11 +1,14 @@
 // src/screens/ChangePasswordScreen.tsx
 
 import { useChangePassword } from "@/src/core/hooks/useChangePassword";
-import { colors, typography } from "@/src/core/styles";
-import { ms, vs } from "@/src/core/styles/scaling";
+import { colors, spacing, typography } from "@/src/core/styles";
+import { ms, rfs, vs } from "@/src/core/styles/scaling";
+import { showToast } from "@/src/core/utils/toast";
 import { Ionicons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import React, { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -16,108 +19,90 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { z } from "zod";
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
 
-interface ChangePasswordPayload {
-  old_password: string;
-  new_password: string;
-  confirm_password: string;
-}
+// --- Validation Schema ---
+const changePasswordSchema = z
+  .object({
+    oldPassword: z.string().min(1, "Old password is required"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain an uppercase letter")
+      .regex(/[a-z]/, "Password must contain a lowercase letter")
+      .regex(/[0-9]/, "Password must contain a number")
+      .regex(
+        /[!@#$%^&*(),.?":{}|<>]/,
+        "Password must contain a special character"
+      ),
+    confirmNewPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Passwords do not match",
+    path: ["confirmNewPassword"],
+  });
+
+type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 const ChangePassword = () => {
   const { update: changePasswordMutation } = useChangePassword();
-
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Password strength validation
-  const validatePasswordStrength = (password: string) => {
-    return password.length >= 8;
+  const {
+    control,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    },
+    mode: "onChange",
+  });
+
+  const newPassword = watch("newPassword");
+  const confirmNewPassword = watch("confirmNewPassword");
+
+  // Password strength indicators
+  const passwordChecks = {
+    length: newPassword?.length >= 8,
+    uppercase: /[A-Z]/.test(newPassword || ""),
+    lowercase: /[a-z]/.test(newPassword || ""),
+    number: /[0-9]/.test(newPassword || ""),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword || ""),
   };
 
-  const isPasswordStrong = validatePasswordStrength(newPassword);
-  const isConfirmPasswordStrong = validatePasswordStrength(confirmNewPassword);
-  const passwordsMatch =
-    newPassword === confirmNewPassword && newPassword.length > 0;
+  const allPasswordRequirementsMet = Object.values(passwordChecks).every(
+    (check) => check
+  );
 
-  const handleChangePassword = async () => {
-    setErrors({});
-
-    const newErrors: any = {};
-
-    if (!oldPassword) newErrors.oldPassword = "Old password is required";
-    if (!newPassword) newErrors.newPassword = "New password is required";
-    else if (!isPasswordStrong)
-      newErrors.newPassword = "Password must be at least 8 characters";
-
-    if (!confirmNewPassword)
-      newErrors.confirmNewPassword = "Please confirm your password";
-    else if (newPassword !== confirmNewPassword)
-      newErrors.confirmNewPassword = "Passwords do not match";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setIsLoading(true);
-
+  const onSubmit = async (data: ChangePasswordFormData) => {
     try {
       await changePasswordMutation.mutateAsync({
         data: {
-          old_password: oldPassword,
-          new_password: newPassword,
-          confirm_password: confirmNewPassword,
+          old_password: data.oldPassword,
+          new_password: data.newPassword,
+          confirm_password: data.confirmNewPassword,
         },
       });
 
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmNewPassword("");
+      reset();
       setShowSuccessModal(true);
     } catch (err: any) {
       console.log("❌ Password change error:", err);
 
-      const backend = err.response?.data;
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        "Failed to change password. Please try again.";
 
-      // 401 – Old password incorrect
-      if (err.response?.status === 401) {
-        return setErrors({ oldPassword: "Old password is incorrect" });
-      }
-
-      // 422 – Validation errors from backend
-      if (err.response?.status === 422) {
-        const errorsFromBackend =
-          backend?.error?.errors || backend?.detail || backend?.errors;
-
-        if (Array.isArray(errorsFromBackend)) {
-          const formatted: any = {};
-          errorsFromBackend.forEach((e: any) => {
-            const field = e.loc?.[e.loc.length - 1];
-            if (field) {
-              formatted[field] = e.msg;
-            }
-          });
-          return setErrors(formatted);
-        }
-      }
-
-      if (backend?.message) {
-        return setErrors({ general: backend.message });
-      }
-
-      if (backend?.detail) {
-        return setErrors({ general: backend.detail });
-      }
-
-      setErrors({ general: "Failed to change password. Please try again." });
-    } finally {
-      setIsLoading(false);
+      showToast.error("Change Failed", errorMessage);
     }
   };
 
@@ -136,7 +121,11 @@ const ChangePassword = () => {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons
+            name="arrow-back"
+            size={ms(24)}
+            color={colors.textPrimary}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Change Password</Text>
         <View style={styles.headerSpacer} />
@@ -148,109 +137,125 @@ const ChangePassword = () => {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
       >
-        {/* General Error Message */}
-        {errors.general && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{errors.general}</Text>
-          </View>
-        )}
-
         {/* Old Password */}
-        <CustomInput
-          label="Enter Old Password"
-          placeholder="Enter Old Password"
-          value={oldPassword}
-          onChangeText={setOldPassword}
-          iconName="lock-closed-outline"
-          isPassword
-          isError={!!errors.oldPassword}
-          errorMessage={errors.oldPassword}
+        <Controller
+          control={control}
+          name="oldPassword"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <CustomInput
+              label="Enter Old Password"
+              placeholder="Enter Old Password"
+              value={value || ""}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              iconName="lock-closed-outline"
+              isPassword
+              isError={!!errors.oldPassword}
+              errorMessage={errors.oldPassword?.message}
+            />
+          )}
         />
 
         {/* New Password */}
         <View style={styles.inputWrapper}>
-          <CustomInput
-            label="Enter New Password"
-            placeholder="Enter New Password"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            iconName="lock-closed-outline"
-            isPassword
-            isError={!!errors.newPassword}
-            errorMessage={errors.newPassword}
-            isValid={isPasswordStrong && newPassword.length > 0}
+          <Controller
+            control={control}
+            name="newPassword"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <CustomInput
+                label="Enter New Password"
+                placeholder="Minimum 8 characters"
+                value={value || ""}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                iconName="lock-closed-outline"
+                isPassword
+                isError={!!errors.newPassword}
+                errorMessage={errors.newPassword?.message}
+                isValid={allPasswordRequirementsMet && (value || "").length > 0}
+              />
+            )}
           />
 
           {/* Password Strength Indicator */}
-          {newPassword.length > 0 && (
-            <View style={styles.strengthIndicator}>
-              {!isPasswordStrong ? (
-                <>
-                  <Ionicons
-                    name="shield"
-                    size={16}
-                    color="#F59E0B"
-                    style={styles.strengthIcon}
+          {newPassword && newPassword.length > 0 && (
+            <View style={styles.passwordStrengthContainer}>
+              <View style={styles.strengthBarsContainer}>
+                {[
+                  passwordChecks.length,
+                  passwordChecks.uppercase || passwordChecks.lowercase,
+                  passwordChecks.number,
+                  passwordChecks.special,
+                ].map((met, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.strengthBar,
+                      met && styles.strengthBarActive,
+                    ]}
                   />
-                  <Text style={styles.weakPasswordText}>
-                    Password too weak, must be at least 8 characters
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color={colors.success}
-                    style={styles.strengthIcon}
-                  />
-                  <Text style={styles.strongPasswordText}>Strong password</Text>
-                </>
-              )}
+                ))}
+              </View>
+              <Text style={styles.strengthText}>
+                {Object.values(passwordChecks).filter(Boolean).length < 3
+                  ? "Weak"
+                  : Object.values(passwordChecks).filter(Boolean).length < 5
+                    ? "Medium"
+                    : "Strong"}
+              </Text>
             </View>
           )}
         </View>
 
         {/* Confirm New Password */}
         <View style={styles.inputWrapper}>
-          <CustomInput
-            label="Confirm New Password"
-            placeholder="Enter New Password"
-            value={confirmNewPassword}
-            onChangeText={setConfirmNewPassword}
-            iconName="lock-closed-outline"
-            isPassword
-            isError={!!errors.confirmNewPassword}
-            errorMessage={errors.confirmNewPassword}
-            isValid={passwordsMatch && isConfirmPasswordStrong}
+          <Controller
+            control={control}
+            name="confirmNewPassword"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <CustomInput
+                label="Confirm New Password"
+                placeholder="Enter New Password"
+                value={value || ""}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                iconName="lock-closed-outline"
+                isPassword
+                isError={!!errors.confirmNewPassword}
+                errorMessage={errors.confirmNewPassword?.message}
+                isValid={
+                  (value || "").length > 0 &&
+                  value === newPassword &&
+                  allPasswordRequirementsMet
+                }
+              />
+            )}
           />
 
-          {/* Confirm Password Strength Indicator */}
-          {confirmNewPassword.length > 0 && (
+          {/* Confirm Password Indicator */}
+          {confirmNewPassword && confirmNewPassword.length > 0 && (
             <View style={styles.strengthIndicator}>
-              {!isConfirmPasswordStrong || !passwordsMatch ? (
+              {confirmNewPassword === newPassword ? (
                 <>
                   <Ionicons
-                    name="shield"
-                    size={16}
-                    color="#F59E0B"
+                    name="checkmark-circle"
+                    size={ms(16)}
+                    color={colors.success}
                     style={styles.strengthIcon}
                   />
-                  <Text style={styles.weakPasswordText}>
-                    {!passwordsMatch
-                      ? "Passwords do not match"
-                      : "Password too weak, must be at least 8 characters"}
-                  </Text>
+                  <Text style={styles.strongPasswordText}>Passwords match</Text>
                 </>
               ) : (
                 <>
                   <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color={colors.success}
+                    name="close-circle"
+                    size={ms(16)}
+                    color={colors.error}
                     style={styles.strengthIcon}
                   />
-                  <Text style={styles.strongPasswordText}>Strong password</Text>
+                  <Text style={styles.weakPasswordText}>
+                    Passwords do not match
+                  </Text>
                 </>
               )}
             </View>
@@ -260,16 +265,9 @@ const ChangePassword = () => {
         {/* Change Password Button */}
         <PrimaryButton
           title="Change Password"
-          onPress={handleChangePassword}
-          isLoading={isLoading}
-          disabled={
-            !oldPassword ||
-            !newPassword ||
-            !confirmNewPassword ||
-            !isPasswordStrong ||
-            !passwordsMatch ||
-            isLoading
-          }
+          onPress={handleSubmit(onSubmit)}
+          isLoading={isSubmitting}
+          disabled={isSubmitting}
         />
       </ScrollView>
 
@@ -321,9 +319,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: ms(20),
+    paddingHorizontal: ms(spacing.lg),
     paddingTop: vs(50),
-    paddingBottom: vs(16),
+    paddingBottom: vs(spacing.md),
     backgroundColor: colors.backgroundMain,
   },
   backButton: {
@@ -344,59 +342,66 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: ms(20),
-    paddingTop: vs(20),
+    paddingHorizontal: ms(spacing.lg),
+    paddingTop: vs(spacing.md),
     paddingBottom: vs(40),
   },
-  errorContainer: {
-    backgroundColor: colors.errorLight,
-    borderRadius: ms(8),
-    padding: ms(12),
-    marginBottom: vs(16),
-    borderWidth: 1,
-    borderColor: colors.error,
-  },
-  errorText: {
-    ...typography.bodyMedium,
-    color: colors.error,
-    textAlign: "center",
-  },
   inputWrapper: {
-    marginBottom: vs(8),
+    marginBottom: vs(spacing.sm),
+  },
+  passwordStrengthContainer: {
+    marginTop: ms(-spacing.sm),
+    marginBottom: ms(spacing.md),
+  },
+  strengthBarsContainer: {
+    flexDirection: "row",
+    gap: ms(6),
+    marginBottom: vs(4),
+  },
+  strengthBar: {
+    flex: 1,
+    height: vs(4),
+    backgroundColor: colors.backgroundSoft,
+    borderRadius: ms(2),
+  },
+  strengthBarActive: {
+    backgroundColor: colors.success,
+  },
+  strengthText: {
+    fontSize: rfs(typography.caption.fontSize),
+    fontFamily: typography.bodySmall.fontFamily,
+    color: colors.textGrey1,
   },
   strengthIndicator: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: vs(4),
     marginBottom: vs(12),
+    paddingHorizontal: ms(8),
   },
   strengthIcon: {
     marginRight: ms(6),
   },
   weakPasswordText: {
-    ...typography.bodySmall,
-    color: "#F59E0B",
-    flex: 1,
+    ...typography.caption,
+    color: colors.error,
   },
   strongPasswordText: {
-    ...typography.bodySmall,
+    ...typography.caption,
     color: colors.success,
-    flex: 1,
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: ms(40),
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: colors.textWhite,
+    width: "80%",
+    backgroundColor: colors.backgroundMain,
     borderRadius: ms(16),
-    padding: ms(32),
+    padding: ms(spacing.xl),
     alignItems: "center",
-    width: "100%",
-    maxWidth: ms(320),
   },
   successIconContainer: {
     marginBottom: vs(20),
@@ -404,20 +409,19 @@ const styles = StyleSheet.create({
   successTitle: {
     ...typography.heading3,
     color: colors.textPrimary,
+    marginBottom: vs(30),
     textAlign: "center",
-    marginBottom: vs(24),
   },
   doneButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: vs(14),
-    paddingHorizontal: ms(48),
-    borderRadius: ms(8),
     width: "100%",
-    alignItems: "center",
+    backgroundColor: colors.primary,
+    paddingVertical: vs(12),
+    borderRadius: ms(8),
   },
   doneButtonText: {
     ...typography.bodyLarge,
     color: colors.textWhite,
+    textAlign: "center",
     fontWeight: "600",
   },
 });

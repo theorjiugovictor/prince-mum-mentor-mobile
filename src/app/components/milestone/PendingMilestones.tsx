@@ -2,8 +2,8 @@ import { getPendingMilestones } from "@/src/core/services/milestoneService";
 import { colors, typography } from "@/src/core/styles";
 import { showToast } from "@/src/core/utils/toast";
 import { useQuery } from "@tanstack/react-query";
-import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 // import Checkbox from "@/src/assets/images/tick-square.png";
 
 export default function PendingMilestones({ childId }: { childId?: string }) {
@@ -16,14 +16,23 @@ export default function PendingMilestones({ childId }: { childId?: string }) {
     queryFn: () => getPendingMilestones(childId),
   });
 
-  if (error) {
-    showToast.error(error.message);
-  }
-
-  console.log(pendingMilestones, "datasss");
+  useEffect(() => {
+    if (error) showToast.error(error.message);
+  }, [error]);
 
   if (isLoading) {
-    return <View>Loading</View>;
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100%",
+        }}
+      >
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (

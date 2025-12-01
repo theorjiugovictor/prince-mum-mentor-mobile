@@ -1,38 +1,76 @@
 // components/EditChildModal.tsx
 import { Feather } from "@expo/vector-icons";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as ImagePicker from "expo-image-picker";
 import {
+  ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   Modal,
-  ScrollView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-  Alert,
-  Platform,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
-
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 // API Imports
 import {
-  updateChildProfile,
-  uploadChildProfilePicture,
   formatDateForApi,
   parseDateFromApi,
+  updateChildProfile,
+  uploadChildProfilePicture,
 } from "../../core/services/childProfile.service";
-import { ChildProfile, UpdateChildProfileRequest } from "../../types/child.types";
+import {
+  ChildProfile,
+  UpdateChildProfileRequest,
+} from "../../types/child.types";
 import GenderDropdown from "../components/GenderDropdown";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const userPic = require("../../assets/images/user-pic.png");
 
+// Utils: Get stable avatar URL - ADDED THIS FUNCTION
+const getStableAvatarUrl = (profilePictureUrl?: string): string => {
+  if (!profilePictureUrl) {
+    return "https://via.placeholder.com/53";
+  }
+
+  // If it's already a full URL (including our avatar endpoint), return as-is
+  if (profilePictureUrl.includes("child-profiles/avatar/")) {
+    return profilePictureUrl;
+  }
+
+  // If it's already a full URL but not our avatar endpoint, use it directly
+  if (profilePictureUrl.startsWith("http")) {
+    return profilePictureUrl;
+  }
+
+  // Extract filename from the profile_picture_url
+  let filename: string;
+
+  if (profilePictureUrl.includes("/")) {
+    filename = profilePictureUrl.split("/").pop() || "";
+  } else {
+    filename = profilePictureUrl;
+  }
+
+  // If we couldn't extract a valid filename, use placeholder
+  if (!filename) {
+    return "https://via.placeholder.com/53";
+  }
+
+  // Construct the full avatar URL using the public endpoint
+  const baseUrl = "https://api.staging.kaizen.emerj.net/api/v1";
+  const avatarUrl = `${baseUrl}/child-profiles/avatar/${filename}`;
+
+  return avatarUrl;
+};
 
 interface EditChildModalProps {
   visible: boolean;
@@ -54,15 +92,6 @@ export function EditChildModal({
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-    const getUserImage = () => {
-    return profilePicture || userPic;
-  };
-
-  const imageSource =
-    typeof getUserImage() === "string"
-      ? { uri: getUserImage() }
-      : getUserImage();
-
   // Update form when child prop changes
   useEffect(() => {
     if (child) {
@@ -70,7 +99,12 @@ export function EditChildModal({
       setGender(child.gender);
       setDateOfBirth(parseDateFromApi(child.date_of_birth));
       setBirthOrder(child.birth_order.toString());
-      setProfilePicture(child.profile_picture_url || null);
+      // Use the stable URL function here
+      setProfilePicture(
+        child.profile_picture_url
+          ? getStableAvatarUrl(child.profile_picture_url)
+          : null
+      );
     }
   }, [child]);
 
@@ -79,7 +113,8 @@ export function EditChildModal({
    */
   const requestPermissions = async () => {
     if (Platform.OS !== "web") {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permission Required",
@@ -129,7 +164,7 @@ export function EditChildModal({
 
     try {
       setUploadingImage(true);
-      
+
       const imageFile = {
         uri: imageUri,
         name: `profile_${Date.now()}.jpg`,
@@ -137,7 +172,8 @@ export function EditChildModal({
       };
 
       const response = await uploadChildProfilePicture(child.id, imageFile);
-      setProfilePicture(response.profile_picture_url);
+      // Use the stable URL function for the response too
+      setProfilePicture(getStableAvatarUrl(response.profile_picture_url));
       Alert.alert("Success", "Profile picture uploaded successfully");
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -235,19 +271,24 @@ export function EditChildModal({
           </View>
 
           {/* Scrollable Content */}
-          <ScrollView
+          <KeyboardAwareScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}
+            bottomOffset={40}
+            extraKeyboardSpace={20}
+            enabled={true}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContentContainer}
           >
-
-
-            {/* Avatar Section */}
+            {/* Avatar Section - FIXED with getStableAvatarUrl */}
             <View style={styles.avatarSection}>
               <Image
-                source={{
-                  uri: imageSource,
-                }}
+                source={profilePicture ? { uri: profilePicture } : userPic}
                 style={styles.avatar}
+                onError={(error) => {
+                  console.log("Failed to load image:", profilePicture);
+                  console.error("Image error:", error.nativeEvent.error);
+                }}
               />
               <TouchableOpacity
                 style={styles.cameraButton}
@@ -285,12 +326,11 @@ export function EditChildModal({
             {/* Gender Field */}
             <View style={styles.formSection}>
               <Text style={styles.label}>Gender</Text>
-            <GenderDropdown
-              label="Child's Gender"
-              value={gender}
-              onValueChange={(gender) => setGender(gender)}
-            />
-               
+              <GenderDropdown
+                label="Child's Gender"
+                value={gender}
+                onValueChange={(gender) => setGender(gender)}
+              />
             </View>
 
             {/* Date of Birth Field */}
@@ -365,7 +405,7 @@ export function EditChildModal({
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </View>
     </Modal>
@@ -385,6 +425,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    minHeight: "100%",
     maxHeight: SCREEN_HEIGHT * 0.9,
     overflow: "hidden",
   },
@@ -399,8 +440,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   content: {
+    flex: 1,
+  },
+  scrollContentContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 40,
   },
   avatarSection: {
     alignItems: "center",

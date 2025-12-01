@@ -35,7 +35,7 @@ import { ChildProfile } from "../../types/child.types";
 // Utils: Get stable avatar URL
 const getStableAvatarUrl = (profilePictureUrl?: string): string => {
   if (!profilePictureUrl) {
-    return "https://i.pravatar.cc/150?img=1";
+    return "https://via.placeholder.com/53";
   }
 
   // If it's already a full URL (including our avatar endpoint), return as-is
@@ -59,7 +59,7 @@ const getStableAvatarUrl = (profilePictureUrl?: string): string => {
 
   // If we couldn't extract a valid filename, use placeholder
   if (!filename) {
-    return "https://i.pravatar.cc/150?img=1";
+    return "https://via.placeholder.com/53";
   }
 
   // Construct the full avatar URL using the public endpoint
@@ -70,7 +70,7 @@ const getStableAvatarUrl = (profilePictureUrl?: string): string => {
 };
 
 // Stable placeholder image
-const PLACEHOLDER_IMAGE = "https://i.pravatar.cc/150?img=1";
+const PLACEHOLDER_IMAGE = "https://via.placeholder.com/53";
 
 // Main Child Info Screen
 export default function ChildInfoScreen({ navigation }: any) {

@@ -47,13 +47,16 @@ export function AddChildModal({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [birthOrder, setBirthOrder] = useState("");
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<File | { uri: string; name?: string; type?: string } | null>(null);
+  const [selectedImage, setSelectedImage] = useState<
+    File | { uri: string; name?: string; type?: string } | null
+  >(null);
   const [loading, setLoading] = useState(false);
 
   // Request camera/gallery permissions
   const requestPermissions = async () => {
     if (Platform.OS !== "web") {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permission Required",
@@ -88,15 +91,15 @@ export function AddChildModal({
             type: "image/jpeg",
           });
           setProfilePicture(asset.uri); // For display
-          setSelectedImage(file);        // For upload
+          setSelectedImage(file); // For upload
         } else {
           const fileObj = {
             uri: asset.uri,
             name: `profile_${Date.now()}.jpg`,
             type: "image/jpeg",
           };
-          setProfilePicture(asset.uri);  // For display
-          setSelectedImage(fileObj);     // For upload
+          setProfilePicture(asset.uri); // For display
+          setSelectedImage(fileObj); // For upload
         }
       }
     } catch (error) {
@@ -111,7 +114,11 @@ export function AddChildModal({
   };
 
   const formatDateForDisplay = (date: Date): string =>
-    date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+    date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
 
   const validateForm = (): boolean => {
     if (!name.trim()) {
@@ -164,13 +171,15 @@ export function AddChildModal({
       console.log("📝 Sending child profile data:", createData);
 
       const newChild = await createChildProfile(createData);
-      
+
       console.log("📦 Server response:", newChild);
 
       // Check if we got a valid response with an ID
       if (!newChild || !newChild.id) {
         console.error("❌ Invalid server response:", newChild);
-        throw new Error("Server did not return a valid child profile. Please try again.");
+        throw new Error(
+          "Server did not return a valid child profile. Please try again."
+        );
       }
 
       console.log("✅ Child profile created with ID:", newChild.id);
@@ -196,13 +205,14 @@ export function AddChildModal({
       onClose();
     } catch (error: any) {
       console.error("❌ ERROR in handleSave:", error);
-      
+
       // Extract meaningful error message
-      const errorMessage = error?.message || 
-                          error?.response?.data?.message || 
-                          error?.response?.data?.detail ||
-                          "Failed to add child profile. Please try again.";
-      
+      const errorMessage =
+        error?.message ||
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        "Failed to add child profile. Please try again.";
+
       Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
@@ -215,15 +225,24 @@ export function AddChildModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={handleCancel}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={handleCancel}
+    >
       <View style={styles.modalOverlay}>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleCancel} />
+        <TouchableOpacity
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={handleCancel}
+        />
         <View style={styles.modalContainer}>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Add Child&apos;s Info</Text>
           </View>
-          <KeyboardAwareScrollView 
-            style={styles.content} 
+          <KeyboardAwareScrollView
+            style={styles.content}
             showsVerticalScrollIndicator={false}
             bottomOffset={40}
             extraKeyboardSpace={20}
@@ -234,11 +253,15 @@ export function AddChildModal({
             <View style={styles.avatarSection}>
               <Image
                 source={{
-                  uri: profilePicture || "https://i.pravatar.cc/150?img=1",
+                  uri: profilePicture || "https://via.placeholder.com/53",
                 }}
                 style={styles.avatar}
               />
-              <TouchableOpacity style={styles.cameraButton} onPress={handlePickImage} disabled={loading}>
+              <TouchableOpacity
+                style={styles.cameraButton}
+                onPress={handlePickImage}
+                disabled={loading}
+              >
                 <Feather name="camera" size={20} color="#FFF" />
               </TouchableOpacity>
             </View>
@@ -247,7 +270,12 @@ export function AddChildModal({
             <View style={styles.formSection}>
               <Text style={styles.label}>Child&apos;s Full Name</Text>
               <View style={styles.inputContainer}>
-                <Feather name="user" size={20} color="#999" style={styles.inputIcon} />
+                <Feather
+                  name="user"
+                  size={20}
+                  color="#999"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={styles.input}
                   value={name}
@@ -262,30 +290,52 @@ export function AddChildModal({
             {/* Gender */}
             <View style={styles.formSection}>
               <Text style={styles.label}>Gender</Text>
-              <GenderDropdown 
-                label="Child's Gender" 
-                value={gender} 
-                onValueChange={setGender} 
+              <GenderDropdown
+                label="Child's Gender"
+                value={gender}
+                onValueChange={setGender}
               />
             </View>
 
             {/* Date of Birth */}
             <View style={styles.formSection}>
               <Text style={styles.label}>Date Of Birth</Text>
-              <TouchableOpacity style={styles.inputContainer} onPress={() => setShowDatePicker(true)} disabled={loading}>
-                <Feather name="calendar" size={20} color="#999" style={styles.inputIcon} />
-                <Text style={styles.dateText}>{formatDateForDisplay(dateOfBirth)}</Text>
+              <TouchableOpacity
+                style={styles.inputContainer}
+                onPress={() => setShowDatePicker(true)}
+                disabled={loading}
+              >
+                <Feather
+                  name="calendar"
+                  size={20}
+                  color="#999"
+                  style={styles.inputIcon}
+                />
+                <Text style={styles.dateText}>
+                  {formatDateForDisplay(dateOfBirth)}
+                </Text>
               </TouchableOpacity>
             </View>
             {showDatePicker && (
-              <DateTimePicker value={dateOfBirth} mode="date" display="default" onChange={handleDateChange} maximumDate={new Date()} />
+              <DateTimePicker
+                value={dateOfBirth}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
             )}
 
             {/* Birth Order */}
             <View style={styles.formSection}>
               <Text style={styles.label}>Birth Order</Text>
               <View style={styles.inputContainer}>
-                <Feather name="list" size={20} color="#999" style={styles.inputIcon} />
+                <Feather
+                  name="list"
+                  size={20}
+                  color="#999"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={styles.input}
                   value={birthOrder}
@@ -299,7 +349,11 @@ export function AddChildModal({
             </View>
 
             {/* Buttons */}
-            <TouchableOpacity style={[styles.saveButton, loading && styles.buttonDisabled]} onPress={handleSave} disabled={loading}>
+            <TouchableOpacity
+              style={[styles.saveButton, loading && styles.buttonDisabled]}
+              onPress={handleSave}
+              disabled={loading}
+            >
               {loading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color="#FFF" />
@@ -310,7 +364,11 @@ export function AddChildModal({
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+              disabled={loading}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </KeyboardAwareScrollView>
@@ -322,26 +380,76 @@ export function AddChildModal({
 
 const styles = StyleSheet.create({
   modalOverlay: { flex: 1, justifyContent: "flex-end" },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0, 0, 0, 0.5)" },
-  modalContainer: { backgroundColor: "#FFF", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: SCREEN_HEIGHT * 0.9, overflow: "hidden" },
-  header: { paddingHorizontal: 20, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: "#F0F0F0" },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    backgroundColor: "#FFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    minHeight: "100%",
+    maxHeight: SCREEN_HEIGHT * 0.9,
+    overflow: "hidden",
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
   headerTitle: { fontSize: 24, fontWeight: "700" },
   content: { flex: 1 },
-  scrollContentContainer: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  scrollContentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
   avatarSection: { alignItems: "center", marginBottom: 24 },
   avatar: { width: 120, height: 120, borderRadius: 60 },
-  cameraButton: { position: "absolute", bottom: 0, right: "35%", backgroundColor: "#666", width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" },
+  cameraButton: {
+    position: "absolute",
+    bottom: 0,
+    right: "35%",
+    backgroundColor: "#666",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   formSection: { marginBottom: 20 },
   label: { fontSize: 16, fontWeight: "600", marginBottom: 8, color: "#000" },
-  inputContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#F5F5F5", borderRadius: 8, paddingHorizontal: 16, minHeight: 56 },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    minHeight: 56,
+  },
   inputIcon: { marginRight: 12 },
   input: { flex: 1, paddingVertical: 16, fontSize: 16, color: "#000" },
   dateText: { flex: 1, paddingVertical: 16, fontSize: 16, color: "#000" },
-  saveButton: { backgroundColor: "#E63946", paddingVertical: 16, borderRadius: 8, alignItems: "center", marginTop: 8, marginBottom: 12 },
+  saveButton: {
+    backgroundColor: "#E63946",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 12,
+  },
   saveButtonText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
   loadingContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
   loadingText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
-  cancelButton: { borderWidth: 2, borderColor: "#E63946", paddingVertical: 16, borderRadius: 8, alignItems: "center", marginBottom: 32 },
+  cancelButton: {
+    borderWidth: 2,
+    borderColor: "#E63946",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 32,
+  },
   cancelButtonText: { color: "#E63946", fontSize: 16, fontWeight: "700" },
   buttonDisabled: { opacity: 0.6 },
 });

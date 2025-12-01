@@ -1,7 +1,7 @@
-import {auth} from "@/src/lib/auth";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {authApi} from "../../lib/api";
-import {fetch} from 'expo/fetch';
+import { auth } from "@/src/lib/auth";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetch } from "expo/fetch";
+import { authApi } from "../../lib/api";
 
 interface ChatSession {
   id: string;
@@ -22,7 +22,6 @@ interface ChatData {
   };
 }
 
-// API Response types
 interface ApiMessage {
   id: string;
   sender: "user" | "ai";
@@ -43,7 +42,6 @@ interface ApiChatResponse {
   };
 }
 
-// Display message type (what your UI expects)
 interface Message {
   id: string;
   text: string;
@@ -57,6 +55,7 @@ interface SendMessageParams {
   message: string;
   onChunk?: (chunk: string) => void;
   onComplete?: (messageId: string) => void;
+  abortSignal?: AbortSignal;
 }
 
 const CHAT_KEYS = {
@@ -64,22 +63,16 @@ const CHAT_KEYS = {
   session: (id: string) => ["ai-chats", id] as const,
 };
 
-/* -----------------------------------------------------------
-   LIST USER CONVERSATIONS
------------------------------------------------------------- */
 export const useChatList = () => {
   return useQuery({
     queryKey: CHAT_KEYS.all,
     queryFn: async () => {
       const res = await authApi.get("/api/v1/ai-chat/chats/");
-        return res.data.data as ChatData; // Returns the full ChatData object with conversations array
+      return res.data.data as ChatData;
     },
   });
 };
 
-/* -----------------------------------------------------------
-   CREATE CHAT SESSION
------------------------------------------------------------- */
 export const useCreateChat = () => {
   const qc = useQueryClient();
 
@@ -89,15 +82,11 @@ export const useCreateChat = () => {
       return res.data.data as ChatSession;
     },
     onSuccess: () => {
-      // Invalidate the chat list to show the new chat immediately
       qc.invalidateQueries({ queryKey: CHAT_KEYS.all });
     },
   });
 };
 
-/* -----------------------------------------------------------
-   GET CHAT MESSAGES - WITH PROPER MAPPING
------------------------------------------------------------- */
 export const useChatMessages = (sessionId?: string) => {
   return useQuery({
     queryKey: CHAT_KEYS.session(sessionId || ""),
@@ -107,7 +96,6 @@ export const useChatMessages = (sessionId?: string) => {
       const res = await authApi.get(`/api/v1/ai-chat/chats/${sessionId}`);
       const data = res.data.data as ApiChatResponse;
 
-      // Transform API messages to display format
       const transformedMessages: Message[] = data.messages.map((msg) => ({
         id: msg.id,
         text: msg.message,
@@ -125,9 +113,6 @@ export const useChatMessages = (sessionId?: string) => {
   });
 };
 
-/* -----------------------------------------------------------
-   SEND MESSAGE WITH STREAMING + OPTIMISTIC UPDATES
------------------------------------------------------------- */
 export const useSendAiMessage = () => {
   const qc = useQueryClient();
 
@@ -137,6 +122,7 @@ export const useSendAiMessage = () => {
       message,
       onChunk,
       onComplete,
+      abortSignal,
     }: SendMessageParams) => {
       const baseURL = authApi.defaults.baseURL || "";
       const token = await auth.getAccessToken();
@@ -150,6 +136,7 @@ export const useSendAiMessage = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ message }),
+          signal: abortSignal, // Add abort signal here
         }
       );
 
@@ -161,43 +148,57 @@ export const useSendAiMessage = () => {
       const decoder = new TextDecoder();
       let buffer = "";
       let messageId = "";
-      let chunkCount = 0;
 
       if (!reader) {
         throw new Error("No response body");
       }
 
-      while (true) {
-        const { done, value } = await reader.read();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
 
-        if (done) {
-          break;
-        }
+          if (done) {
+            break;
+          }
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
 
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(line.slice(6));
 
-              if (data.type === "start") {
-                messageId = data.message_id;
-              } else if (data.type === "chunk" && onChunk) {
-                onChunk(data.content);
-              } else if (data.type === "done") {
-                messageId = data.message_id;
-                if (onComplete) {
-                  onComplete(messageId);
+                if (data.type === "start") {
+                  messageId = data.message_id;
+                } else if (data.type === "chunk" && onChunk) {
+                  onChunk(data.content);
+                } else if (data.type === "done") {
+                  messageId = data.message_id;
+                  if (onComplete) {
+                    onComplete(messageId);
+                  }
                 }
+              } catch (e) {
+                console.error("❌ Failed to parse SSE data:", e, "Line:", line);
               }
-            } catch (e) {
-              console.error("❌ Failed to parse SSE data:", e, "Line:", line);
             }
           }
         }
+      } catch (error: any) {
+        // Handle abort differently from other errors
+        if (error.name === "AbortError") {
+          console.log("Stream aborted by user");
+          // Still call onComplete if we have a messageId
+          if (messageId && onComplete) {
+            onComplete(messageId);
+          }
+          throw error; // Re-throw to let mutation know it was aborted
+        }
+        throw error;
+      } finally {
+        reader.releaseLock();
       }
 
       return { messageId };
@@ -224,8 +225,11 @@ export const useSendAiMessage = () => {
 
       return { previousMessages };
     },
-    onError: (err, { session_id }, context) => {
-      console.error("❌ Mutation error:", err);
+    onError: (err: any, { session_id }, context) => {
+      // Don't show error for user-initiated abort
+      if (err?.name !== "AbortError") {
+        console.error("❌ Mutation error:", err);
+      }
       if (context?.previousMessages) {
         qc.setQueryData(
           CHAT_KEYS.session(session_id),
@@ -239,9 +243,7 @@ export const useSendAiMessage = () => {
     },
   });
 };
-/* -----------------------------------------------------------
-   DELETE CONVERSATION
------------------------------------------------------------- */
+
 export const useDeleteConversation = () => {
   const qc = useQueryClient();
 
@@ -252,19 +254,16 @@ export const useDeleteConversation = () => {
           `/api/v1/ai-chat/chats/${conversation_id}`
         );
 
-        // 1. Force failure if server didn't return 200-299
         if (res.status < 200 || res.status >= 300) {
           throw new Error(`Delete failed with status ${res.status}`);
         }
 
-        // 2. If the server wraps success in JSON
         if (res.data?.success === false) {
           throw new Error(res.data?.message || "Delete failed");
         }
 
         return res.data;
       } catch (err: any) {
-        // 3. Ensure mutation throws for React Query
         const message =
           err?.response?.data?.message ||
           err?.message ||
@@ -280,9 +279,6 @@ export const useDeleteConversation = () => {
   });
 };
 
-/* -----------------------------------------------------------
-   RENAME CONVERSATION
------------------------------------------------------------- */
 export const useRenameConversation = () => {
   const qc = useQueryClient();
 
@@ -301,7 +297,6 @@ export const useRenameConversation = () => {
       return res.data;
     },
     onSuccess: (_, { conversation_id }) => {
-      // Invalidate both the list and the specific session
       qc.invalidateQueries({ queryKey: CHAT_KEYS.all });
       qc.invalidateQueries({ queryKey: CHAT_KEYS.session(conversation_id) });
     },

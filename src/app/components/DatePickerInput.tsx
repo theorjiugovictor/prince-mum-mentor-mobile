@@ -20,6 +20,7 @@ interface DatePickerInputProps {
   isError?: boolean;
   errorMessage?: string;
   icon?: string;
+  maxDate?: Date | undefined;
 }
 
 const DatePickerInput: React.FC<DatePickerInputProps> = ({
@@ -30,9 +31,15 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
   isError = false,
   errorMessage,
   icon,
+  maxDate,
 }) => {
+  const parsed = value ? new Date(value) : new Date();
+  const initialDate = isNaN(parsed.getTime()) ? new Date() : parsed;
+
+  const [date, setDate] = useState<Date>(initialDate);
+
   const [showPicker, setShowPicker] = useState(false);
-  const [date, setDate] = useState<Date>(value ? new Date(value) : new Date());
+  // const [date, setDate] = useState<Date>(value ? new Date(value) : new Date());
 
   const formatDate = (dateObj: Date): string => {
     const day = dateObj.getDate().toString().padStart(2, "0");
@@ -96,7 +103,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
           mode="date"
           display="default"
           onChange={handleDateChange}
-          maximumDate={new Date()}
+          maximumDate={maxDate}
         />
       )}
 
@@ -122,7 +129,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
                 onChange={(event, selectedDate) => {
                   if (selectedDate) setDate(selectedDate);
                 }}
-                maximumDate={new Date()}
+                maximumDate={maxDate}
                 textColor={colors.textPrimary}
               />
             </View>

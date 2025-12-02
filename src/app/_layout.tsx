@@ -7,7 +7,6 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
@@ -19,14 +18,13 @@ import { useAssetLoading } from "../core/utils/assetsLoading";
 import { toastConfig } from "../core/utils/toast";
 
 import { JournalProvider } from "./components/journal/journalContext";
-
+import { ONBOARDING_COMPLETE_KEY } from "../constants";
 
 SplashScreen.preventAutoHideAsync();
 
 // ----------------------------------------------------
 // ONBOARDING STORAGE LOGIC
 // ----------------------------------------------------
-const ONBOARDING_KEY = "@OnboardingComplete";
 
 function useOnboardingStatusLoader() {
   const [onboardingComplete, setOnboardingComplete] = useState(false);
@@ -35,7 +33,7 @@ function useOnboardingStatusLoader() {
   useEffect(() => {
     const check = async () => {
       try {
-        const value = await AsyncStorage.getItem(ONBOARDING_KEY);
+        const value = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
         setOnboardingComplete(value === "true");
       } catch (error) {
         console.error("Failed to load onboarding status:", error);
@@ -94,12 +92,12 @@ function RootLayoutContent() {
 
     if (user) {
       // User is logged in - go to home
-      router.replace("/(tabs)/Home");
+      router.replace("/Home");
     } else {
       // User is not logged in
       if (onboardingComplete) {
         // Onboarding done - go to sign in
-        router.replace("/(auth)/SignInScreen");
+        router.replace("/SignInScreen");
       } else {
         // Show onboarding
         router.replace("/(onboarding)");
@@ -153,19 +151,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-       
-          <AuthProvider>
-            <SetupProvider>
-              <SavedResourcesProvider>
-                <JournalProvider>
-                  <KeyboardProvider>
-                    <RootLayoutContent />
-                  </KeyboardProvider>
-                </JournalProvider>
-              </SavedResourcesProvider>
-            </SetupProvider>
-          </AuthProvider>
-       
+        <AuthProvider>
+          <SetupProvider>
+            <SavedResourcesProvider>
+              <JournalProvider>
+                <KeyboardProvider>
+                  <RootLayoutContent />
+                </KeyboardProvider>
+              </JournalProvider>
+            </SavedResourcesProvider>
+          </SetupProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

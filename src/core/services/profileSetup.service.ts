@@ -1,9 +1,9 @@
 // core/services/profileSetup.service.ts
 
-import {AxiosError} from "axios"; // Keep this for type checking
-import type {ChildProfile} from "../../types/child.types";
-import {authApi} from "@/src/lib/api";
+import { authApi } from "@/src/lib/api";
 import storage from "@/src/store/storage";
+import { AxiosError } from "axios"; // Keep this for type checking
+import type { ChildProfile } from "../../types/child.types";
 
 // ======================================================
 // API CONFIGURATION - REMOVED: Now handled in apiClient.ts
@@ -46,9 +46,8 @@ export async function createProfileSetup(
   data: CreateProfileSetupRequest
 ): Promise<ProfileSetupData | { id: string }> {
   try {
-
     // FIX: Use the imported apiClient instead of the local 'api' instance
-      const response = await authApi.post("/api/v1/profile-setup/", data);
+    const response = await authApi.post("/api/v1/profile-setup/", data);
     const rawData = response.data;
 
     let profileSetupId: string;
@@ -61,7 +60,7 @@ export async function createProfileSetup(
       throw new Error("Unexpected profile setup response format");
     }
 
-      await storage.set("profile_setup_id", profileSetupId);
+    await storage.set("profile_setup_id", profileSetupId);
 
     return { id: profileSetupId };
   } catch (error) {
@@ -72,7 +71,9 @@ export async function createProfileSetup(
     if (status === 422) {
       const detail = axiosError.response?.data?.detail;
       if (Array.isArray(detail)) {
-        const msg = detail.map((err: any) => `${err.loc.join(".")}: ${err.msg}`).join(", ");
+        const msg = detail
+          .map((err: any) => `${err.loc.join(".")}: ${err.msg}`)
+          .join(", ");
         throw new Error(`Validation failed: ${msg}`);
       }
       throw new Error("Validation failed");
@@ -92,11 +93,14 @@ export async function createProfileSetup(
 export async function getProfileSetup(): Promise<ProfileSetupData | null> {
   try {
     // ✅ FIX: Use the imported apiClient instead of the local 'api' instance
-      const response = await authApi.get<ProfileSetupResponse>("/api/v1/profile-setup/");
+    const response = await authApi.get<ProfileSetupResponse>(
+      "/api/v1/profile/setup"
+    );
     const profileSetup = response.data.data;
+    console.log("res", response);
 
     if (profileSetup?.id) {
-        await storage.set("profile_setup_id", profileSetup.id);
+      await storage.set("profile_setup_id", profileSetup.id);
       return profileSetup;
     }
 
@@ -104,8 +108,10 @@ export async function getProfileSetup(): Promise<ProfileSetupData | null> {
     return null;
   } catch (error) {
     const axiosError = error as AxiosError;
-    if (axiosError.response?.status === 404) console.error("❌ Profile setup not found");
-    else if (axiosError.response?.status === 401) console.error("❌ Unauthorized");
+    if (axiosError.response?.status === 404)
+      console.error("❌ Profile setup not found");
+    else if (axiosError.response?.status === 401)
+      console.error("❌ Unauthorized");
     else console.error("❌ Error fetching profile setup:", error);
 
     return null;
@@ -118,10 +124,10 @@ export async function getProfileSetup(): Promise<ProfileSetupData | null> {
 
 export async function getProfileSetupId(): Promise<string | null> {
   try {
-      const storedId = await storage.get("profile_setup_id");
+    const storedId = await storage.get("profile_setup_id");
     if (storedId) return storedId;
   } catch (error) {
-      console.error("❌ Error reading storage:", error);
+    console.error("❌ Error reading storage:", error);
   }
 
   const profileSetup = await getProfileSetup();

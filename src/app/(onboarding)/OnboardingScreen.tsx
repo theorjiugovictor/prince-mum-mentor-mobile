@@ -1,7 +1,9 @@
-import { colors, spacing, typography } from '@/src/core/styles';
-import { ms, rbr, rfs, vs } from '@/src/core/styles/scaling';
-import React, { useState } from 'react';
-import { router } from 'expo-router';
+import { ONBOARDING_COMPLETE_KEY } from "@/src/constants";
+import { colors, spacing, typography } from "@/src/core/styles";
+import { ms, rbr, rfs, vs } from "@/src/core/styles/scaling";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import React, { useState } from "react";
 import {
   Image,
   ImageBackground,
@@ -9,15 +11,15 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
   runOnJS,
-} from 'react-native-reanimated';
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 /**
  * Interface for each onboarding slide
@@ -50,40 +52,39 @@ interface OnboardingSlideItemProps {
  */
 const ONBOARDING_SLIDES: OnboardingSlide[] = [
   {
-    id: '1',
-    title: 'Your Motherhood Companion',
-    subtitle: 'Personalized support for every stage of motherhood.',
-    image: require('../../assets/images/onboarding/slide1.png'),
+    id: "1",
+    title: "Your Motherhood Companion",
+    subtitle: "Personalized support for every stage of motherhood.",
+    image: require("../../assets/images/onboarding/slide1.png"),
   },
   {
-    id: '2',
-    title: 'Your 24/7 AI Mentor',
+    id: "2",
+    title: "Your 24/7 AI Mentor",
     subtitle:
-      'Ask questions, get clarity, and receive trusted answers anytime you need support.',
-    image: require('../../assets/images/onboarding/slide2.png'),
+      "Ask questions, get clarity, and receive trusted answers anytime you need support.",
+    image: require("../../assets/images/onboarding/slide2.png"),
   },
   {
-    id: '3',
-    title: 'Track Milestones With Ease',
-    subtitle: 'Track milestones, save memories, stay confident.',
-    image: require('../../assets/images/onboarding/slide3.png'),
+    id: "3",
+    title: "Track Milestones With Ease",
+    subtitle: "Track milestones, save memories, stay confident.",
+    image: require("../../assets/images/onboarding/slide3.png"),
   },
 ];
-
 
 /**
  * Individual slide component
  * Displays background image, pagination dots, logo, title, subtitle, and action buttons
  */
-const OnboardingSlideItem: React.FC<OnboardingSlideItemProps> = ({ 
-  slide, 
-  currentIndex, 
+const OnboardingSlideItem: React.FC<OnboardingSlideItemProps> = ({
+  slide,
+  currentIndex,
   totalSlides,
   onSelectSlide,
   onNext,
   onSkip,
   onLogin,
-  onSignUp 
+  onSignUp,
 }) => {
   // Determine if we're on the last slide
   const isLastSlide = currentIndex === totalSlides - 1;
@@ -120,7 +121,7 @@ const OnboardingSlideItem: React.FC<OnboardingSlideItemProps> = ({
 
         {/* NORA Logo */}
         <Image
-          source={require('../../assets/images/logo-horizontal.png')}
+          source={require("../../assets/images/logo-horizontal.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -140,10 +141,12 @@ const OnboardingSlideItem: React.FC<OnboardingSlideItemProps> = ({
           onPress={isLastSlide ? onLogin : onNext}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel={isLastSlide ? 'Log in to your account' : 'Go to next slide'}
+          accessibilityLabel={
+            isLastSlide ? "Log in to your account" : "Go to next slide"
+          }
         >
           <Text style={styles.primaryButtonText}>
-            {isLastSlide ? 'Log in' : 'Next'}
+            {isLastSlide ? "Log in" : "Next"}
           </Text>
         </TouchableOpacity>
 
@@ -153,10 +156,12 @@ const OnboardingSlideItem: React.FC<OnboardingSlideItemProps> = ({
           onPress={isLastSlide ? onSignUp : onSkip}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel={isLastSlide ? 'Sign up for a new account' : 'Skip to last slide'}
+          accessibilityLabel={
+            isLastSlide ? "Sign up for a new account" : "Skip to last slide"
+          }
         >
           <Text style={styles.secondaryButtonText}>
-            {isLastSlide ? 'Sign Up' : 'Skip'}
+            {isLastSlide ? "Sign Up" : "Skip"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -164,10 +169,7 @@ const OnboardingSlideItem: React.FC<OnboardingSlideItemProps> = ({
   );
 };
 
-
-
 export default function OnboardingSlides() {
-
   // Track current active slide index (0, 1, or 2)
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -211,6 +213,9 @@ export default function OnboardingSlides() {
       runOnJS(setCurrentIndex)(ONBOARDING_SLIDES.length - 1);
       opacity.value = withTiming(1, { duration: 200 });
     });
+    AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, "true", () => {
+      console.log("Onboarding completed successfully!");
+    });
   };
 
   /**
@@ -219,7 +224,10 @@ export default function OnboardingSlides() {
    * NOTE: Onboarding will be marked complete AFTER successful login
    */
   const handleLogin = () => {
-    router.push('./(auth)/SignInScreen');
+    router.push("./(auth)/SignInScreen");
+    AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, "true", () => {
+      console.log("Onboarding completed successfully!");
+    });
   };
 
   /**
@@ -228,7 +236,10 @@ export default function OnboardingSlides() {
    * NOTE: Onboarding will be marked complete AFTER successful signup
    */
   const handleSignUp = () => {
-    router.push('./(auth)/SignUpScreen');
+    router.push("./(auth)/SignUpScreen");
+    AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, "true", () => {
+      console.log("Onboarding completed successfully!");
+    });
   };
 
   /**
@@ -244,8 +255,14 @@ export default function OnboardingSlides() {
       const velocity = event.velocityX;
 
       // Determine if swipe was strong enough
-      if (Math.abs(event.translationX) > swipeThreshold || Math.abs(velocity) > 500) {
-        if (event.translationX < 0 && currentIndex < ONBOARDING_SLIDES.length - 1) {
+      if (
+        Math.abs(event.translationX) > swipeThreshold ||
+        Math.abs(velocity) > 500
+      ) {
+        if (
+          event.translationX < 0 &&
+          currentIndex < ONBOARDING_SLIDES.length - 1
+        ) {
           // Swipe left -> Next slide
           translateX.value = withSpring(0);
           runOnJS(handleNext)();
@@ -306,22 +323,22 @@ const styles = StyleSheet.create({
   // Individual slide container - stretches to fill available space
   slideContainer: {
     flex: 1,
-    width: '100%',
-    height: '100%',
-    justifyContent: 'flex-end', // Push content to bottom
+    width: "100%",
+    height: "100%",
+    justifyContent: "flex-end", // Push content to bottom
   },
 
   // Content container at bottom of each slide
   contentContainer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: vs(180), // Space for controls at bottom
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   // Pagination dots container - positioned above logo
   paginationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: ms(12),
     marginBottom: vs(24),
   },
@@ -356,7 +373,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.heading2,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: vs(12),
   },
 
@@ -364,7 +381,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.bodyMedium,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: rfs(24),
     paddingHorizontal: spacing.md,
     bottom: vs(8),
@@ -372,22 +389,22 @@ const styles = StyleSheet.create({
 
   // Bottom controls container (buttons)
   controlsContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: vs(40),
     left: 0,
     right: 0,
     paddingHorizontal: spacing.lg,
     paddingBottom: vs(32),
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   // Primary button (Next / Log in)
   primaryButton: {
-    width: '100%',
+    width: "100%",
     backgroundColor: colors.primary,
     paddingVertical: vs(14),
     borderRadius: rbr(8),
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: vs(10),
   },
 
@@ -399,9 +416,9 @@ const styles = StyleSheet.create({
 
   // Secondary button (Skip / Sign Up)
   secondaryButton: {
-    width: '100%',
+    width: "100%",
     paddingVertical: vs(8),
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   // Secondary button text

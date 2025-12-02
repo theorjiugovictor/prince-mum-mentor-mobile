@@ -210,8 +210,11 @@ export default function GalleryScreen() {
                     <View style={styles.albumCover}>
                       {album?.last_image ? (
                         <Image
-                          source={{ uri: album?.last_image }}
+                          source={{ uri: encodeURI(album.last_image) }}
                           style={styles.albumCoverImage}
+                          onError={(e) =>
+                            console.log("Image error:", e.nativeEvent.error)
+                          }
                         />
                       ) : (
                         <Ionicons

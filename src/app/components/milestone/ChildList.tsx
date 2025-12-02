@@ -91,7 +91,8 @@ export default function ChildList() {
             <Image
               source={{
                 uri:
-                  child.profile_picture_url || "https://via.placeholder.com/53",
+                  child?.profile_picture_url ||
+                  "https://via.placeholder.com/53",
               }}
               style={styles.childBoxAvatar}
             />

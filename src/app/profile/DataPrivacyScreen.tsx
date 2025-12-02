@@ -58,14 +58,14 @@ export default function DataPrivacyScreen() {
         </View>
 
         {/* Download Data */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.settingItem}
           accessibilityRole="button"
           accessibilityLabel="Download your data"
         >
           <Text style={styles.settingLabel}>Download Data</Text>
           <Feather name="download-cloud" size={ms(20)} color={colors.textGrey1} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Delete Account */}
         <TouchableOpacity

@@ -18,6 +18,8 @@ import {
 import PrimaryButton from "../PrimaryButton";
 import SecondaryButton from "../SecondaryButton";
 import { useJournal } from "./journalContext";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import DatePickerInput from "../DatePickerInput";
 
 interface EditFormProps {
   isEditing: boolean;
@@ -170,6 +172,11 @@ const EditForm: React.FC<EditFormProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={80}
+      >
       <ScrollView style={{ paddingBottom: 16, marginHorizontal: "auto" }}>
         {/* Header */}
         <View style={styles.header}>
@@ -195,19 +202,14 @@ const EditForm: React.FC<EditFormProps> = ({
 
         {/* Date Input */}
         <View style={styles.section}>
-          <Text style={styles.label}>Date</Text>
-          <View style={styles.dateInputContainer}>
-            <TextInput
-              style={styles.dateInput}
-              value={date}
-              onChangeText={setDate}
-              placeholder="YYYY-MM-DD"
-            />
-            <Image
-              source={require("../../assets/images/journal/calendar.png")}
-              style={{ height: 24, width: 24 }}
-            />
-          </View>
+          <DatePickerInput
+            label="Date"
+            placeholder="Select a date"
+            value={date}
+            onDateChange={setDate}
+            icon="calendar-outline"
+            maxDate={new Date()} 
+          />     
         </View>
 
         {/* Category Selection */}
@@ -349,6 +351,7 @@ const EditForm: React.FC<EditFormProps> = ({
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

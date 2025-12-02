@@ -47,7 +47,7 @@ export default function ProfileScreen({ navigation }: any) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const userPic = require("../../assets/images/user-pic.png");
+  const userPic = require("../../assets/images/user-pics.png");
 
   // --- Fetch Profile Setup ---
   const fetchProfileSetup = async (baseProfile: UserProfile) => {
@@ -204,7 +204,7 @@ export default function ProfileScreen({ navigation }: any) {
           <View style={styles.profileInfoCard}>
             <View style={styles.profileInfo}>
               <Text style={styles.userName}>{getUserDisplayName()}</Text>
-              <Text style={styles.userRole}>{getUserRole()}</Text>
+              {/* <Text style={styles.userRole}>{getUserRole()}</Text> */}
             </View>
             <TouchableOpacity
               style={styles.editButton}
@@ -301,10 +301,10 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
         {/* --- Preferences Section --- */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
           <View style={styles.menuItemWrapper}>
-            {/* Notification */}
+           
             <TouchableOpacity
               style={styles.menuItem}
               accessibilityRole="button"
@@ -326,7 +326,7 @@ export default function ProfileScreen({ navigation }: any) {
               />
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {/* --- Others Section --- */}
         <View style={styles.section}>

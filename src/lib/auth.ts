@@ -1,16 +1,15 @@
 // lib/auth.ts
 import storage from "@/src/store/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { RelativePathString, router } from "expo-router";
+import {router} from "expo-router";
 import {
-  ACCESS_TOKEN_KEY,
-  API_ENDPOINTS,
-  AUTH_ROUTES,
-  ONBOARDING_COMPLETE_KEY,
-  REDIRECT_AFTER_LOGIN_KEY,
-  REFRESH_TOKEN_KEY,
+    ACCESS_TOKEN_KEY,
+    API_ENDPOINTS,
+    ONBOARDING_COMPLETE_KEY,
+    REDIRECT_AFTER_LOGIN_KEY,
+    REFRESH_TOKEN_KEY,
 } from "../constants";
-import { api } from "./api";
+import {api} from "./api";
 
 export const auth = {
   // Get access token
@@ -59,7 +58,7 @@ export const auth = {
 
   logout: async () => {
     await auth.clearTokens();
-    router.replace(AUTH_ROUTES.LOGIN as RelativePathString);
+      router.replace("/(auth)/SignInScreen");
   },
 
   // Check if user is authenticated - FIXED
@@ -130,7 +129,7 @@ export const auth = {
     if (currentRoute) {
       await auth.storeRedirectUrl(currentRoute);
     }
-    router.replace(AUTH_ROUTES.LOGIN as RelativePathString);
+      router.replace("/(auth)/SignInScreen");
   },
 
   // Refresh access token

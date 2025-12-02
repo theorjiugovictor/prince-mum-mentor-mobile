@@ -10,18 +10,6 @@ export const API_ENDPOINTS = {
   USER_PROFILE: "/api/v1/auth/profile",
 };
 
-export const AUTH_ROUTES = {
-  LOGIN: "/(auth)/login",
-  REGISTER: "/(auth)/register",
-  ONBOARDING: "/(auth)/onboarding",
-};
-
-export const AUTH_ROUTES_LIST = [
-  "/(auth)/login",
-  "/(auth)/register",
-  "/(auth)/onboarding",
-];
-
 // export const ACCESS_TOKEN_KEY = "access_token";
 export const ACCESS_TOKEN_KEY = "NoraAppAuthToken";
 export const REFRESH_TOKEN_KEY = "refresh_token";

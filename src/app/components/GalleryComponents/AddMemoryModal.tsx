@@ -53,7 +53,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
-  const { pickAndUpload, isUploading, data, upload } = useImageUpload({});
+  const { pickAndUpload, isUploading, data } = useImageUpload({});
   const { linkImage } = useLinkImageToAlbum("album-items");
 
   const { albumId } = useLocalSearchParams();
@@ -81,17 +81,17 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
     onClose();
   };
 
-  const handleTakePhoto = async () => {
-    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-    if (cameraPermission.status !== "granted") {
-      showToast.warning(
-        "Permission Required",
-        "Camera permission is required to take photos."
-      );
-      return;
-    }
-    setIsCameraVisible(true);
-  };
+  // const handleTakePhoto = async () => {
+  //   const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+  //   if (cameraPermission.status !== "granted") {
+  //     showToast.warning(
+  //       "Permission Required",
+  //       "Camera permission is required to take photos."
+  //     );
+  //     return;
+  //   }
+  //   setIsCameraVisible(true);
+  // };
 
   const handleCameraPhotoTaken = (uri: string) => {
     setPhotoUri(uri);
@@ -194,7 +194,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                     </View>
                   ) : (
                     <View style={styles.photoOptionsContainer}>
-                      <TouchableOpacity
+                      {/* <TouchableOpacity
                         style={styles.photoOption}
                         onPress={handleTakePhoto}
                       >
@@ -206,7 +206,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                           />
                         </View>
                         <Text style={styles.photoOptionText}>Take a photo</Text>
-                      </TouchableOpacity>
+                      </TouchableOpacity> */}
 
                       <TouchableOpacity
                         style={styles.photoOption}

@@ -36,7 +36,6 @@ export const useImageUpload = (options?: UploadOptions) => {
     ImagePicker.ImagePickerAsset
   >({
     mutationFn: async (image: ImagePicker.ImagePickerAsset) => {
-
       // Convert URI → Blob
       const fileResponse = await fetch(image.uri);
       const blob = await fileResponse.blob();
@@ -68,8 +67,6 @@ export const useImageUpload = (options?: UploadOptions) => {
       if (options?.onSuccess) {
         options.onSuccess(response.data);
       }
-      
-     
     },
     onError: (error) => {
       // 1. Display the error to the user
@@ -104,12 +101,14 @@ export const useImageUpload = (options?: UploadOptions) => {
 
       if (!result.canceled && result.assets[0]) {
         // --- FIX 1: Use upload.mutate instead of upload.mutateAsync ---
-        upload.mutate(result.assets[0]);
+        upload.mutateAsync(result.assets[0]);
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      showToast.error(error instanceof Error ? error.message : fallbackErrorMessage, "error");
-    
+      showToast.error(
+        error instanceof Error ? error.message : fallbackErrorMessage,
+        "error"
+      );
     }
   };
 
@@ -136,8 +135,10 @@ export const useImageUpload = (options?: UploadOptions) => {
       }
     } catch (error) {
       console.error("Error taking photo:", error);
-      showToast.error(error instanceof Error ? error.message : fallbackErrorMessage, "error");
-      
+      showToast.error(
+        error instanceof Error ? error.message : fallbackErrorMessage,
+        "error"
+      );
     }
   };
 
@@ -145,7 +146,7 @@ export const useImageUpload = (options?: UploadOptions) => {
    * Upload an already selected image
    */
   const uploadImage = (image: ImagePicker.ImagePickerAsset) => {
-    return upload.mutateAsync(image); 
+    return upload.mutateAsync(image);
   };
 
   return {

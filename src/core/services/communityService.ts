@@ -1,6 +1,6 @@
-import { authApi } from "@/src/lib/api"
+import { authApi } from "@/src/lib/api";
 
-const prefix = "/api/v1/community/posts"
+const prefix = "/api/v1/community/posts";
 
 // ============================================================
 // COMMUNITY SERVICE
@@ -11,14 +11,14 @@ const prefix = "/api/v1/community/posts"
  */
 export async function fetchUserPosts(userId: string) {
   try {
-    const response = await authApi.get(`${prefix}/${userId}`)
+    const response = await authApi.get(`${prefix}/${userId}`);
     if (response.status >= 200 && response.status < 300) {
-      return response.data.data || response.data
+      return response.data.data || response.data;
     }
-    throw new Error("Failed to fetch posts")
+    throw new Error("Failed to fetch posts");
   } catch (error) {
-    console.error("Error fetching posts:", error)
-    throw error
+    console.error("Error fetching posts:", error);
+    throw error;
   }
 }
 
@@ -32,14 +32,14 @@ export async function fetchAllCommunityPosts(page = 1, perPage = 20) {
         page,
         per_page: perPage,
       },
-    })
+    });
     if (response.status >= 200 && response.status < 300) {
-      return response.data.data || response.data
+      return response.data.data || response.data;
     }
-    throw new Error("Failed to fetch posts")
+    throw new Error("Failed to fetch posts");
   } catch (error) {
-    console.error("Error fetching posts:", error)
-    throw error
+    console.error("Error fetching posts:", error);
+    throw error;
   }
 }
 
@@ -49,14 +49,14 @@ export async function fetchAllCommunityPosts(page = 1, perPage = 20) {
  */
 export async function fetchSinglePost(postId: string) {
   try {
-    const response = await authApi.get(`${prefix}/${postId}`)
+    const response = await authApi.get(`${prefix}/${postId}`);
     if (response.status === 200) {
-      return response.data.data || response.data
+      return response.data.data || response.data;
     }
-    throw new Error("Failed to fetch post")
+    throw new Error("Failed to fetch post");
   } catch (error) {
-    console.error("Error fetching post:", error)
-    throw error
+    console.error("Error fetching post:", error);
+    throw error;
   }
 }
 
@@ -66,14 +66,27 @@ export async function fetchSinglePost(postId: string) {
  */
 export async function togglePostLike(postId: string) {
   try {
-    const response = await authApi.post(`${prefix}/${postId}/like`)
+    const response = await authApi.post(`${prefix}/${postId}/like`);
     if (response.status === 200) {
-      return response.data.data || response.data
+      return response.data.data || response.data;
     }
-    throw new Error("Failed to toggle like")
+    throw new Error("Failed to toggle like");
   } catch (error) {
-    console.error("Error toggling like:", error)
-    throw error
+    console.error("Error toggling like:", error);
+    throw error;
+  }
+}
+
+export async function deletePost(postId: string) {
+  try {
+    const response = await authApi.delete(`${prefix}/${postId}`);
+    if (response.status === 200) {
+      return response.data.data || response.data;
+    }
+    throw new Error("Failed to delete post");
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    throw error;
   }
 }
 
@@ -82,19 +95,19 @@ export async function togglePostLike(postId: string) {
  * POST /api/v1/community/posts
  */
 export async function createCommunityPost(payload: {
-  title: string
-  content: string
-  photo_ids?: string[]
+  title: string;
+  content: string;
+  photo_ids?: string[];
 }) {
   try {
-    const response = await authApi.post(prefix, payload)
+    const response = await authApi.post(prefix, payload);
     if (response.status === 201) {
-      return response.data.data || response.data
+      return response.data.data || response.data;
     }
-    throw new Error("Failed to create post")
+    throw new Error("Failed to create post");
   } catch (error) {
-    console.error("Error creating post:", error)
-    throw error
+    console.error("Error creating post:", error);
+    throw error;
   }
 }
 
@@ -108,14 +121,14 @@ export async function createPostWithUploads(formData: FormData) {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    })
+    });
     if (response.status === 201) {
-      return response.data.data || response.data
+      return response.data.data || response.data;
     }
-    throw new Error("Failed to upload post")
+    throw new Error("Failed to upload post");
   } catch (error) {
-    console.error("Error uploading post:", error)
-    throw error
+    console.error("Error uploading post:", error);
+    throw error;
   }
 }
 
@@ -127,13 +140,13 @@ export async function commentOnPost(postId: string, comment: string) {
   try {
     const response = await authApi.post(`${prefix}/${postId}/comment`, {
       comment,
-    })
+    });
     if (response.status === 201) {
-      return response.data.data || response.data
+      return response.data.data || response.data;
     }
-    throw new Error("Failed to add comment")
+    throw new Error("Failed to add comment");
   } catch (error) {
-    console.error("Error commenting on post:", error)
-    throw error
+    console.error("Error commenting on post:", error);
+    throw error;
   }
 }

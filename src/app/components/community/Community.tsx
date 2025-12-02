@@ -15,8 +15,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, spacing, typography } from "../../core/styles";
-import { ms, rfs, vs } from "../../core/styles/scaling";
+import { colors, spacing, typography } from "../../../core/styles";
+import { ms, rfs, vs } from "../../../core/styles/scaling";
 
 import {
   useCommentOnPost,
@@ -29,11 +29,11 @@ import {
 import { useGetUserProfile } from "@/src/core/hooks/useGetUserProfile";
 
 // Import components
-import CreatePostModal from "../components/community/CreatePostModal";
-import DeleteConfirmModal from "../components/community/DeleteConfirmModal";
-import PostCard from "../components/community/PostCard";
-import PostDetailModal from "../components/community/PostDetailModal";
-import PostOptionsModal from "../components/community/PostOptionsModal";
+import CreatePostModal from "./CreatePostModal";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import PostCard from "./PostCard";
+import PostDetailModal from "./PostDetailModal";
+import PostOptionsModal from "./PostOptionsModal";
 
 type ImageSource = ImageSourcePropType;
 
@@ -51,7 +51,7 @@ type CommunityPost = {
   commentsList?: any[];
 };
 
-const avatar = require("../../assets/images/profile-image.png");
+const avatar = require("@/src/assets/images/profile-image.png");
 
 interface Props {
   userId?: string;
@@ -285,7 +285,7 @@ const Community: React.FC<Props> = () => {
               onPress={() => router.back()}
             >
               <Image
-                source={require("../../assets/images/arrow.png")}
+                source={require("@/src/assets/images/arrow.png")}
                 style={styles.arrowImage}
               />
             </TouchableOpacity>

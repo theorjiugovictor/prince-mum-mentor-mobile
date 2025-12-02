@@ -67,7 +67,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           {/* Delete Icon */}
           <View style={styles.iconContainer}>
             <View style={styles.deleteIconWrapper}>
-              <Image source={trash}/>
+              <Image source={trash} style={styles.deleteIcon}/>
             </View>
           </View>
 
@@ -127,10 +127,13 @@ const styles = StyleSheet.create({
     marginBottom: vs(20),
   },
   deleteIconWrapper: {
-    width: ms(64),
-    height: ms(64),
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  deleteIcon: {
+    width: ms(32),
+    height: ms(32),
+    resizeMode: "contain",
   },
   title: {
     ...typography.heading3,

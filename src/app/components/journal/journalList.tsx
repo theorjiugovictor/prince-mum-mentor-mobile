@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   actionButtons: {
     position: "absolute",
     right: ms(spacing.md),
-    top: ms(spacing.md),
+    bottom: ms(spacing.md),
     flexDirection: "row",
     gap: 8,
   },

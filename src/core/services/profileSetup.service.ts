@@ -94,7 +94,7 @@ export async function getProfileSetup(): Promise<ProfileSetupData | null> {
   try {
     // ✅ FIX: Use the imported apiClient instead of the local 'api' instance
     const response = await authApi.get<ProfileSetupResponse>(
-      "/api/v1/profile-setup/"
+      "/api/v1/profile/setup"
     );
     const profileSetup = response.data.data;
     console.log("res", response);

@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   },
   agreementContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: ms(spacing.xl),
     marginTop: ms(spacing.sm),
     borderRadius: ms(15),

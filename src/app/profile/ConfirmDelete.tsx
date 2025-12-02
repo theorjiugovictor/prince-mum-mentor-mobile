@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -17,50 +18,75 @@ import CustomInput from "../components/CustomInput";
 import DeleteConfirmModal from "../components/DeleteConfirmationModal";
 import PrimaryButton from "../components/PrimaryButton";
 import SuccessModal from "../components/SuccessModal";
+import { useDeleteAccount } from "@/src/core/hooks/useDeleteAccount";
+const CONFIRMATION_PHRASE = "DELETE MY ACCOUNT";
 
 const ConfirmDelete = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmationText, setConfirmationText] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const deleteAccountMutation = useDeleteAccount();
+
+  const validateInputs = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (!confirmationText) {
+      newErrors.confirmation = "Confirmation phrase is required";
+    } else if (confirmationText !== CONFIRMATION_PHRASE) {
+      newErrors.confirmation = `Please type exactly: ${CONFIRMATION_PHRASE}`;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleConfirmPress = () => {
-    if (validateEmail(email)) {
+    if (validateInputs()) {
       setShowDeleteModal(true);
-    } else {
-      setErrors({ email: "Please enter a valid email address" });
     }
   };
 
   const handleDelete = async () => {
     setShowDeleteModal(false);
-    setIsLoading(true);
+
     try {
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        setShowSuccessModal(true);
-      }, 1500);
-    } catch (error) {
-      console.error("Error deleting account:", error);
-      setIsLoading(false);
-      setErrors({ general: "Failed to delete account" });
+      await deleteAccountMutation.mutateAsync({
+        confirmation_phrase: confirmationText,
+        password: password,
+      });
+
+      // Show success modal
+      setShowSuccessModal(true);
+    } catch (error: any) {
+      // Show error alert
+      Alert.alert(
+        "Delete Failed",
+        error.message || "Failed to delete account. Please try again.",
+        [{ text: "OK" }]
+      );
     }
   };
 
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
-    // Navigate to login or welcome screen
-    // router.replace('/auth/SignUpScreen');
+    // Navigate to signup screen
+    router.replace("/(auth)/SignUpScreen");
   };
 
-  const isConfirmDisabled = !email || !validateEmail(email) || isLoading;
+  const isConfirmDisabled =
+    !password ||
+    !confirmationText ||
+    confirmationText !== CONFIRMATION_PHRASE ||
+    deleteAccountMutation.isPending;
 
   return (
     <KeyboardAvoidingView
@@ -87,39 +113,84 @@ const ConfirmDelete = () => {
           contentContainerStyle={styles.scrollContent}
         >
           {/* Warning Text */}
-          <View style={styles.deleteTextContainer}>
-            <Text style={styles.deleteText}>
-              Please note this is a permanent and can&apos;t be undone. To
-              confirm deleting your account please enter your email.
+          <View style={styles.warningContainer}>
+            <View style={styles.warningIconContainer}>
+              <Ionicons name="warning" size={48} color={colors.error} />
+            </View>
+            <Text style={styles.warningTitle}>
+              This action cannot be undone
+            </Text>
+            <Text style={styles.warningText}>
+              Deleting your account will permanently remove all your data,
+              including your profile, posts, and activity. This action is
+              irreversible.
             </Text>
           </View>
 
-          {/* Email Input */}
-          <CustomInput
-            label="Email"
-            placeholder="Enter Email Address"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (errors.email) {
-                setErrors({ ...errors, email: "" });
-              }
-            }}
-            keyboardType="email-address"
-            isError={!!errors.email}
-            errorMessage={errors.email}
-            iconName="mail-outline"
-            isValid={validateEmail(email) && !errors.email}
-          />
+          {/* Confirmation Phrase Input */}
+          <View style={styles.inputSection}>
+            <Text style={styles.inputLabel}>
+              Type{" "}
+              <Text style={styles.highlightedText}>
+                &quot;{CONFIRMATION_PHRASE}&quot;
+              </Text>{" "}
+              to confirm
+            </Text>
+            <CustomInput
+              placeholder={`Type: ${CONFIRMATION_PHRASE}`}
+              value={confirmationText}
+              onChangeText={(text) => {
+                setConfirmationText(text);
+                if (errors.confirmation) {
+                  setErrors({ ...errors, confirmation: "" });
+                }
+              }}
+              isError={!!errors.confirmation}
+              errorMessage={errors.confirmation}
+            />
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputSection}>
+            <Text style={styles.inputLabel}>Enter your password</Text>
+            <CustomInput
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) {
+                  setErrors({ ...errors, password: "" });
+                }
+              }}
+              secureTextEntry
+              isError={!!errors.password}
+              errorMessage={errors.password}
+              iconName="lock-closed-outline"
+            />
+          </View>
+
+          {/* Additional Warning */}
+          <View style={styles.infoBox}>
+            <Ionicons
+              name="information-circle"
+              size={20}
+              color={colors.primary}
+            />
+            <Text style={styles.infoText}>
+              Make sure you&apos;ve backed up any important information before
+              proceeding.
+            </Text>
+          </View>
         </ScrollView>
 
         {/* Confirm Button */}
         <View style={styles.buttonContainer}>
           <PrimaryButton
-            title="Confirm"
+            title="Delete My Account"
             onPress={handleConfirmPress}
-            isLoading={isLoading}
+            isLoading={deleteAccountMutation.isPending}
             disabled={isConfirmDisabled}
+            style={styles.deleteButton}
           />
         </View>
 
@@ -128,12 +199,15 @@ const ConfirmDelete = () => {
           visible={showDeleteModal}
           onDelete={handleDelete}
           onCancel={() => setShowDeleteModal(false)}
+          title="Final Confirmation"
+          message="Are you absolutely sure you want to delete your account? This cannot be undone."
         />
 
         {/* Success Modal */}
         <SuccessModal
           visible={showSuccessModal}
-          title="Delete successfully"
+          title="Account Deleted"
+          message="Your account has been permanently deleted. We're sorry to see you go."
           onClose={handleSuccessClose}
           buttonText="Done"
           iconComponent={
@@ -185,24 +259,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: ms(20),
     paddingBottom: vs(20),
   },
-  confirmTitle: {
+  warningContainer: {
+    alignItems: "center",
+    marginVertical: vs(24),
+    paddingVertical: vs(20),
+    paddingHorizontal: ms(16),
+    backgroundColor: colors.errorLight || "#FEE2E2",
+    borderRadius: ms(12),
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  warningIconContainer: {
+    marginBottom: vs(12),
+  },
+  warningTitle: {
     ...typography.heading3,
-    color: colors.textPrimary,
-    marginTop: vs(8),
-    marginBottom: vs(16),
+    color: colors.error,
+    marginBottom: vs(8),
+    textAlign: "center",
   },
-  deleteTextContainer: {
-    marginBottom: vs(24),
-  },
-  deleteText: {
+  warningText: {
     ...typography.bodyMedium,
     color: colors.textGrey1,
+    textAlign: "center",
     lineHeight: 22,
+  },
+  inputSection: {
+    marginBottom: vs(24),
+  },
+  inputLabel: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    marginBottom: vs(8),
+    fontWeight: "600",
+  },
+  highlightedText: {
+    color: colors.error,
+    fontWeight: "700",
+  },
+  infoBox: {
+    flexDirection: "row",
+    backgroundColor: colors.primaryLight || "#E0F2FE",
+    padding: ms(12),
+    borderRadius: ms(8),
+    marginTop: vs(8),
+    gap: ms(8),
+  },
+  infoText: {
+    ...typography.bodySmall,
+    color: colors.textGrey1,
+    flex: 1,
+    lineHeight: 18,
   },
   buttonContainer: {
     paddingHorizontal: ms(20),
     paddingVertical: vs(16),
     backgroundColor: colors.backgroundMain,
+  },
+  deleteButton: {
+    backgroundColor: colors.error,
   },
   successIcon: {
     width: ms(60),

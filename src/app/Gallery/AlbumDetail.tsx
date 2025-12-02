@@ -44,7 +44,7 @@ export default function AlbumDetailScreen() {
   const params = useLocalSearchParams();
   const albumId = params.albumId as string;
   const albumName = (params.albumName as string) || "Album";
-  const { create: deleteAlbum } = useDeleteAlbum({ album_id: albumId });
+  const deleteAlbum = useDeleteAlbum();
   const { data, isLoading, refetch } = useGetAlbum(albumId);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,7 +91,7 @@ export default function AlbumDetailScreen() {
           onPress: async () => {
             try {
               await deleteAlbum.mutateAsync(
-                {},
+                { album_id: albumId },
                 {
                   onSuccess() {
                     showToast.success("Success", "Album deleted successfully");
@@ -112,13 +112,6 @@ export default function AlbumDetailScreen() {
   const handleCloseAddMemoryModal = () => {
     setIsAddMemoryModalVisible(false);
   };
-
-  // const handlePhotoPress = (photoUrl: string) => {
-  //   router.push({
-  //     pathname: "../Gallery/PhotoDetail",
-  //     params: { photoUrl },
-  //   });
-  // };
 
   // Filter photos based on search query
   const filteredPhotos =

@@ -157,7 +157,6 @@ export default function ChatScreen() {
         // Don't show error toast for user-initiated stops
       } else {
         console.error(error);
-        showToast.error("Error", "Failed to send message");
       }
     } finally {
       setIsAiSpeaking(false);

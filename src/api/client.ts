@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "https://api.staging.kaizen.emerj.net",
+  baseURL: "https://api.noramum.app",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

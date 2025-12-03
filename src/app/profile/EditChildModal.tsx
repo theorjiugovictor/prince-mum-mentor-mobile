@@ -66,7 +66,7 @@ const getStableAvatarUrl = (profilePictureUrl?: string): string => {
   }
 
   // Construct the full avatar URL using the public endpoint
-  const baseUrl = "https://api.staging.kaizen.emerj.net/api/v1";
+  const baseUrl = "https://api.noramum.app/api/v1";
   const avatarUrl = `${baseUrl}/child-profiles/avatar/${filename}`;
 
   return avatarUrl;

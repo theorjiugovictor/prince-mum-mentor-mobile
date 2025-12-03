@@ -1,8 +1,4 @@
 import { useAuth } from "@/src/core/hooks/useAuth";
-import {
-  isAppleAuthAvailable,
-  signInWithApple,
-} from "@/src/core/services/appleAuthService";
 import { signInWithGoogle } from "@/src/core/services/googleAuthservice";
 import { colors, spacing, typography } from "@/src/core/styles";
 import { ms, rfs } from "@/src/core/styles/scaling";
@@ -10,7 +6,7 @@ import { showToast } from "@/src/core/utils/toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -43,8 +39,6 @@ type SignInFormData = z.infer<typeof signInSchema>;
 export default function SignInScreen() {
   const { login } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
-  const [isAppleAvailable, setIsAppleAvailable] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   const {
@@ -58,13 +52,6 @@ export default function SignInScreen() {
       password: "",
     },
   });
-
-  useEffect(() => {
-    (async () => {
-      const available = await isAppleAuthAvailable();
-      setIsAppleAvailable(available);
-    })();
-  }, []);
 
   const redirectAfterLogin = async () => {
     try {
@@ -121,24 +108,6 @@ export default function SignInScreen() {
         "An unexpected error occurred. Please try again.";
 
       showToast.error("Login Failed", errorMessage);
-    }
-  };
-
-  const handleApplePress = async () => {
-    setIsAppleLoading(true);
-    setGeneralError(null);
-
-    try {
-      const result = await signInWithApple();
-      if (result.success) {
-        showToast.success("Welcome Back!", `Signed in as ${result.user?.name}`);
-        await redirectAfterLogin();
-      } else setGeneralError(result.error || "Apple sign in failed.");
-    } catch (error) {
-      console.error(error);
-      setGeneralError("Apple sign in failed.");
-    } finally {
-      setIsAppleLoading(false);
     }
   };
 

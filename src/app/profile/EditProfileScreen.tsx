@@ -1,27 +1,26 @@
 // components/EditProfileModal.tsx
-import {Feather} from "@expo/vector-icons";
-import React, {useEffect, useState} from "react";
+import { Feather } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    Image,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 // --- Style Imports ---
-import {colors, fontFamilies, spacing, typography} from "../../core/styles";
-import {ms} from "../../core/styles/scaling";
+import { colors, fontFamilies, spacing, typography } from "../../core/styles";
+import { ms } from "../../core/styles/scaling";
 
 // --- API Imports ---
-import {showToast} from "@/src/core/utils/toast";
-import {authApi} from "@/src/lib/api";
-import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
+import { showToast } from "@/src/core/utils/toast";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -58,6 +57,8 @@ export default function EditProfileModal({
   const [selectedMomStatus, setSelectedMomStatus] = useState("");
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  console.log(visible, userProfile);
 
   // Mom status options mapping
   const momStatuses = [
@@ -112,12 +113,6 @@ export default function EditProfileModal({
       };
 
       try {
-        // Try PATCH first
-        const patchResponse = await authApi.patch(
-          "/api/v1/profile-setup/",
-          profileSetupData
-        );
-
         if (onProfileUpdated) onProfileUpdated();
         showToast.success("Success", "Profile updated successfully!");
         onClose();
@@ -154,11 +149,6 @@ export default function EditProfileModal({
             if (userProfile?.partner?.email) {
               createData.partner = userProfile.partner;
             }
-
-            const postResponse = await authApi.post(
-              "/api/v1/profile-setup/",
-              createData
-            );
 
             if (onProfileUpdated) onProfileUpdated();
             showToast.success("Success", "Profile created successfully!");
@@ -238,7 +228,7 @@ export default function EditProfileModal({
           </View>
 
           {/* Scrollable Content */}
-            <KeyboardAwareScrollView
+          <KeyboardAwareScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}
           >
@@ -384,7 +374,7 @@ export default function EditProfileModal({
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            </KeyboardAwareScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </View>
     </Modal>

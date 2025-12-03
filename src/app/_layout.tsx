@@ -17,8 +17,8 @@ import { colors } from "../core/styles";
 import { useAssetLoading } from "../core/utils/assetsLoading";
 import { toastConfig } from "../core/utils/toast";
 
-import { JournalProvider } from "./components/journal/journalContext";
 import { ONBOARDING_COMPLETE_KEY } from "../constants";
+import { JournalProvider } from "./components/journal/journalContext";
 
 SplashScreen.preventAutoHideAsync();
 

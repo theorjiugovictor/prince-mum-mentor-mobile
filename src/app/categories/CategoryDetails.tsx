@@ -1,23 +1,23 @@
 import BackButton from "@/src/app/components/milestone/BackButton";
-import CreateForm from "@/src/app/components/milestone/CreateForm";
 import DeleteModal from "@/src/app/components/milestone/DeleteModal";
 import EditForm from "@/src/app/components/milestone/EditForm";
 import EditSuccessModal from "@/src/app/components/milestone/EditSuccessModal";
 import MilestoneProgressBar from "@/src/app/components/milestone/MilestoneProgressBar";
 import MilestonesList from "@/src/app/components/milestone/MilestonesList";
 import SuccessModal from "@/src/app/components/milestone/SuccessModal";
-import {MILESTONE_STATUS} from "@/src/core/data/milestone-data";
-import {getMilestonesByCategory} from "@/src/core/services/milestoneService";
-import {colors, typography} from "@/src/core/styles";
-import {useMilestoneStore} from "@/src/store/useMilestone";
+import { MILESTONE_STATUS } from "@/src/core/data/milestone-data";
+import { getMilestonesByCategory } from "@/src/core/services/milestoneService";
+import { colors, typography } from "@/src/core/styles";
+import { useMilestoneStore } from "@/src/store/useMilestone";
 
-import {useQuery} from "@tanstack/react-query";
-import {useLocalSearchParams} from "expo-router";
-import React, {useEffect, useState} from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 
-import {Image, Pressable, StyleSheet, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
-import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import CreateForm from "../components/milestone/CreateForm";
 
 export default function CategoryDetails() {
   const onAddMilestoneOnMount = useMilestoneStore(
@@ -63,10 +63,10 @@ export default function CategoryDetails() {
 
             {/* Status header */}
             <View style={styles.mileStonesHeading}>
-              {MILESTONE_STATUS.map((section) => (
+              {MILESTONE_STATUS.map((section, i) => (
                 <Text
                   onPress={() => setMilestoneStatus(section.status)}
-                  key={section.id}
+                  key={i}
                   style={[
                     styles.sectionText,
                     section.status === milestoneStatus &&

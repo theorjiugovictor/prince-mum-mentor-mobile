@@ -154,7 +154,7 @@ function OtpScreen() {
         const response = await verifyMutation.mutateAsync(payload);
 
         // 🔥 YOU'LL SEE THE RESPONSE HERE
-        console.log("Component received response:", response);
+        // console.log("Component received response:", response);
 
         if (context === "register") {
           const accessToken = extractToken(response.access_token);

@@ -7,7 +7,7 @@ export const API_ENDPOINTS = {
   REFRESH_TOKEN: "/api/v1/auth/refresh/",
   LOGOUT: "/api/v1/auth/logout",
   // Add other endpoints
-  USER_PROFILE: "/api/v1/auth/profile",
+  USER_PROFILE: "/api/v1/profile/",
 };
 
 // export const ACCESS_TOKEN_KEY = "access_token";

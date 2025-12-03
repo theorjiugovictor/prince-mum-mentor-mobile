@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 // import Checkbox from "@/src/assets/images/tick-square.png";
 
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 export default function MilestoneDashboard({
   milestoneType,
@@ -32,7 +32,18 @@ export default function MilestoneDashboard({
   }, [isError, error]);
 
   if (isLoading) {
-    return <View>Loading...</View>;
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100%",
+        }}
+      >
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (

@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { auth } from "@/src/lib/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
 import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
@@ -88,7 +89,11 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("❌ Backend authentication failed:", data);
+      console.error(
+        "❌ Backend authentication failed:",
+        data.message || "Unknown error",
+        data
+      );
       throw new Error(data.message || "Backend authentication failed");
     }
 
@@ -96,7 +101,7 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
       const { access_token, refresh_token } = data.data;
 
       // This part should be in your code
-      await setAuthToken(access_token);
+      await auth.setTokens(access_token, refresh_token);
 
       // This part should fetch user profile
       const userProfile = await getCurrentUser();

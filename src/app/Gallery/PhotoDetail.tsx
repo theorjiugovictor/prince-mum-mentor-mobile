@@ -9,6 +9,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -94,9 +95,15 @@ export default function PhotoDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <StatusBar style="dark" />
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100%",
+        }}
+      >
+        <ActivityIndicator size="large" />
       </View>
     );
   }

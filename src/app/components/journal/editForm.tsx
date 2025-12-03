@@ -2,22 +2,23 @@
 
 import * as ImagePicker from "expo-image-picker";
 import type React from "react";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Image,
+    Modal,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import PrimaryButton from "../PrimaryButton";
 import SecondaryButton from "../SecondaryButton";
-import { useJournal } from "./journalContext";
+import {useJournal} from "./journalContext";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
+import DatePickerInput from "../DatePickerInput";
 
 interface EditFormProps {
   isEditing: boolean;
@@ -170,7 +171,7 @@ const EditForm: React.FC<EditFormProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ScrollView style={{ paddingBottom: 16, marginHorizontal: "auto" }}>
+        <KeyboardAwareScrollView style={{paddingBottom: 16, marginHorizontal: "auto"}}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onClose}>
@@ -195,19 +196,14 @@ const EditForm: React.FC<EditFormProps> = ({
 
         {/* Date Input */}
         <View style={styles.section}>
-          <Text style={styles.label}>Date</Text>
-          <View style={styles.dateInputContainer}>
-            <TextInput
-              style={styles.dateInput}
-              value={date}
-              onChangeText={setDate}
-              placeholder="YYYY-MM-DD"
-            />
-            <Image
-              source={require("../../assets/images/journal/calendar.png")}
-              style={{ height: 24, width: 24 }}
-            />
-          </View>
+          <DatePickerInput
+            label="Date"
+            placeholder="Select a date"
+            value={date}
+            onDateChange={setDate}
+            icon="calendar-outline"
+            maxDate={new Date()} 
+          />     
         </View>
 
         {/* Category Selection */}
@@ -348,7 +344,7 @@ const EditForm: React.FC<EditFormProps> = ({
             disabled={isSaving}
           />
         </View>
-      </ScrollView>
+        </KeyboardAwareScrollView>
     </Modal>
   );
 };

@@ -16,6 +16,8 @@ import { SavedResourcesProvider } from "../core/services/savedResourcesContext";
 import { colors } from "../core/styles";
 import { useAssetLoading } from "../core/utils/assetsLoading";
 import { toastConfig } from "../core/utils/toast";
+
+import { ONBOARDING_COMPLETE_KEY } from "../constants";
 import { JournalProvider } from "./components/journal/journalContext";
 
 SplashScreen.preventAutoHideAsync();
@@ -23,7 +25,6 @@ SplashScreen.preventAutoHideAsync();
 // ----------------------------------------------------
 // ONBOARDING STORAGE LOGIC
 // ----------------------------------------------------
-const ONBOARDING_KEY = "@OnboardingComplete";
 
 function useOnboardingStatusLoader() {
   const [onboardingComplete, setOnboardingComplete] = useState(false);
@@ -32,7 +33,7 @@ function useOnboardingStatusLoader() {
   useEffect(() => {
     const check = async () => {
       try {
-        const value = await AsyncStorage.getItem(ONBOARDING_KEY);
+        const value = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
         setOnboardingComplete(value === "true");
       } catch (error) {
         console.error("Failed to load onboarding status:", error);
@@ -91,12 +92,12 @@ function RootLayoutContent() {
 
     if (user) {
       // User is logged in - go to home
-      router.replace("/(tabs)/Home");
+      router.replace("/Home");
     } else {
       // User is not logged in
       if (onboardingComplete) {
         // Onboarding done - go to sign in
-        router.replace("/(auth)/SignInScreen");
+        router.replace("/SignInScreen");
       } else {
         // Show onboarding
         router.replace("/(onboarding)");

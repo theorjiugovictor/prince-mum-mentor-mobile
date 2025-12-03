@@ -1,9 +1,16 @@
-import {colors, typography} from "@/src/core/styles";
-import {ms, rbr, vs} from "@/src/core/styles/scaling";
-import {Ionicons} from "@expo/vector-icons";
+import { colors, typography } from "@/src/core/styles";
+import { ms, rbr, vs } from "@/src/core/styles/scaling";
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import React, {useState} from "react";
-import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
+import React, { useState } from "react";
+import {
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface DatePickerInputProps {
   label: string;
@@ -13,6 +20,7 @@ interface DatePickerInputProps {
   isError?: boolean;
   errorMessage?: string;
   icon?: string;
+  maxDate?: Date | undefined;
 }
 
 const DatePickerInput: React.FC<DatePickerInputProps> = ({
@@ -23,15 +31,21 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
   isError = false,
   errorMessage,
   icon,
+  maxDate,
 }) => {
+  const parsed = value ? new Date(value) : new Date();
+  const initialDate = isNaN(parsed.getTime()) ? new Date() : parsed;
+
+  const [date, setDate] = useState<Date>(initialDate);
+
   const [showPicker, setShowPicker] = useState(false);
-  const [date, setDate] = useState<Date>(value ? new Date(value) : new Date());
+  // const [date, setDate] = useState<Date>(value ? new Date(value) : new Date());
 
   const formatDate = (dateObj: Date): string => {
     const day = dateObj.getDate().toString().padStart(2, "0");
     const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
-      const year = dateObj.getFullYear();
-      return `${year}/${month}/${day}`;
+    const year = dateObj.getFullYear();
+    return `${year}-${month}-${day}`;
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -89,7 +103,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
           mode="date"
           display="default"
           onChange={handleDateChange}
-          maximumDate={new Date()}
+          maximumDate={maxDate}
         />
       )}
 
@@ -115,7 +129,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
                 onChange={(event, selectedDate) => {
                   if (selectedDate) setDate(selectedDate);
                 }}
-                maximumDate={new Date()}
+                maximumDate={maxDate}
                 textColor={colors.textPrimary}
               />
             </View>

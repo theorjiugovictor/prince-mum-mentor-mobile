@@ -72,7 +72,6 @@ export default function GalleryScreen() {
     try {
       const newAlbum = await galleryService.createAlbum(albumName);
 
-      alert(newAlbum?.album_id);
       setCreatedAlbumName(albumName);
       setCreatedAlbumId(newAlbum?.album_id || "");
       setIsCreateModalVisible(false);
@@ -211,8 +210,11 @@ export default function GalleryScreen() {
                     <View style={styles.albumCover}>
                       {album?.last_image ? (
                         <Image
-                          source={{ uri: album?.last_image }}
+                          source={{ uri: encodeURI(album.last_image) }}
                           style={styles.albumCoverImage}
+                          onError={(e) =>
+                            console.log("Image error:", e.nativeEvent.error)
+                          }
                         />
                       ) : (
                         <Ionicons

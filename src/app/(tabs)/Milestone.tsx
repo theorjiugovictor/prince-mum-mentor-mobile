@@ -23,12 +23,12 @@ export default function Milestone() {
             <Text style={styles.headerText}>Milestones</Text>
 
             <View style={styles.milestoneSectionRow}>
-              {MILESTONE_SECTION.map((section) => (
+              {MILESTONE_SECTION.map((section, i) => (
                 <Text
                   onPress={() =>
                     setMilestoneType(section.type as MilestoneType)
                   }
-                  key={section.id}
+                  key={i}
                   style={[
                     styles.sectionText,
                     section.type === milestoneType && styles.sectionTextActive,

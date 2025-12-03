@@ -10,8 +10,10 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,7 +21,9 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  ViewStyle,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import PrimaryButton from "../PrimaryButton";
 import CameraScreen from "./CameraScreen";
 
@@ -28,6 +32,7 @@ interface AddMemoryModalProps {
   onClose: () => void;
   setIsAddMemoryModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
   albumName?: string;
+  refetch: () => void;
 }
 
 export interface MemoryData {
@@ -43,7 +48,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
   visible,
   onClose,
   setIsAddMemoryModalVisible,
-  albumName,
+  refetch,
 }) => {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -51,7 +56,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
-  const { pickAndUpload, isUploading, data, upload } = useImageUpload({});
+  const { pickAndUpload, isUploading, data } = useImageUpload({});
   const { linkImage } = useLinkImageToAlbum("album-items");
 
   const { albumId } = useLocalSearchParams();
@@ -79,17 +84,17 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
     onClose();
   };
 
-  const handleTakePhoto = async () => {
-    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-    if (cameraPermission.status !== "granted") {
-      showToast.warning(
-        "Permission Required",
-        "Camera permission is required to take photos."
-      );
-      return;
-    }
-    setIsCameraVisible(true);
-  };
+  // const handleTakePhoto = async () => {
+  //   const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+  //   if (cameraPermission.status !== "granted") {
+  //     showToast.warning(
+  //       "Permission Required",
+  //       "Camera permission is required to take photos."
+  //     );
+  //     return;
+  //   }
+  //   setIsCameraVisible(true);
+  // };
 
   const handleCameraPhotoTaken = (uri: string) => {
     setPhotoUri(uri);
@@ -119,6 +124,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
       {
         onSuccess(data, variables, onMutateResult, context) {
           setIsAddMemoryModalVisible(false);
+          refetch();
         },
         onSettled(data, error, variables, onMutateResult, context) {
           setIsLoading(false);
@@ -141,20 +147,28 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
     <>
       <Modal
         visible={visible}
-        transparent
         animationType="slide"
         onRequestClose={handleClose}
+        style={{ justifyContent: "flex-end", margin: 0 }}
       >
-        <TouchableWithoutFeedback onPress={handleClose}>
-          <View style={styles.overlay}>
-            <TouchableWithoutFeedback>
-              {/* DYNAMIC HEIGHT MODAL */}
-              <View
-                style={[
-                  styles.modalContainer,
-                  photoUri ? styles.fullHeight : styles.partialHeight,
-                ]}
-              >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={handleClose}
+          />
+          <View style={styles.modalContent}>
+            <KeyboardAwareScrollView
+              style={styles.formContainer}
+              contentContainerStyle={styles.formContentContainer}
+              // enableOnAndroid={true}
+              // enableAutomaticScroll={true}
+              // extraScrollHeight={20}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {/* <View style={styles.overlay}> */}
+              <TouchableWithoutFeedback>
                 {/* Header */}
                 <View style={styles.header}>
                   <TouchableOpacity
@@ -170,6 +184,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                   <Text style={styles.headerTitle}>Add A Memory</Text>
                   <View style={{ width: 20 }} />
                 </View>
+                {isUploading && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={styles.uploadingText}>Uploading image...</Text>
+                  </View>
+                )}
 
                 <ScrollView
                   contentContainerStyle={styles.scrollContent}
@@ -185,7 +205,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                     </View>
                   ) : (
                     <View style={styles.photoOptionsContainer}>
-                      <TouchableOpacity
+                      {/* <TouchableOpacity
                         style={styles.photoOption}
                         onPress={handleTakePhoto}
                       >
@@ -197,7 +217,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                           />
                         </View>
                         <Text style={styles.photoOptionText}>Take a photo</Text>
-                      </TouchableOpacity>
+                      </TouchableOpacity> */}
 
                       <TouchableOpacity
                         style={styles.photoOption}
@@ -234,12 +254,14 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
 
                   {/* Save To */}
                   <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionLabel}>Save To:</Text>
-                      <TouchableOpacity>
-                        <Text style={styles.createAlbumText}>Create Album</Text>
-                      </TouchableOpacity>
-                    </View>
+                    {/* <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionLabel}>Save To:</Text>
+                        <TouchableOpacity>
+                          <Text style={styles.createAlbumText}>
+                            Create Album
+                          </Text>
+                        </TouchableOpacity>
+                      </View> */}
 
                     <View style={styles.categoriesContainer}>
                       {CATEGORIES.map((cat) => (
@@ -268,12 +290,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
 
                   {/* Date */}
                   <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionLabel}>Saved On:</Text>
-                      <TouchableOpacity>
-                        <Text style={styles.editText}>Edit</Text>
-                      </TouchableOpacity>
-                    </View>
+                    {/* <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionLabel}>Saved On:</Text>
+                        <TouchableOpacity>
+                          <Text style={styles.editText}>Edit</Text>
+                        </TouchableOpacity>
+                      </View> */}
 
                     <View style={styles.dateContainer}>
                       <Ionicons
@@ -297,10 +319,11 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                     disabled={!data?.data.id || isLoading || isUploading}
                   />
                 </View>
-              </View>
-            </TouchableWithoutFeedback>
+              </TouchableWithoutFeedback>
+              {/* </View> */}
+            </KeyboardAwareScrollView>
           </View>
-        </TouchableWithoutFeedback>
+        </View>
       </Modal>
 
       {isCameraVisible && (
@@ -468,9 +491,57 @@ const styles = StyleSheet.create({
   },
 
   saveButtonContainer: {
-    padding: ms(spacing.lg),
-    paddingBottom: vs(spacing.xl),
+    padding: ms(spacing.sm),
     borderTopWidth: 1,
     borderTopColor: colors.outline,
   },
+
+  uploadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100, // ensure it's above everything
+  },
+  uploadingText: {
+    ...typography.labelMedium,
+    color: colors.textWhite,
+    marginTop: vs(8),
+    fontSize: rfs(14),
+  },
+
+  formContainer: {
+    paddingTop: 10,
+  } as ViewStyle,
+
+  formContentContainer: {
+    paddingBottom: Platform.OS === "ios" ? ms(spacing.xl) : ms(spacing.lg),
+  } as ViewStyle,
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  } as ViewStyle,
+
+  modalBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  } as ViewStyle,
+
+  modalContent: {
+    backgroundColor: colors.backgroundMain,
+    borderTopLeftRadius: ms(12),
+    borderTopRightRadius: ms(12),
+    paddingHorizontal: ms(spacing.md),
+    width: "100%",
+    maxHeight: "100%",
+  } as ViewStyle,
 });

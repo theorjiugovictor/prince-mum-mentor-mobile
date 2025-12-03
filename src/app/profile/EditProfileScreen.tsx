@@ -7,7 +7,6 @@ import {
     Dimensions,
     Image,
     Modal,
-    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -22,6 +21,7 @@ import {ms} from "../../core/styles/scaling";
 // --- API Imports ---
 import {showToast} from "@/src/core/utils/toast";
 import {authApi} from "@/src/lib/api";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -113,7 +113,7 @@ export default function EditProfileModal({
 
       try {
         // Try PATCH first
-          const patchResponse = await authApi.patch(
+        const patchResponse = await authApi.patch(
           "/api/v1/profile-setup/",
           profileSetupData
         );
@@ -155,7 +155,7 @@ export default function EditProfileModal({
               createData.partner = userProfile.partner;
             }
 
-              const postResponse = await authApi.post(
+            const postResponse = await authApi.post(
               "/api/v1/profile-setup/",
               createData
             );
@@ -165,12 +165,9 @@ export default function EditProfileModal({
             onClose();
             return;
           } catch (postError: any) {
-
             if (
               postError.response?.status === 500 &&
-              postError.response?.data?.error?.detail?.includes(
-                "profile_setup"
-              )
+              postError.response?.data?.error?.detail?.includes("profile_setup")
             ) {
               Alert.alert(
                 "Feature Not Available",
@@ -241,7 +238,7 @@ export default function EditProfileModal({
           </View>
 
           {/* Scrollable Content */}
-          <ScrollView
+            <KeyboardAwareScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}
           >
@@ -251,7 +248,7 @@ export default function EditProfileModal({
                 source={{
                   uri:
                     userProfile?.profile_image ||
-                    "https://i.pravatar.cc/150?img=5",
+                    "https://via.placeholder.com/53",
                 }}
                 style={styles.avatar}
               />
@@ -387,7 +384,7 @@ export default function EditProfileModal({
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-          </ScrollView>
+            </KeyboardAwareScrollView>
         </View>
       </View>
     </Modal>
@@ -507,7 +504,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     color: colors.textSecondary,
   },
-  chipTextSelected: { color: colors.primary, fontFamily: fontFamilies.semiBold },
+  chipTextSelected: {
+    color: colors.primary,
+    fontFamily: fontFamilies.semiBold,
+  },
   saveButton: {
     backgroundColor: colors.primary,
     paddingVertical: 16,

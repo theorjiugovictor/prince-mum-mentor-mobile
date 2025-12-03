@@ -1,53 +1,67 @@
 // lib/api.ts
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosInstance } from "axios";
 import { API_BASE_URL } from "../constants";
 import { auth } from "./auth";
 
 export const apiAuth = (axiosInstance: AxiosInstance) => {
-  // Request interceptor - Add token to requests
-  axiosInstance.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
-      const token = await auth.getAccessToken();
+  let isRefreshing = false;
+  let refreshQueue: ((token: string) => void)[] = [];
 
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+  // ✅ Request interceptor (only once)
+  axiosInstance.interceptors.request.use(async (config) => {
+    const token = await auth.getAccessToken();
 
-      // Set Content-Type for JSON requests only if not FormData
-      if (config.data && !(config.data instanceof FormData)) {
-        config.headers["Content-Type"] = "application/json";
-      }
-
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-  );
 
-  // Response interceptor - Handle token refresh on 401
-  // In your apiAuth interceptor, update the request interceptor:
-  axiosInstance.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
-      const token = await auth.getAccessToken();
+    if (config.data && !(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
 
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    return config;
+  });
 
-      // Only set Content-Type for JSON if not already set and not FormData
-      if (config.data && !(config.data instanceof FormData)) {
-        if (!config.headers["Content-Type"]) {
-          config.headers["Content-Type"] = "application/json";
+  // ✅ Response interceptor (handles 401 refresh)
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+
+    async (error) => {
+      const originalRequest = error.config;
+
+      // If unauthorized and not retried yet
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        // Prevent multiple refresh calls
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            const newToken = await auth.refreshToken();
+
+            // Process queued requests
+            refreshQueue.forEach((cb) => cb(newToken));
+            refreshQueue = [];
+
+            isRefreshing = false;
+
+            return axiosInstance(originalRequest);
+          } catch (err) {
+            isRefreshing = false;
+            refreshQueue = [];
+            throw err;
+          }
         }
-      } else if (config.data instanceof FormData) {
-        // Let the browser/axios set the Content-Type with boundary
-        delete config.headers["Content-Type"];
+
+        // Queue other requests until token refresh completes
+        return new Promise((resolve) => {
+          refreshQueue.push((newToken: string) => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(axiosInstance(originalRequest));
+          });
+        });
       }
 
-      return config;
-    },
-    (error) => {
       return Promise.reject(error);
     }
   );

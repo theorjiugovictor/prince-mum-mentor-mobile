@@ -46,7 +46,7 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
     if (!dob) return "";
 
     try {
-      const parts = dob.split("/");
+      const parts = dob.split("-");
       if (parts.length !== 3) {
         console.warn("DOB format is incorrect:", dob);
         return "";
@@ -68,7 +68,7 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
       // Check if date is in the future
       if (birth > today) {
         console.warn("Date of birth is in the future:", dob);
-        return "";
+        return "0";
       }
 
       // Calculate age
@@ -96,6 +96,12 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
   const handleChange = (key: keyof ChildData, value: string) => {
     onUpdate(index, { ...childData, [key]: value });
   };
+
+  const maxDob = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d;
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -164,6 +170,7 @@ const ChildSetupItem: React.FC<ChildSetupItemProps> = ({
                 placeholder="Select Date"
                 value={childData.dob}
                 onDateChange={(date) => handleChange("dob", date)}
+                maxDate={maxDob}
               />
             )}
 

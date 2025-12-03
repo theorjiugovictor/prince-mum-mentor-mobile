@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {Modal, Platform, StyleSheet, Text, TextStyle, TouchableOpacity, View, ViewStyle,} from "react-native";
-import {KeyboardAwareScrollView} from "react-native-keyboard-aware-scroll-view";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
@@ -220,9 +220,7 @@ const CreateTaskForm: React.FC<{
         <KeyboardAwareScrollView
             style={taskStyles.formContainer}
             contentContainerStyle={taskStyles.formContentContainer}
-            enableOnAndroid={true}
-            enableAutomaticScroll={true}
-            extraScrollHeight={20}
+            extraKeyboardSpace={20}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
         >

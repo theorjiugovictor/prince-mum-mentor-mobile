@@ -6,9 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
   Image,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -27,6 +25,7 @@ import PrimaryButton from "../components/PrimaryButton";
 
 // --- API Service ---
 import { AxiosError } from "axios";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import {
   ApiErrorResponse,
   resetPassword,
@@ -149,10 +148,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -297,7 +293,7 @@ export default function ResetPassword() {
         onRequestClose={handleSuccessModalClose}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <KeyboardAvoidingView style={styles.modalContent} behavior="padding">
             <View style={styles.successIcon}>
               <Ionicons
                 name="checkmark"
@@ -315,7 +311,7 @@ export default function ResetPassword() {
               onPress={handleSuccessModalClose}
               style={styles.modalButton}
             />
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </KeyboardAvoidingView>

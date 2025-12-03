@@ -1,22 +1,21 @@
 // src/components/AddGoalModal.tsx
 
-import React, { useEffect, useRef } from 'react';
+import React, {useEffect, useRef} from 'react';
 import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Pressable,
-  Image,
-  Animated,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
+    Animated,
+    Image,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
-import { colors, typography } from '@/src/core/styles';
-import { rbr, ms, vs } from '@/src/core/styles/scaling';
+import {colors, typography} from '@/src/core/styles';
+import {rbr} from '@/src/core/styles/scaling';
+import {KeyboardAvoidingView} from "react-native-keyboard-controller";
 
 interface AddGoalModalProps {
   visible: boolean;
@@ -50,15 +49,11 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({
         useNativeDriver: true,
       }).start();
     }
-  }, [visible]);
+  }, [slideAnim, visible]);
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
+        <KeyboardAvoidingView style={styles.overlay} behavior="padding">
         {/* Background pressable so modal closes when tapping outside */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 

@@ -26,6 +26,7 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import PrimaryButton from "../PrimaryButton";
 import CameraScreen from "./CameraScreen";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 interface AddMemoryModalProps {
   visible: boolean;
@@ -170,11 +171,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
               {/* <View style={styles.overlay}> */}
               <TouchableWithoutFeedback>
                 {/* DYNAMIC HEIGHT MODAL */}
-                <View
+                <KeyboardAvoidingView
                   style={[
                     styles.modalContainer,
                     photoUri ? styles.fullHeight : styles.partialHeight,
                   ]}
+                  behavior="padding"
                 >
                   {/* Header */}
                   <View style={styles.header}>
@@ -328,7 +330,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                       disabled={!data?.data.id || isLoading || isUploading}
                     />
                   </View>
-                </View>
+                </KeyboardAvoidingView>
               </TouchableWithoutFeedback>
               {/* </View> */}
             </KeyboardAwareScrollView>

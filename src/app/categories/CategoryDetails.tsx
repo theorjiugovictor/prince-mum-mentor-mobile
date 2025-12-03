@@ -1,5 +1,4 @@
 import BackButton from "@/src/app/components/milestone/BackButton";
-import CreateForm from "@/src/app/components/milestone/CreateForm";
 import DeleteModal from "@/src/app/components/milestone/DeleteModal";
 import EditForm from "@/src/app/components/milestone/EditForm";
 import EditSuccessModal from "@/src/app/components/milestone/EditSuccessModal";
@@ -16,8 +15,9 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import CreateForm from "../components/milestone/CreateForm";
 
 export default function CategoryDetails() {
   const onAddMilestoneOnMount = useMilestoneStore(
@@ -52,8 +52,6 @@ export default function CategoryDetails() {
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
-        enableOnAndroid={true}
-        extraScrollHeight={20}
       >
         <View style={styles.container}>
           <BackButton categoryHeading={category} />

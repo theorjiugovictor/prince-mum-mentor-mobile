@@ -329,8 +329,8 @@ export default function SignUpScreen() {
                     {Object.values(passwordChecks).filter(Boolean).length < 3
                       ? "Weak Password"
                       : Object.values(passwordChecks).filter(Boolean).length < 5
-                        ? "Medium Password"
-                        : "Strong Password"}
+                      ? "Medium Password"
+                      : "Strong Password"}
                   </Text>
                 </View>
               )}
@@ -375,8 +375,8 @@ export default function SignUpScreen() {
                           value
                             ? colors.success
                             : errors.isAgreed
-                              ? colors.error
-                              : colors.textPrimary
+                            ? colors.error
+                            : colors.textPrimary
                         }
                       />
                     </TouchableOpacity>
@@ -432,7 +432,7 @@ export default function SignUpScreen() {
                   )}
                 </TouchableOpacity>
 
-                {isAppleAvailable && (
+                {/* {isAppleAvailable && (
                   <TouchableOpacity
                     style={[
                       styles.socialButton,
@@ -454,7 +454,7 @@ export default function SignUpScreen() {
                       </>
                     )}
                   </TouchableOpacity>
-                )}
+                )} */}
               </View>
             </View>
           </ScrollView>

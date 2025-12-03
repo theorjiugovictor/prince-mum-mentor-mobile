@@ -1,23 +1,15 @@
-import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {Feather} from "@expo/vector-icons";
+import {router} from "expo-router";
+import React, {useCallback, useEffect, useState} from "react";
+import {ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 // --- Style Imports ---
-import { colors, fontFamilies, spacing, typography } from "../../core/styles";
-import { ms } from "../../core/styles/scaling";
+import {colors, fontFamilies, spacing, typography} from "../../core/styles";
+import {ms} from "../../core/styles/scaling";
 
 // --- Component Imports ---
-import { authApi } from "@/src/lib/api";
+import {authApi} from "@/src/lib/api";
 import EditProfileModal from "./EditProfileScreen";
 import LogoutModal from "./LogoutModal";
 
@@ -52,7 +44,7 @@ export default function ProfileScreen({ navigation }: any) {
   // --- Fetch Profile Setup ---
   const fetchProfileSetup = async (baseProfile: UserProfile) => {
     try {
-      const response = await authApi.get("/api/v1/profile-setup/");
+        const response = await authApi.get("/api/v1/profile/setup");
 
       if (response.data) {
         setUserProfile({
@@ -74,7 +66,7 @@ export default function ProfileScreen({ navigation }: any) {
       setLoading(true);
       setError(null);
 
-      const response = await authApi.get("/api/v1/auth/profile");
+      const response = await authApi.get("/api/v1/profile/");
 
       // The actual user data is nested in response.data.data
       if (response.data?.data) {
@@ -304,7 +296,7 @@ export default function ProfileScreen({ navigation }: any) {
         {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
           <View style={styles.menuItemWrapper}>
-           
+
             <TouchableOpacity
               style={styles.menuItem}
               accessibilityRole="button"

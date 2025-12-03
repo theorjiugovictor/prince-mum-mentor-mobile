@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,7 +21,9 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  ViewStyle,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import PrimaryButton from "../PrimaryButton";
 import CameraScreen from "./CameraScreen";
 
@@ -144,20 +147,28 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
     <>
       <Modal
         visible={visible}
-        transparent
         animationType="slide"
         onRequestClose={handleClose}
+        style={{ justifyContent: "flex-end", margin: 0 }}
       >
-        <TouchableWithoutFeedback onPress={handleClose}>
-          <View style={styles.overlay}>
-            <TouchableWithoutFeedback>
-              {/* DYNAMIC HEIGHT MODAL */}
-              <View
-                style={[
-                  styles.modalContainer,
-                  photoUri ? styles.fullHeight : styles.partialHeight,
-                ]}
-              >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={handleClose}
+          />
+          <View style={styles.modalContent}>
+            <KeyboardAwareScrollView
+              style={styles.formContainer}
+              contentContainerStyle={styles.formContentContainer}
+              // enableOnAndroid={true}
+              // enableAutomaticScroll={true}
+              // extraScrollHeight={20}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {/* <View style={styles.overlay}> */}
+              <TouchableWithoutFeedback>
                 {/* Header */}
                 <View style={styles.header}>
                   <TouchableOpacity
@@ -243,12 +254,14 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
 
                   {/* Save To */}
                   <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionLabel}>Save To:</Text>
-                      <TouchableOpacity>
-                        <Text style={styles.createAlbumText}>Create Album</Text>
-                      </TouchableOpacity>
-                    </View>
+                    {/* <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionLabel}>Save To:</Text>
+                        <TouchableOpacity>
+                          <Text style={styles.createAlbumText}>
+                            Create Album
+                          </Text>
+                        </TouchableOpacity>
+                      </View> */}
 
                     <View style={styles.categoriesContainer}>
                       {CATEGORIES.map((cat) => (
@@ -277,12 +290,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
 
                   {/* Date */}
                   <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionLabel}>Saved On:</Text>
-                      <TouchableOpacity>
-                        <Text style={styles.editText}>Edit</Text>
-                      </TouchableOpacity>
-                    </View>
+                    {/* <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionLabel}>Saved On:</Text>
+                        <TouchableOpacity>
+                          <Text style={styles.editText}>Edit</Text>
+                        </TouchableOpacity>
+                      </View> */}
 
                     <View style={styles.dateContainer}>
                       <Ionicons
@@ -306,10 +319,11 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                     disabled={!data?.data.id || isLoading || isUploading}
                   />
                 </View>
-              </View>
-            </TouchableWithoutFeedback>
+              </TouchableWithoutFeedback>
+              {/* </View> */}
+            </KeyboardAwareScrollView>
           </View>
-        </TouchableWithoutFeedback>
+        </View>
       </Modal>
 
       {isCameraVisible && (
@@ -477,8 +491,7 @@ const styles = StyleSheet.create({
   },
 
   saveButtonContainer: {
-    padding: ms(spacing.lg),
-    paddingBottom: vs(spacing.xl),
+    padding: ms(spacing.sm),
     borderTopWidth: 1,
     borderTopColor: colors.outline,
   },
@@ -500,4 +513,35 @@ const styles = StyleSheet.create({
     marginTop: vs(8),
     fontSize: rfs(14),
   },
+
+  formContainer: {
+    paddingTop: 10,
+  } as ViewStyle,
+
+  formContentContainer: {
+    paddingBottom: Platform.OS === "ios" ? ms(spacing.xl) : ms(spacing.lg),
+  } as ViewStyle,
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  } as ViewStyle,
+
+  modalBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  } as ViewStyle,
+
+  modalContent: {
+    backgroundColor: colors.backgroundMain,
+    borderTopLeftRadius: ms(12),
+    borderTopRightRadius: ms(12),
+    paddingHorizontal: ms(spacing.md),
+    width: "100%",
+    maxHeight: "100%",
+  } as ViewStyle,
 });

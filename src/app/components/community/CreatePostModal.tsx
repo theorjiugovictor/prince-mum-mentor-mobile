@@ -5,15 +5,15 @@ import { ms, rfs, vs } from "@/src/core/styles/scaling";
 import React from "react";
 import {
   Image,
+  type ImageSourcePropType,
   Modal,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  type ImageSourcePropType,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type ImageSource = ImageSourcePropType;
@@ -67,7 +67,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </TouchableOpacity>
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.modalBody}
           contentContainerStyle={{ paddingBottom: vs(40) }}
         >
@@ -100,7 +100,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
               resizeMode="cover"
             />
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
     </Modal>
   );

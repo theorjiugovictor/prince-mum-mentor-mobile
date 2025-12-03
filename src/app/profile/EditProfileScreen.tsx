@@ -1,27 +1,27 @@
 // components/EditProfileModal.tsx
-import { Feather } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import {Feather} from "@expo/vector-icons";
+import React, {useEffect, useState} from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 // --- Style Imports ---
-import { colors, fontFamilies, spacing, typography } from "../../core/styles";
-import { ms } from "../../core/styles/scaling";
+import {colors, fontFamilies, spacing, typography} from "../../core/styles";
+import {ms} from "../../core/styles/scaling";
 
 // --- API Imports ---
-import { showToast } from "@/src/core/utils/toast";
-import { authApi } from "@/src/lib/api";
+import {showToast} from "@/src/core/utils/toast";
+import {authApi} from "@/src/lib/api";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -238,7 +238,7 @@ export default function EditProfileModal({
           </View>
 
           {/* Scrollable Content */}
-          <ScrollView
+            <KeyboardAwareScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}
           >
@@ -384,7 +384,7 @@ export default function EditProfileModal({
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-          </ScrollView>
+            </KeyboardAwareScrollView>
         </View>
       </View>
     </Modal>

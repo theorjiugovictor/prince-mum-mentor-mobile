@@ -234,7 +234,7 @@ export default function SignInScreen() {
               )}
             </TouchableOpacity>
 
-            {isAppleAvailable && (
+            {/* {isAppleAvailable && (
               <TouchableOpacity
                 style={[styles.socialButton, { marginLeft: ms(spacing.md) }]}
                 onPress={handleApplePress}
@@ -252,7 +252,7 @@ export default function SignInScreen() {
                   </>
                 )}
               </TouchableOpacity>
-            )}
+            )} */}
           </View>
         </View>
       </ScrollView>

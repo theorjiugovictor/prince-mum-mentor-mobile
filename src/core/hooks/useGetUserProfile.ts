@@ -13,7 +13,7 @@ export const useGetUserProfile = () => {
       google_id: string | null;
       role: string;
     }
-  >("/api/v1/auth/profile", {
+  >("/api/v1/profile/", {
     queryKey: "user-profile",
     enabled: true,
   });

@@ -2,23 +2,22 @@
 
 import * as ImagePicker from "expo-image-picker";
 import type React from "react";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Image,
+    Modal,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import PrimaryButton from "../PrimaryButton";
 import SecondaryButton from "../SecondaryButton";
-import { useJournal } from "./journalContext";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import {useJournal} from "./journalContext";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 import DatePickerInput from "../DatePickerInput";
 
 interface EditFormProps {
@@ -172,12 +171,7 @@ const EditForm: React.FC<EditFormProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={80}
-      >
-      <ScrollView style={{ paddingBottom: 16, marginHorizontal: "auto" }}>
+        <KeyboardAwareScrollView style={{paddingBottom: 16, marginHorizontal: "auto"}}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onClose}>
@@ -350,8 +344,7 @@ const EditForm: React.FC<EditFormProps> = ({
             disabled={isSaving}
           />
         </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     </Modal>
   );
 };

@@ -1,20 +1,20 @@
 "use client";
 
-import { colors, fontFamilies, spacing } from "@/src/core/styles";
-import { ms, rfs, vs } from "@/src/core/styles/scaling";
+import {colors, fontFamilies, spacing} from "@/src/core/styles";
+import {ms, rfs, vs} from "@/src/core/styles/scaling";
 import React from "react";
 import {
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  type ImageSourcePropType,
+    Image,
+    type ImageSourcePropType,
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {SafeAreaView} from "react-native-safe-area-context";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 
 type ImageSource = ImageSourcePropType;
 
@@ -67,7 +67,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </TouchableOpacity>
         </View>
 
-        <ScrollView
+          <KeyboardAwareScrollView
           style={styles.modalBody}
           contentContainerStyle={{ paddingBottom: vs(40) }}
         >
@@ -100,7 +100,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
               resizeMode="cover"
             />
           )}
-        </ScrollView>
+          </KeyboardAwareScrollView>
       </SafeAreaView>
     </Modal>
   );

@@ -1,33 +1,20 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import {Ionicons} from "@expo/vector-icons";
+import {router, useLocalSearchParams} from "expo-router";
+import React, {useEffect, useState} from "react";
+import {Alert, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
 
 // --- Theme and Utilities ---
-import { defaultTheme, spacing } from "../../core/styles/index";
-import { ms, vs } from "../../core/styles/scaling";
+import {defaultTheme, spacing} from "../../core/styles/index";
+import {ms, vs} from "../../core/styles/scaling";
 
 // --- Components ---
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
 
 // --- API Service ---
-import { AxiosError } from "axios";
-import {
-  ApiErrorResponse,
-  resetPassword,
-} from "../../core/services/authService";
+import {AxiosError} from "axios";
+import {ApiErrorResponse, resetPassword,} from "../../core/services/authService";
+import {KeyboardAvoidingView} from "react-native-keyboard-controller";
 
 // Destructure theme values outside component to prevent re-renders
 const { colors, typography } = defaultTheme;
@@ -143,7 +130,7 @@ export default function ResetPassword() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior="padding"
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -225,7 +212,7 @@ export default function ResetPassword() {
         onRequestClose={handleSuccessModalClose}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+            <KeyboardAvoidingView style={styles.modalContent} behavior="padding">
             <View style={styles.successIcon}>
               <Ionicons
                 name="checkmark"
@@ -243,7 +230,7 @@ export default function ResetPassword() {
               onPress={handleSuccessModalClose}
               style={styles.modalButton}
             />
-          </View>
+            </KeyboardAvoidingView>
         </View>
       </Modal>
     </KeyboardAvoidingView>

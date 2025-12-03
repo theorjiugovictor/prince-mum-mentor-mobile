@@ -1,23 +1,15 @@
 import FormInput from "@/src/app/components/milestone/FormInput";
-import { createMilestone } from "@/src/core/services/milestoneService";
-import { colors, typography } from "@/src/core/styles";
-import { showToast } from "@/src/core/utils/toast";
-import { useMilestoneStore } from "@/src/store/useMilestone";
-import { CreateMilestoneType, MilestoneDataType } from "@/src/types/milestones";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {createMilestone} from "@/src/core/services/milestoneService";
+import {colors, typography} from "@/src/core/styles";
+import {showToast} from "@/src/core/utils/toast";
+import {useMilestoneStore} from "@/src/store/useMilestone";
+import {CreateMilestoneType, MilestoneDataType} from "@/src/types/milestones";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 import * as Crypto from "expo-crypto";
-import { useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import {useLocalSearchParams} from "expo-router";
+import React, {useState} from "react";
+import {Platform, Pressable, StyleSheet, Text, TextInput, View,} from "react-native";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 import Modal from "react-native-modal";
 
 export default function CreateForm() {
@@ -85,15 +77,10 @@ export default function CreateForm() {
       avoidKeyboard={false}
     >
       <KeyboardAwareScrollView
-        enableOnAndroid={true}
-        extraScrollHeight={Platform.OS === "ios" ? 20 : 100}
+          extraKeyboardSpace={Platform.OS === "ios" ? 20 : 100}
         contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
         keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          contentContainerStyle={{ flex: 1, justifyContent: "flex-end" }}
-          keyboardShouldPersistTaps="handled"
-        >
           <View style={styles.milestoneFormContainer}>
             <View style={styles.formHeaderBox}>
               <Text style={styles.formTitle}>create milestones</Text>
@@ -156,7 +143,6 @@ export default function CreateForm() {
               </Pressable>
             </View>
           </View>
-        </ScrollView>
       </KeyboardAwareScrollView>
     </Modal>
   );

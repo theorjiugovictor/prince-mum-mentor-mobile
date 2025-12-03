@@ -4,7 +4,7 @@ import {rbr, s, vs} from "@/src/core/styles/scaling";
 import {showToast} from "@/src/core/utils/toast";
 import React, {useCallback, useMemo, useState} from "react";
 import {FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View,} from "react-native";
-import {useKeyboardState} from "react-native-keyboard-controller";
+import {KeyboardAvoidingView} from "react-native-keyboard-controller";
 
 /* -------------------------------------------------------------------------- */
 /*                                Types                                        */
@@ -35,20 +35,19 @@ type ModalView = "list" | "rename" | "delete" | "success";
 const ModalContainer = React.memo(
   ({
     children,
-    keyboardHeight,
   }: {
     children: React.ReactNode;
-    keyboardHeight: number;
   }) => (
-    <TouchableOpacity
-      activeOpacity={1}
-      style={styles.container}
-      onPress={(e) => e.stopPropagation()}
-    >
-      <View style={styles.dragHandle} />
-      {children}
-      <View style={{ height: keyboardHeight }} />
-    </TouchableOpacity>
+      <KeyboardAvoidingView behavior="padding">
+          <TouchableOpacity
+              activeOpacity={1}
+              style={styles.container}
+              onPress={(e) => e.stopPropagation()}
+          >
+              <View style={styles.dragHandle}/>
+              {children}
+          </TouchableOpacity>
+      </KeyboardAvoidingView>
   )
 );
 
@@ -339,8 +338,6 @@ export const HistoryEmptyState = ({
   /* Rename ---------------------------------------------------------- */
   const [renameTitle, setRenameTitle] = useState("");
 
-  const keyboard = useKeyboardState();
-
   /* Derived Chats --------------------------------------------------- */
   const filteredChats = useMemo(() => {
     return [...chats]
@@ -447,7 +444,7 @@ export const HistoryEmptyState = ({
       onRequestClose={onClose}
     >
       <TouchableOpacity style={styles.overlay} onPress={onClose}>
-        <ModalContainer keyboardHeight={keyboard.height}>
+          <ModalContainer>
           {renderScreen()}
         </ModalContainer>
       </TouchableOpacity>

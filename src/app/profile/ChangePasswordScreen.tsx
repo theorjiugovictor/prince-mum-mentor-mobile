@@ -1,27 +1,19 @@
 // src/screens/ChangePasswordScreen.tsx
 
-import { useChangePassword } from "@/src/core/hooks/useChangePassword";
-import { colors, spacing, typography } from "@/src/core/styles";
-import { ms, rfs, vs } from "@/src/core/styles/scaling";
-import { showToast } from "@/src/core/utils/toast";
-import { Ionicons } from "@expo/vector-icons";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
-import React, { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { z } from "zod";
+import {useChangePassword} from "@/src/core/hooks/useChangePassword";
+import {colors, spacing, typography} from "@/src/core/styles";
+import {ms, rfs, vs} from "@/src/core/styles/scaling";
+import {showToast} from "@/src/core/utils/toast";
+import {Ionicons} from "@expo/vector-icons";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {router} from "expo-router";
+import React, {useState} from "react";
+import {Controller, useForm} from "react-hook-form";
+import {Modal, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
+import {z} from "zod";
 import CustomInput from "../components/CustomInput";
 import PrimaryButton from "../components/PrimaryButton";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 
 // --- Validation Schema ---
 const changePasswordSchema = z
@@ -112,10 +104,7 @@ const ChangePassword = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+      <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -131,7 +120,7 @@ const ChangePassword = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
+          <KeyboardAwareScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -269,7 +258,7 @@ const ChangePassword = () => {
           isLoading={isSubmitting}
           disabled={isSubmitting}
         />
-      </ScrollView>
+          </KeyboardAwareScrollView>
 
       {/* Success Modal */}
       <Modal
@@ -304,7 +293,7 @@ const ChangePassword = () => {
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+      </View>
   );
 };
 

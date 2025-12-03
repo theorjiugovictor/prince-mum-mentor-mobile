@@ -1,28 +1,29 @@
 // src/components/GalleryComponents/AddMemoryModal.tsx
 
-import { useImageUpload } from "@/src/core/hooks/useImageUpload";
-import { useLinkImageToAlbum } from "@/src/core/hooks/useLinkImageToAlbum";
-import { colors, spacing, typography } from "@/src/core/styles";
-import { ms, rfs, vs } from "@/src/core/styles/scaling";
-import { showToast } from "@/src/core/utils/toast";
-import { Ionicons } from "@expo/vector-icons";
+import {useImageUpload} from "@/src/core/hooks/useImageUpload";
+import {useLinkImageToAlbum} from "@/src/core/hooks/useLinkImageToAlbum";
+import {colors, spacing, typography} from "@/src/core/styles";
+import {ms, rfs, vs} from "@/src/core/styles/scaling";
+import {showToast} from "@/src/core/utils/toast";
+import {Ionicons} from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import {useLocalSearchParams} from "expo-router";
+import React, {useState} from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    ActivityIndicator,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import PrimaryButton from "../PrimaryButton";
 import CameraScreen from "./CameraScreen";
+import {KeyboardAvoidingView} from "react-native-keyboard-controller";
 
 interface AddMemoryModalProps {
   visible: boolean;
@@ -152,11 +153,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
           <View style={styles.overlay}>
             <TouchableWithoutFeedback>
               {/* DYNAMIC HEIGHT MODAL */}
-              <View
+                <KeyboardAvoidingView
                 style={[
                   styles.modalContainer,
                   photoUri ? styles.fullHeight : styles.partialHeight,
                 ]}
+                behavior="padding"
               >
                 {/* Header */}
                 <View style={styles.header}>
@@ -306,7 +308,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                     disabled={!data?.data.id || isLoading || isUploading}
                   />
                 </View>
-              </View>
+                </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>

@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import CustomInput from "../CustomInput";
 import PrimaryButton from "../PrimaryButton";
 import SecondaryButton from "../SecondaryButton";
@@ -52,47 +53,53 @@ const CreateAlbumModal: React.FC<CreateAlbumModalProps> = ({
       animationType="slide"
       onRequestClose={handleCancel}
     >
-      <TouchableWithoutFeedback onPress={handleCancel}>
-        <View style={styles.overlay}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.keyboardAvoidingView}
-          >
-            <TouchableWithoutFeedback>
-              <View style={styles.modalContainer}>
-                {/* Header */}
-                <View style={styles.header}>
-                  <Text style={styles.title}>Create Album</Text>
-                  <Text style={styles.subtitle}>
-                    Gather memories that belong together
-                  </Text>
-                </View>
+      <KeyboardAwareScrollView
+        extraKeyboardSpace={Platform.OS === "ios" ? 40 : 120}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableWithoutFeedback onPress={handleCancel}>
+          <View style={styles.overlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.keyboardAvoidingView}
+            >
+              <TouchableWithoutFeedback>
+                <View style={styles.modalContainer}>
+                  {/* Header */}
+                  <View style={styles.header}>
+                    <Text style={styles.title}>Create Album</Text>
+                    <Text style={styles.subtitle}>
+                      Gather memories that belong together
+                    </Text>
+                  </View>
 
-                {/* Album Name Input */}
-                <View style={styles.inputContainer}>
-                  <CustomInput
-                    label="Album name"
-                    placeholder="e.g Tiny Smiles"
-                    value={albumName}
-                    onChangeText={setAlbumName}
-                    iconName="gallery-outline"
-                  />
-                </View>
+                  {/* Album Name Input */}
+                  <View style={styles.inputContainer}>
+                    <CustomInput
+                      label="Album name"
+                      placeholder="e.g Tiny Smiles"
+                      value={albumName}
+                      onChangeText={setAlbumName}
+                      iconName="gallery-outline"
+                    />
+                  </View>
 
-                {/* Buttons */}
-                <View style={styles.buttonsContainer}>
-                  <PrimaryButton
-                    title="Save"
-                    onPress={handleSave}
-                    disabled={!albumName.trim()}
-                  />
-                  <SecondaryButton title="Cancel" onPress={handleCancel} />
+                  {/* Buttons */}
+                  <View style={styles.buttonsContainer}>
+                    <PrimaryButton
+                      title="Save"
+                      onPress={handleSave}
+                      disabled={!albumName.trim()}
+                    />
+                    <SecondaryButton title="Cancel" onPress={handleCancel} />
+                  </View>
                 </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
-        </View>
-      </TouchableWithoutFeedback>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAwareScrollView>
     </Modal>
   );
 };

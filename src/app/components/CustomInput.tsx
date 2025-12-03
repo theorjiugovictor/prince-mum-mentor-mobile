@@ -62,9 +62,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
   isPassword = false,
   isValid = false,
   inputRef,
-  multiline,
   editable = true,
   defaultValue,
+  multiline = false,
+
   onBlur,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -102,6 +103,17 @@ const CustomInput: React.FC<CustomInputProps> = ({
       height: ms(50),
       backgroundColor: colors.backgroundMain,
     },
+    descriptionContainer: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: borderColor,
+      borderRadius: ms(10),
+      paddingHorizontal: ms(spacing.sm),
+      height: "100%",
+      backgroundColor: colors.backgroundMain,
+    },
     icon: {
       marginRight: ms(spacing.sm),
       color: colors.textGrey2,
@@ -119,6 +131,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
       fontFamily: typography.bodyMedium.fontFamily,
       color: colors.textPrimary,
       paddingVertical: ms(spacing.xs),
+      borderColor: "none",
     },
     validationIcon: {
       marginLeft: ms(spacing.sm),
@@ -143,7 +156,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
 
-      <View style={styles.inputContainer}>
+      <View
+        style={multiline ? styles.descriptionContainer : styles.inputContainer}
+      >
         {/* Custom PNG Icon */}
         {iconName && icons[iconName] && (
           <Image source={icons[iconName]} style={styles.iconImage} />
@@ -164,6 +179,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
           editable={editable}
           defaultValue={defaultValue}
           onBlur={onBlur}
+          textAlignVertical={multiline ? "top" : "center"}
+          numberOfLines={multiline ? 3 : 1}
         />
 
         <View style={styles.passwordToggle}>

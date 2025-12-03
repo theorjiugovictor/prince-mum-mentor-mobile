@@ -18,10 +18,10 @@ import SecondaryButton from "../components/SecondaryButton";
 // --- REQUIRED STYLE IMPORTS ---
 import { createTask, updateTask } from "@/src/core/services/tasksService";
 import { showToast } from "@/src/core/utils/toast";
+import { useMutation } from "@tanstack/react-query";
 import { colors } from "../../core/styles/index";
 import { ms } from "../../core/styles/scaling";
 import DatePickerInput from "./DatePickerInput";
-import { useMutation } from "@tanstack/react-query";
 
 const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
 const typography = {
@@ -289,6 +289,7 @@ const CreateTaskForm: React.FC<{
           value={description}
           onChangeText={setDescription}
           iconName="mail-outline"
+          multiline={true}
         />
       </View>
 
@@ -298,8 +299,8 @@ const CreateTaskForm: React.FC<{
             mutation.isPending
               ? "Saving..."
               : initData
-              ? "Update Task"
-              : "Create Task"
+                ? "Update Task"
+                : "Create Task"
           }
           onPress={initData ? handleUpdateTask : handleCreateTask}
           style={taskStyles.createTaskButton}
@@ -426,7 +427,7 @@ const taskStyles = StyleSheet.create({
   buttonRow: {
     flexDirection: "column",
     gap: ms(spacing.xs),
-    marginTop: ms(spacing.sm),
+    marginTop: ms(spacing.lg),
     paddingBottom: ms(spacing.md),
   } as ViewStyle,
 

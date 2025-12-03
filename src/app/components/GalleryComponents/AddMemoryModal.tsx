@@ -1,29 +1,27 @@
 // src/components/GalleryComponents/AddMemoryModal.tsx
 
-import { useImageUpload } from "@/src/core/hooks/useImageUpload";
-import { useLinkImageToAlbum } from "@/src/core/hooks/useLinkImageToAlbum";
-import { colors, spacing, typography } from "@/src/core/styles";
-import { ms, rfs, vs } from "@/src/core/styles/scaling";
-import { showToast } from "@/src/core/utils/toast";
-import { Ionicons } from "@expo/vector-icons";
+import {useImageUpload} from "@/src/core/hooks/useImageUpload";
+import {useLinkImageToAlbum} from "@/src/core/hooks/useLinkImageToAlbum";
+import {colors, spacing, typography} from "@/src/core/styles";
+import {ms, rfs, vs} from "@/src/core/styles/scaling";
+import {showToast} from "@/src/core/utils/toast";
+import {Ionicons} from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import {useLocalSearchParams} from "expo-router";
+import React, {useState} from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-  ViewStyle,
+    ActivityIndicator,
+    Image,
+    Modal,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    ViewStyle,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 import PrimaryButton from "../PrimaryButton";
 import CameraScreen from "./CameraScreen";
 
@@ -33,13 +31,6 @@ interface AddMemoryModalProps {
   setIsAddMemoryModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
   albumName?: string;
   refetch: () => void;
-}
-
-export interface MemoryData {
-  photoUri: string;
-  note: string;
-  category: string;
-  date: Date;
 }
 
 const CATEGORIES = ["Baby Photos", "Pregnancy", "Videos", "Album"];
@@ -167,8 +158,6 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
-              {/* <View style={styles.overlay}> */}
-              <TouchableWithoutFeedback>
                 {/* Header */}
                 <View style={styles.header}>
                   <TouchableOpacity
@@ -191,10 +180,8 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                   </View>
                 )}
 
-                <ScrollView
-                  contentContainerStyle={styles.scrollContent}
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
+                <View
+                    style={styles.scrollContent}
                 >
                   {photoUri ? (
                     <View style={styles.photoPreviewContainer}>
@@ -308,7 +295,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                       </Text>
                     </View>
                   </View>
-                </ScrollView>
+                </View>
 
                 {/* Save Button */}
                 <View style={styles.saveButtonContainer}>
@@ -319,8 +306,6 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                     disabled={!data?.data.id || isLoading || isUploading}
                   />
                 </View>
-              </TouchableWithoutFeedback>
-              {/* </View> */}
             </KeyboardAwareScrollView>
           </View>
         </View>

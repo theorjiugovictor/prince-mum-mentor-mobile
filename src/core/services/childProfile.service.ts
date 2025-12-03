@@ -5,7 +5,6 @@ import {
   CreateChildProfileRequest,
   UpdateChildProfileRequest,
   UploadProfilePictureResponse,
-  ApiError,
 } from "../../types/child.types";
 
 import { getAuthToken } from "./authStorage";
@@ -14,7 +13,7 @@ import { getAuthToken } from "./authStorage";
 // BASE URL
 // ===============================
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://api.staging.kaizen.emerj.net";
+  process.env.EXPO_PUBLIC_API_URL || "https://api.noramum.app";
 
 // ===============================
 // AXIOS INSTANCE
@@ -89,29 +88,34 @@ export const createChildProfile = async (
 ): Promise<ChildProfile> => {
   try {
     console.log("📤 Sending child profile request:", data);
-    
+
     const response = await api.post("/api/v1/child-profiles/", data);
 
-    console.log("📥 Full API response:", JSON.stringify(response.data, null, 2));
+    console.log(
+      "📥 Full API response:",
+      JSON.stringify(response.data, null, 2)
+    );
 
     // Check multiple possible response structures
-    const child = 
+    const child =
       response.data?.data?.child || // Expected structure: { data: { child: {...} } }
-      response.data?.child ||        // Alternative structure: { child: {...} }
-      response.data?.data ||         // Another alternative: { data: {...} }
-      response.data;                 // Direct structure: { id, name, ... }
+      response.data?.child || // Alternative structure: { child: {...} }
+      response.data?.data || // Another alternative: { data: {...} }
+      response.data; // Direct structure: { id, name, ... }
 
     console.log("👶 Extracted child object:", child);
 
     // Validate child object has ID
-    if (!child || typeof child !== 'object') {
+    if (!child || typeof child !== "object") {
       console.error("❌ Invalid child object:", child);
       throw new Error("Server returned invalid child profile data");
     }
 
     if (!child.id) {
       console.error("❌ Child object missing ID:", child);
-      throw new Error("Server did not return child ID. Response: " + JSON.stringify(child));
+      throw new Error(
+        "Server did not return child ID. Response: " + JSON.stringify(child)
+      );
     }
 
     console.log("✅ Child profile created successfully with ID:", child.id);
@@ -145,9 +149,7 @@ export const updateChildProfile = async (
 // ======================================================================
 // DELETE CHILD PROFILE
 // ======================================================================
-export const deleteChildProfile = async (
-  childId: string
-): Promise<void> => {
+export const deleteChildProfile = async (childId: string): Promise<void> => {
   try {
     await api.delete(`/api/v1/child-profiles/${childId}`);
   } catch (error) {
@@ -165,16 +167,16 @@ export const uploadChildProfilePicture = async (
 ): Promise<UploadProfilePictureResponse> => {
   try {
     console.log("🖼 Starting profile picture upload for child:", childId);
-    
+
     const formData = new FormData();
 
     // Handle File object (web)
     if (image instanceof File) {
       console.log("📁 Uploading File object:", image.name);
       formData.append("file", image);
-    } 
+    }
     // Handle URI object (mobile)
-    else if (typeof image === 'object' && 'uri' in image) {
+    else if (typeof image === "object" && "uri" in image) {
       const fileName = image.name || `child_${childId}.jpg`;
       const fileType = image.type || "image/jpeg";
 
@@ -197,28 +199,37 @@ export const uploadChildProfilePicture = async (
     }
 
     console.log("📤 Sending image upload request...");
-    
+
     const response = await api.post(
       `/api/v1/child-profiles/${childId}/upload-picture`,
       formData,
       { headers: { "Content-Type": "multipart/form-data" } }
     );
 
-    console.log("✅ Image upload response:", JSON.stringify(response.data, null, 2));
+    console.log(
+      "✅ Image upload response:",
+      JSON.stringify(response.data, null, 2)
+    );
     console.log("📋 Response status:", response.status);
     console.log("📋 Response headers:", response.headers);
-    
+
     // Log what URL the server returned (if any)
     if (response.data?.profile_picture_url) {
-      console.log("🖼 Server returned image URL:", response.data.profile_picture_url);
+      console.log(
+        "🖼 Server returned image URL:",
+        response.data.profile_picture_url
+      );
     } else if (response.data?.data?.profile_picture_url) {
-      console.log("🖼 Server returned image URL:", response.data.data.profile_picture_url);
+      console.log(
+        "🖼 Server returned image URL:",
+        response.data.data.profile_picture_url
+      );
     } else if (response.data?.url) {
       console.log("🖼 Server returned image URL:", response.data.url);
     } else {
       console.warn("⚠️ Server did not return an image URL in response");
     }
-    
+
     // The response should contain the updated profile with the new image URL
     // Return the full response so we can use it if needed
     return response.data;
@@ -242,7 +253,7 @@ export const uploadChildProfilePicture = async (
 const handleApiError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<any>;
-    
+
     console.error("🔴 Axios Error Details:", {
       url: axiosError.config?.url,
       method: axiosError.config?.method,
@@ -253,7 +264,7 @@ const handleApiError = (error: unknown) => {
     });
 
     // Extract user-friendly error message
-    const errorMessage = 
+    const errorMessage =
       axiosError.response?.data?.message ||
       axiosError.response?.data?.detail ||
       axiosError.response?.data?.error ||

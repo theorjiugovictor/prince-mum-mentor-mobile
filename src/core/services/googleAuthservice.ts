@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
 import { getCurrentUser, UserProfile } from "./userService";
 
-const API_BASE_URL = "https://api.staging.kaizen.emerj.net";
+const API_BASE_URL = "https://api.noramum.app";
 
 // This is required for both iOS and Android
 const GOOGLE_WEB_CLIENT_ID =

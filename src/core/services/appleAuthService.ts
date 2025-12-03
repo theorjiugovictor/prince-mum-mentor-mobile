@@ -1,7 +1,7 @@
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as SecureStore from "expo-secure-store";
 
-const API_BASE_URL = "https://api.staging.kaizen.emerj.net";
+const API_BASE_URL = "https://api.noramum.app";
 
 export interface AppleAuthResult {
   success: boolean;
@@ -28,7 +28,6 @@ export const isAppleAuthAvailable = async (): Promise<boolean> => {
  */
 export const signInWithApple = async (): Promise<AppleAuthResult> => {
   try {
-
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -73,7 +72,6 @@ export const signInWithApple = async (): Promise<AppleAuthResult> => {
     }
 
     if (data.status === "success" && data.data) {
-
       const { access_token, refresh_token } = data.data;
 
       // Store tokens securely

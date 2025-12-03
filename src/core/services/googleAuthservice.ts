@@ -1,18 +1,11 @@
 // @ts-nocheck
-import { auth } from "@/src/lib/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {auth} from "@/src/lib/auth";
+import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
-import { getAuthToken, removeAuthToken, setAuthToken } from "./authStorage";
-import { getCurrentUser, UserProfile } from "./userService";
+import {getAuthToken, removeAuthToken, setAuthToken} from "./authStorage";
+import {getCurrentUser, UserProfile} from "./userService";
 
-const API_BASE_URL = "https://api.staging.kaizen.emerj.net";
-
-// This is required for both iOS and Android
-const GOOGLE_WEB_CLIENT_ID =
-  "177967447276-tsh54rjdsp3dl0u7aho6sg6l38vap45c.apps.googleusercontent.com";
-
-const GOOGLE_IOS_CLIENT_ID =
-  "177967447276-9ncqmgbbs4rq2i3r682e91npjss49ir4.apps.googleusercontent.com";
+const API_BASE_URL = "https://api.noramum.app";
 
 export interface GoogleAuthResult {
   success: boolean;
@@ -29,18 +22,12 @@ export interface GoogleAuthResult {
   error?: string;
 }
 
-/**
- * Configure Google Sign-In
- * Call this once when your app starts (e.g., in App.tsx or _layout.tsx)
- */
-export const configureGoogleSignIn = () => {
-  GoogleSignin.configure({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
+GoogleSignin.configure({
+    webClientId: "177967447276-tsh54rjdsp3dl0u7aho6sg6l38vap45c.apps.googleusercontent.com",
+    iosClientId: "177967447276-9ncqmgbbs4rq2i3r682e91npjss49ir4.apps.googleusercontent.com",
     forceCodeForRefreshToken: true,
     scopes: ["profile", "email", "openid"],
-  });
-};
+});
 
 /**
  * Sign in with Google and authenticate with your backend

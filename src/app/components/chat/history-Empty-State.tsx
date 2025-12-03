@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   clearIcon: {
     width: s(20),
     height: s(20),
-    tintColor: colors.textGrey1,
+    color: colors.textGrey1,
   },
   newChatButton: {
     flexDirection: "row",

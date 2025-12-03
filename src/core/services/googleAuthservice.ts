@@ -89,7 +89,11 @@ export const signInWithGoogle = async (): Promise<GoogleAuthResult> => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("❌ Backend authentication failed:", data.message);
+      console.error(
+        "❌ Backend authentication failed:",
+        data.message || "Unknown error",
+        data
+      );
       throw new Error(data.message || "Backend authentication failed");
     }
 

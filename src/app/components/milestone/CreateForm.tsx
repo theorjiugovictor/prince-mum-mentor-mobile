@@ -167,7 +167,7 @@ export default function CreateForm() {
 
                   <Pressable
                     style={[styles.buttons, styles.buttonCancel]}
-                    onPress={() => onToggleCreateForm(false)}
+                    onPress={onClose}
                     disabled={isCreatingMilestone}
                   >
                     <Text style={styles.buttonCancelText}>Cancel</Text>

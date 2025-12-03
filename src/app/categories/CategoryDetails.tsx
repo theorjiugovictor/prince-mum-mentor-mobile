@@ -65,10 +65,10 @@ export default function CategoryDetails() {
 
             {/* Status header */}
             <View style={styles.mileStonesHeading}>
-              {MILESTONE_STATUS.map((section) => (
+              {MILESTONE_STATUS.map((section, i) => (
                 <Text
                   onPress={() => setMilestoneStatus(section.status)}
-                  key={section.id}
+                  key={i}
                   style={[
                     styles.sectionText,
                     section.status === milestoneStatus &&

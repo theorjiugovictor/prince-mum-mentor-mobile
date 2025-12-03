@@ -1,6 +1,7 @@
 import FormInput from "@/src/app/components/milestone/FormInput";
 import { createMilestone } from "@/src/core/services/milestoneService";
-import { colors, typography } from "@/src/core/styles";
+import { colors, spacing, typography } from "@/src/core/styles";
+import { ms } from "@/src/core/styles/scaling";
 import { showToast } from "@/src/core/utils/toast";
 import { useMilestoneStore } from "@/src/store/useMilestone";
 import { CreateMilestoneType, MilestoneDataType } from "@/src/types/milestones";
@@ -15,7 +16,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
+  ViewStyle,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Modal from "react-native-modal";
@@ -74,90 +77,107 @@ export default function CreateForm() {
     setFormData({ name: "", description: "" });
   }
 
+  // Handler to close the modal
+  function onClose() {
+    onToggleCreateForm(false);
+  }
+
   return (
     <Modal
       isVisible={isCreateFormOpen}
       animationIn="slideInUp"
       animationOut="slideOutDown"
       backdropOpacity={0.5}
-      onBackdropPress={() => onToggleCreateForm(false)}
+      onBackdropPress={onClose}
       style={{ justifyContent: "flex-end", margin: 0 }}
       avoidKeyboard={false}
     >
-      <KeyboardAwareScrollView
-        enableOnAndroid={true}
-        extraScrollHeight={Platform.OS === "ios" ? 20 : 100}
-        contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <ScrollView
-          contentContainerStyle={{ flex: 1, justifyContent: "flex-end" }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.milestoneFormContainer}>
-            <View style={styles.formHeaderBox}>
-              <Text style={styles.formTitle}>create milestones</Text>
-              <Text style={styles.formDescription}>
-                Add Milestones to stay focused, celebrate progress
-              </Text>
-            </View>
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <View style={styles.modalContent}>
+          <KeyboardAwareScrollView
+            style={styles.formContainer}
+            contentContainerStyle={styles.formContentContainer}
+            enableOnAndroid={true}
+            enableAutomaticScroll={true}
+            extraScrollHeight={20}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <ScrollView
+              contentContainerStyle={{ flex: 1, justifyContent: "flex-end" }}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.milestoneFormContainer}>
+                <View style={styles.formHeaderBox}>
+                  <Text style={styles.formTitle}>create milestones</Text>
+                  <Text style={styles.formDescription}>
+                    Add Milestones to stay focused, celebrate progress
+                  </Text>
+                </View>
 
-            <FormInput label="Milestone Name">
-              <TextInput
-                style={styles.input}
-                placeholder="e.g 5 Minutes Exercise"
-                placeholderTextColor={colors.textGrey2}
-                editable={!isCreatingMilestone}
-                autoCapitalize="none"
-                value={formData.name}
-                onChangeText={(text) =>
-                  setFormData((cur) => ({ ...cur, name: text }))
-                }
-              />
-            </FormInput>
+                <FormInput label="Milestone Name">
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g 5 Minutes Exercise"
+                    placeholderTextColor={colors.textGrey2}
+                    editable={!isCreatingMilestone}
+                    autoCapitalize="none"
+                    value={formData.name}
+                    onChangeText={(text) =>
+                      setFormData((cur) => ({ ...cur, name: text }))
+                    }
+                  />
+                </FormInput>
 
-            <FormInput label="Add Description">
-              <TextInput
-                style={styles.input}
-                placeholder="eg. Tried a 5 Minutes Exercise Plan..."
-                placeholderTextColor={colors.textGrey2}
-                editable={!isCreatingMilestone}
-                defaultValue=""
-                keyboardType="default"
-                autoCapitalize="none"
-                onChangeText={(text) =>
-                  setFormData((cur) => ({ ...cur, description: text }))
-                }
-              />
-            </FormInput>
+                <FormInput label="Add Description">
+                  <TextInput
+                    style={styles.input}
+                    placeholder="eg. Tried a 5 Minutes Exercise Plan..."
+                    placeholderTextColor={colors.textGrey2}
+                    editable={!isCreatingMilestone}
+                    defaultValue=""
+                    keyboardType="default"
+                    autoCapitalize="none"
+                    onChangeText={(text) =>
+                      setFormData((cur) => ({ ...cur, description: text }))
+                    }
+                  />
+                </FormInput>
 
-            <View style={styles.buttonsContainer}>
-              <Pressable
-                style={[
-                  styles.buttons,
-                  styles.buttonSave,
-                  (!isNameInputFilled || isCreatingMilestone) &&
-                    styles.buttonDisabled,
-                ]}
-                onPress={handleMilestoneCreation}
-                disabled={!isNameInputFilled || isCreatingMilestone}
-              >
-                <Text style={styles.buttonText}>
-                  {isCreatingMilestone ? "Saving..." : "Save"}
-                </Text>
-              </Pressable>
+                <View style={styles.buttonsContainer}>
+                  <Pressable
+                    style={[
+                      styles.buttons,
+                      styles.buttonSave,
+                      (!isNameInputFilled || isCreatingMilestone) &&
+                        styles.buttonDisabled,
+                    ]}
+                    onPress={handleMilestoneCreation}
+                    disabled={!isNameInputFilled || isCreatingMilestone}
+                  >
+                    <Text style={styles.buttonText}>
+                      {isCreatingMilestone ? "Saving..." : "Save"}
+                    </Text>
+                  </Pressable>
 
-              <Pressable
-                style={[styles.buttons, styles.buttonCancel]}
-                onPress={() => onToggleCreateForm(false)}
-                disabled={isCreatingMilestone}
-              >
-                <Text style={styles.buttonCancelText}>Cancel</Text>
-              </Pressable>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAwareScrollView>
+                  <Pressable
+                    style={[styles.buttons, styles.buttonCancel]}
+                    onPress={() => onToggleCreateForm(false)}
+                    disabled={isCreatingMilestone}
+                  >
+                    <Text style={styles.buttonCancelText}>Cancel</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAwareScrollView>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -239,4 +259,35 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 24,
   },
+
+  formContainer: {
+    paddingTop: 10,
+  } as ViewStyle,
+
+  formContentContainer: {
+    paddingBottom: Platform.OS === "ios" ? ms(spacing.xl) : ms(spacing.lg),
+  } as ViewStyle,
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  } as ViewStyle,
+
+  modalBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  } as ViewStyle,
+
+  modalContent: {
+    backgroundColor: colors.backgroundMain,
+    borderTopLeftRadius: ms(12),
+    borderTopRightRadius: ms(12),
+    paddingHorizontal: ms(spacing.md),
+    width: "100%",
+    maxHeight: "90%",
+  } as ViewStyle,
 });

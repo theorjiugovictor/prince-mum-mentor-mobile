@@ -1,19 +1,10 @@
-import { useDebounce } from "@/src/core/hooks/useDebounce";
-import { colors, typography } from "@/src/core/styles";
-import { rbr, s, vs } from "@/src/core/styles/scaling";
-import { showToast } from "@/src/core/utils/toast";
-import React, { useCallback, useMemo, useState } from "react";
-import {
-  FlatList,
-  Image,
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useKeyboardState } from "react-native-keyboard-controller";
+import {useDebounce} from "@/src/core/hooks/useDebounce";
+import {colors, typography} from "@/src/core/styles";
+import {rbr, s, vs} from "@/src/core/styles/scaling";
+import {showToast} from "@/src/core/utils/toast";
+import React, {useCallback, useMemo, useState} from "react";
+import {FlatList, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View,} from "react-native";
+import {useKeyboardState} from "react-native-keyboard-controller";
 
 /* -------------------------------------------------------------------------- */
 /*                                Types                                        */
@@ -358,7 +349,7 @@ export const HistoryEmptyState = ({
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
       .filter((chat) =>
-        chat.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+          chat.title?.toLowerCase().includes(debouncedSearch?.toLowerCase())
       );
   }, [chats, debouncedSearch]);
 

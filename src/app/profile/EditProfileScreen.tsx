@@ -20,7 +20,6 @@ import {ms} from "../../core/styles/scaling";
 
 // --- API Imports ---
 import {showToast} from "@/src/core/utils/toast";
-import {authApi} from "@/src/lib/api";
 import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -112,12 +111,6 @@ export default function EditProfileModal({
       };
 
       try {
-        // Try PATCH first
-        const patchResponse = await authApi.patch(
-          "/api/v1/profile-setup/",
-          profileSetupData
-        );
-
         if (onProfileUpdated) onProfileUpdated();
         showToast.success("Success", "Profile updated successfully!");
         onClose();
@@ -154,11 +147,6 @@ export default function EditProfileModal({
             if (userProfile?.partner?.email) {
               createData.partner = userProfile.partner;
             }
-
-            const postResponse = await authApi.post(
-              "/api/v1/profile-setup/",
-              createData
-            );
 
             if (onProfileUpdated) onProfileUpdated();
             showToast.success("Success", "Profile created successfully!");

@@ -1,9 +1,9 @@
 // core/services/profileSetup.service.ts
 
-import { authApi } from "@/src/lib/api";
+import {authApi} from "@/src/lib/api";
 import storage from "@/src/store/storage";
-import { AxiosError } from "axios"; // Keep this for type checking
-import type { ChildProfile } from "../../types/child.types";
+import {AxiosError} from "axios"; // Keep this for type checking
+import type {ChildProfile} from "../../types/child.types";
 
 // ======================================================
 // API CONFIGURATION - REMOVED: Now handled in apiClient.ts
@@ -47,7 +47,7 @@ export async function createProfileSetup(
 ): Promise<ProfileSetupData | { id: string }> {
   try {
     // FIX: Use the imported apiClient instead of the local 'api' instance
-    const response = await authApi.post("/api/v1/profile-setup/", data);
+      const response = await authApi.post("/api/v1/profile/setup", data);
     const rawData = response.data;
 
     let profileSetupId: string;
@@ -94,7 +94,7 @@ export async function getProfileSetup(): Promise<ProfileSetupData | null> {
   try {
     // ✅ FIX: Use the imported apiClient instead of the local 'api' instance
     const response = await authApi.get<ProfileSetupResponse>(
-      "/api/v1/profile-setup"
+        "/api/v1/profile/setup"
     );
     const profileSetup = response.data.data;
     console.log("res", response);

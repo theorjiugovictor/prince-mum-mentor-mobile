@@ -1,5 +1,5 @@
 // constants/index.ts
-export const API_BASE_URL = "https://api.staging.kaizen.emerj.net";
+export const API_BASE_URL = "https://api.noramum.app";
 
 export const API_ENDPOINTS = {
   LOGIN: "/api/v1/auth/login",

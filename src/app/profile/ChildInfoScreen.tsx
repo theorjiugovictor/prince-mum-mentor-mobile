@@ -63,7 +63,7 @@ const getStableAvatarUrl = (profilePictureUrl?: string): string => {
   }
 
   // Construct the full avatar URL using the public endpoint
-  const baseUrl = "https://api.staging.kaizen.emerj.net/api/v1";
+  const baseUrl = "https://api.noramum.app/api/v1";
   const avatarUrl = `${baseUrl}/child-profiles/avatar/${filename}`;
 
   return avatarUrl;
@@ -285,10 +285,10 @@ export default function ChildInfoScreen({ navigation }: any) {
               {child.birth_order === 1
                 ? "First"
                 : child.birth_order === 2
-                  ? "Second"
-                  : child.birth_order === 3
-                    ? "Third"
-                    : `${child.birth_order}th`}{" "}
+                ? "Second"
+                : child.birth_order === 3
+                ? "Third"
+                : `${child.birth_order}th`}{" "}
               born
             </Text>
           </View>

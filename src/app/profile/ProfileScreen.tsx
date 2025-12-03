@@ -1,15 +1,23 @@
-import {Feather} from "@expo/vector-icons";
-import {router} from "expo-router";
-import React, {useCallback, useEffect, useState} from "react";
-import {ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // --- Style Imports ---
-import {colors, fontFamilies, spacing, typography} from "../../core/styles";
-import {ms} from "../../core/styles/scaling";
+import { colors, fontFamilies, spacing, typography } from "../../core/styles";
+import { ms } from "../../core/styles/scaling";
 
 // --- Component Imports ---
-import {authApi} from "@/src/lib/api";
+import { authApi } from "@/src/lib/api";
 import EditProfileModal from "./EditProfileScreen";
 import LogoutModal from "./LogoutModal";
 
@@ -44,15 +52,17 @@ export default function ProfileScreen({ navigation }: any) {
   // --- Fetch Profile Setup ---
   const fetchProfileSetup = async (baseProfile: UserProfile) => {
     try {
-        const response = await authApi.get("/api/v1/profile/setup");
+      const response = await authApi.get("/api/v1/profile/setup");
+
+      console.log("RESPONSE:", response);
 
       if (response.data) {
         setUserProfile({
           ...baseProfile,
-          mom_status: response.data.mom_status,
-          goals: response.data.goals,
-          partner: response.data.partner,
-          children: response.data.children,
+          mom_status: response.data.data.mom_status,
+          goals: response.data.data.goals,
+          partner: response.data.data.partner,
+          children: response.data.data.children,
         });
       }
     } catch (err: any) {

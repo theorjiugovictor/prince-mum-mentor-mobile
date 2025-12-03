@@ -1,17 +1,24 @@
 import FormInput from "@/src/app/components/milestone/FormInput";
-import {colors, typography} from "@/src/core/styles";
-import React, {useEffect, useState} from "react";
+import { colors, typography } from "@/src/core/styles";
+import React, { useEffect, useState } from "react";
 import Modal from "react-native-modal";
 
-import {editMilestone} from "@/src/core/services/milestoneService";
-import {showToast} from "@/src/core/utils/toast";
-import {useMilestoneStore} from "@/src/store/useMilestone";
-import {EditMilestoneType} from "@/src/types/milestones";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {useLocalSearchParams} from "expo-router";
-import {Platform, Pressable, StyleSheet, Text, TextInput, View,} from "react-native";
-import {useShallow} from "zustand/react/shallow";
-import {KeyboardAwareScrollView} from "react-native-keyboard-controller";
+import { editMilestone } from "@/src/core/services/milestoneService";
+import { showToast } from "@/src/core/utils/toast";
+import { useMilestoneStore } from "@/src/store/useMilestone";
+import { EditMilestoneType } from "@/src/types/milestones";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocalSearchParams } from "expo-router";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { useShallow } from "zustand/react/shallow";
 
 export default function EditForm() {
   const {
@@ -95,7 +102,7 @@ export default function EditForm() {
       avoidKeyboard={false}
     >
       <KeyboardAwareScrollView
-          extraKeyboardSpace={Platform.OS === "ios" ? 20 : 100}
+        extraKeyboardSpace={Platform.OS === "ios" ? 40 : 120}
         contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
         keyboardShouldPersistTaps="handled"
       >

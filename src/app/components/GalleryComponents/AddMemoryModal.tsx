@@ -23,10 +23,9 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import PrimaryButton from "../PrimaryButton";
 import CameraScreen from "./CameraScreen";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 interface AddMemoryModalProps {
   visible: boolean;
@@ -162,61 +161,51 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
             <KeyboardAwareScrollView
               style={styles.formContainer}
               contentContainerStyle={styles.formContentContainer}
-              enableOnAndroid={true}
-              enableAutomaticScroll={true}
-              extraScrollHeight={20}
+              // enableOnAndroid={true}
+              // enableAutomaticScroll={true}
+              // extraScrollHeight={20}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
               {/* <View style={styles.overlay}> */}
               <TouchableWithoutFeedback>
-                {/* DYNAMIC HEIGHT MODAL */}
-                <KeyboardAvoidingView
-                  style={[
-                    styles.modalContainer,
-                    photoUri ? styles.fullHeight : styles.partialHeight,
-                  ]}
-                  behavior="padding"
-                >
-                  {/* Header */}
-                  <View style={styles.header}>
-                    <TouchableOpacity
-                      onPress={handleClose}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Ionicons
-                        name="arrow-back"
-                        size={20}
-                        color={colors.textPrimary}
-                      />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Add A Memory</Text>
-                    <View style={{ width: 20 }} />
-                  </View>
-                  {isUploading && (
-                    <View style={styles.uploadingOverlay}>
-                      <ActivityIndicator size="large" color={colors.primary} />
-                      <Text style={styles.uploadingText}>
-                        Uploading image...
-                      </Text>
-                    </View>
-                  )}
-
-                  <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
+                {/* Header */}
+                <View style={styles.header}>
+                  <TouchableOpacity
+                    onPress={handleClose}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    {photoUri ? (
-                      <View style={styles.photoPreviewContainer}>
-                        <Image
-                          source={{ uri: photoUri }}
-                          style={styles.photoPreview}
-                        />
-                      </View>
-                    ) : (
-                      <View style={styles.photoOptionsContainer}>
-                        {/* <TouchableOpacity
+                    <Ionicons
+                      name="arrow-back"
+                      size={20}
+                      color={colors.textPrimary}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.headerTitle}>Add A Memory</Text>
+                  <View style={{ width: 20 }} />
+                </View>
+                {isUploading && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={styles.uploadingText}>Uploading image...</Text>
+                  </View>
+                )}
+
+                <ScrollView
+                  contentContainerStyle={styles.scrollContent}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                >
+                  {photoUri ? (
+                    <View style={styles.photoPreviewContainer}>
+                      <Image
+                        source={{ uri: photoUri }}
+                        style={styles.photoPreview}
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.photoOptionsContainer}>
+                      {/* <TouchableOpacity
                         style={styles.photoOption}
                         onPress={handleTakePhoto}
                       >
@@ -230,42 +219,42 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                         <Text style={styles.photoOptionText}>Take a photo</Text>
                       </TouchableOpacity> */}
 
-                        <TouchableOpacity
-                          style={styles.photoOption}
-                          onPress={pickAndUpload}
-                        >
-                          <View style={styles.photoIconContainer}>
-                            <Ionicons
-                              name="images-outline"
-                              size={24}
-                              color={colors.primary}
-                            />
-                          </View>
-                          <Text style={styles.photoOptionText}>
-                            Upload from gallery
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-
-                    {/* Note Section */}
-                    <View style={styles.section}>
-                      <Text style={styles.sectionLabel}>
-                        Note about this moment
-                      </Text>
-                      <TextInput
-                        style={styles.noteInput}
-                        placeholder="Add a little note"
-                        placeholderTextColor={colors.textGrey2}
-                        multiline
-                        value={note}
-                        onChangeText={setNote}
-                      />
+                      <TouchableOpacity
+                        style={styles.photoOption}
+                        onPress={pickAndUpload}
+                      >
+                        <View style={styles.photoIconContainer}>
+                          <Ionicons
+                            name="images-outline"
+                            size={24}
+                            color={colors.primary}
+                          />
+                        </View>
+                        <Text style={styles.photoOptionText}>
+                          Upload from gallery
+                        </Text>
+                      </TouchableOpacity>
                     </View>
+                  )}
 
-                    {/* Save To */}
-                    <View style={styles.section}>
-                      {/* <View style={styles.sectionHeader}>
+                  {/* Note Section */}
+                  <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>
+                      Note about this moment
+                    </Text>
+                    <TextInput
+                      style={styles.noteInput}
+                      placeholder="Add a little note"
+                      placeholderTextColor={colors.textGrey2}
+                      multiline
+                      value={note}
+                      onChangeText={setNote}
+                    />
+                  </View>
+
+                  {/* Save To */}
+                  <View style={styles.section}>
+                    {/* <View style={styles.sectionHeader}>
                         <Text style={styles.sectionLabel}>Save To:</Text>
                         <TouchableOpacity>
                           <Text style={styles.createAlbumText}>
@@ -274,63 +263,62 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({
                         </TouchableOpacity>
                       </View> */}
 
-                      <View style={styles.categoriesContainer}>
-                        {CATEGORIES.map((cat) => (
-                          <TouchableOpacity
-                            key={cat}
+                    <View style={styles.categoriesContainer}>
+                      {CATEGORIES.map((cat) => (
+                        <TouchableOpacity
+                          key={cat}
+                          style={[
+                            styles.categoryChip,
+                            selectedCategory === cat &&
+                              styles.categoryChipSelected,
+                          ]}
+                          onPress={() => setSelectedCategory(cat)}
+                        >
+                          <Text
                             style={[
-                              styles.categoryChip,
+                              styles.categoryChipText,
                               selectedCategory === cat &&
-                                styles.categoryChipSelected,
+                                styles.categoryChipTextSelected,
                             ]}
-                            onPress={() => setSelectedCategory(cat)}
                           >
-                            <Text
-                              style={[
-                                styles.categoryChipText,
-                                selectedCategory === cat &&
-                                  styles.categoryChipTextSelected,
-                              ]}
-                            >
-                              {cat}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
+                            {cat}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
                     </View>
+                  </View>
 
-                    {/* Date */}
-                    <View style={styles.section}>
-                      {/* <View style={styles.sectionHeader}>
+                  {/* Date */}
+                  <View style={styles.section}>
+                    {/* <View style={styles.sectionHeader}>
                         <Text style={styles.sectionLabel}>Saved On:</Text>
                         <TouchableOpacity>
                           <Text style={styles.editText}>Edit</Text>
                         </TouchableOpacity>
                       </View> */}
 
-                      <View style={styles.dateContainer}>
-                        <Ionicons
-                          name="calendar-outline"
-                          size={16}
-                          color={colors.textGrey1}
-                        />
-                        <Text style={styles.dateText}>
-                          {formatDate(selectedDate)}
-                        </Text>
-                      </View>
+                    <View style={styles.dateContainer}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={16}
+                        color={colors.textGrey1}
+                      />
+                      <Text style={styles.dateText}>
+                        {formatDate(selectedDate)}
+                      </Text>
                     </View>
-                  </ScrollView>
-
-                  {/* Save Button */}
-                  <View style={styles.saveButtonContainer}>
-                    <PrimaryButton
-                      title="Save Memory"
-                      onPress={handleSaveMemory}
-                      isLoading={isLoading || isUploading}
-                      disabled={!data?.data.id || isLoading || isUploading}
-                    />
                   </View>
-                </KeyboardAvoidingView>
+                </ScrollView>
+
+                {/* Save Button */}
+                <View style={styles.saveButtonContainer}>
+                  <PrimaryButton
+                    title="Save Memory"
+                    onPress={handleSaveMemory}
+                    isLoading={isLoading || isUploading}
+                    disabled={!data?.data.id || isLoading || isUploading}
+                  />
+                </View>
               </TouchableWithoutFeedback>
               {/* </View> */}
             </KeyboardAwareScrollView>

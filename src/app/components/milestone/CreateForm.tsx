@@ -20,8 +20,8 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Modal from "react-native-modal";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 export default function CreateForm() {
   const isCreateFormOpen = useMilestoneStore((state) => state.isCreateFormOpen);
@@ -102,9 +102,9 @@ export default function CreateForm() {
           <KeyboardAwareScrollView
             style={styles.formContainer}
             contentContainerStyle={styles.formContentContainer}
-            enableOnAndroid={true}
-            enableAutomaticScroll={true}
-            extraScrollHeight={20}
+            // enableOnAndroid={true}
+            // enableAutomaticScroll={true}
+            // extraScrollHeight={20}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
